@@ -1,0 +1,32 @@
+<div class="shell">
+  <header class="topbar">
+    <a class="brand" routerLink="/storefront" aria-label="Nomori Marketplace home">
+      <span class="brand-mark" aria-hidden="true">N</span>
+      <span>Nomori Marketplace</span>
+    </a>
+
+    <nav class="primary-nav" aria-label="Primary navigation">
+      <a routerLink="/storefront" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Storefront</a>
+      <a routerLink="/admin" routerLinkActive="active">Admin</a>
+    </nav>
+
+    <div class="account-status" aria-live="polite">
+      @if (auth.isAuthenticated()) {
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>{{ auth.session()?.email }}</span>
+      } @else {
+        <span class="status-dot status-dot--muted" aria-hidden="true"></span>
+        <span>Guest session</span>
+      }
+    </div>
+  </header>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+
+  <footer class="footer">
+    <span>Nomori Marketplace</span>
+    <span>Foundation workspace</span>
+  </footer>
+</div>

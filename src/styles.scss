@@ -1,0 +1,37 @@
+/* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+	--paper: #f7f5ef;
+	--ink: #1f2520;
+	--muted: #687066;
+	--line: #d9ddd4;
+	--line-strong: #afb8aa;
+	--green: #27745d;
+	--display-font: 'Manrope', sans-serif;
+	--mono-font: 'DM Mono', monospace;
+	color: var(--ink);
+	background: var(--paper);
+	font-family: var(--display-font);
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+}
+
+* { box-sizing: border-box; }
+
+html { min-width: 320px; min-height: 100%; background: var(--paper); }
+
+body {
+	min-width: 320px;
+	min-height: 100vh;
+	margin: 0;
+	background:
+		linear-gradient(rgba(39, 116, 93, 0.045) 1px, transparent 1px),
+		linear-gradient(90deg, rgba(39, 116, 93, 0.045) 1px, transparent 1px),
+		var(--paper);
+	background-size: 32px 32px;
+}
+
+button, a { transition: background-color 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease; }
+
+:focus-visible { outline: 3px solid #e39c3d; outline-offset: 3px; }
