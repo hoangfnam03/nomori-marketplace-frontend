@@ -14,7 +14,7 @@ npm install
 npm start
 ```
 
-Open `http://localhost:4200`. The development server proxies `/api` to the backend and accepts the local HTTPS certificate through `secure: false` in `proxy.conf.json`.
+Open `http://localhost:4200`. The development server proxies `/api` to the HTTPS backend and accepts the local development certificate through `secure: false` in `proxy.conf.json`.
 
 ## Validation
 

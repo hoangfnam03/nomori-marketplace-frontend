@@ -13,10 +13,12 @@
     <div class="account-status" aria-live="polite">
       @if (auth.isAuthenticated()) {
         <span class="status-dot" aria-hidden="true"></span>
-        <span>{{ auth.session()?.email }}</span>
+        <a class="account-email" routerLink="/auth/account">{{ auth.session()?.email }}</a>
+        <button type="button" class="account-action" (click)="logout()">Sign out</button>
       } @else {
         <span class="status-dot status-dot--muted" aria-hidden="true"></span>
         <span>Guest session</span>
+        <a class="account-action" routerLink="/auth/login">Sign in</a>
       }
     </div>
   </header>

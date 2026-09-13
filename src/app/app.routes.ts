@@ -7,6 +7,10 @@ export const routes: Routes = [
 		loadComponent: () => import('./layout/app-shell/app-shell.component').then(page => page.AppShellComponent),
 		children: [
 			{
+				path: 'auth',
+				loadChildren: () => import('./auth/auth.routes').then(route => route.authRoutes)
+			},
+			{
 				path: 'storefront',
 				loadChildren: () => import('./storefront/storefront.routes').then(route => route.storefrontRoutes)
 			},
