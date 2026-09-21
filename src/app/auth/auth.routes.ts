@@ -8,6 +8,7 @@ export const authRoutes: Routes = [
   { path: 'forgot-password', loadComponent: () => import('./pages/forgot-password.page').then(page => page.ForgotPasswordPage) },
   { path: 'reset-password', loadComponent: () => import('./pages/reset-password.page').then(page => page.ResetPasswordPage) },
   { path: 'verify-email', loadComponent: () => import('./pages/verify-email.page').then(page => page.VerifyEmailPage) },
+  { path: 'confirm-email-change', loadComponent: () => import('./pages/confirm-email-change.page').then(page => page.ConfirmEmailChangePage) },
   { path: 'forbidden', loadComponent: () => import('./pages/forbidden.page').then(page => page.ForbiddenPage) },
   { path: 'account', canActivate: [authGuard], loadComponent: () => import('./pages/account.page').then(page => page.AccountPage) }
 ];

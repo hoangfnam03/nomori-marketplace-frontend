@@ -15,6 +15,10 @@ export const routes: Routes = [
 				loadChildren: () => import('./storefront/storefront.routes').then(route => route.storefrontRoutes)
 			},
 			{
+				path: 'customer',
+				loadChildren: () => import('./customer/customer.routes').then(route => route.customerRoutes)
+			},
+			{
 				path: 'admin',
 				loadChildren: () => import('./admin/admin.routes').then(route => route.adminRoutes)
 			}

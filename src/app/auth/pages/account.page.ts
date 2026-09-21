@@ -38,7 +38,7 @@ import { passwordValidators } from '../../core/auth/password-policy';
           <div class="field"><label for="newPassword">New password</label><input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" /> @if (form.controls.newPassword.touched && form.controls.newPassword.invalid) { <span class="field-error">Use at least 12 characters with upper/lowercase, a number and a special character.</span> }</div>
           @if (error) { <div class="form-error" role="alert">{{ error }}</div> } @if (success) { <div class="form-success" role="status">Password changed. Sign in again with the new password.</div> }
           <button class="submit" type="submit" [disabled]="form.invalid || auth.isLoading()">{{ auth.isLoading() ? 'Changing...' : 'Change password' }}</button>
-          <div class="auth-links"><a routerLink="/storefront">Back to storefront</a></div>
+          <div class="auth-links"><a routerLink="/customer/profile">Edit profile</a><a routerLink="/storefront">Back to storefront</a></div>
         </form>
       </div>
     </div>
