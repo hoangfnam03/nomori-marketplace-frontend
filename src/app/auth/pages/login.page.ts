@@ -32,6 +32,12 @@ export class LoginPage {
   submit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.error = null;
-    this.auth.login(this.form.getRawValue()).subscribe({ next: () => this.router.navigateByUrl('/storefront'), error: error => this.error = error.message });
+    const request = this.form.getRawValue();
+    this.auth.login(request).subscribe({
+      next: result => result?.otpRequired
+        ? this.router.navigate(['/auth/login-otp'], { queryParams: { challengeId: result.challengeId, rememberMe: request.rememberMe, developmentCode: result.developmentCode ?? undefined } })
+        : this.router.navigateByUrl('/storefront'),
+      error: error => this.error = error.message
+    });
   }
 }

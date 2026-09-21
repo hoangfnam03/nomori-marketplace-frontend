@@ -6,6 +6,7 @@ export const errorInterceptor: HttpInterceptorFn = (request, next) => next(reque
     const normalizedError = {
       status: error.status,
       code: error.error?.code ?? null,
+      fieldErrors: error.error?.errors ?? undefined,
       traceId: error.headers.get('X-Correlation-ID') ?? error.error?.traceId ?? null,
       message: error.error?.detail ?? error.message
     };
