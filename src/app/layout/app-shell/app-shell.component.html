@@ -14,6 +14,7 @@
       @if (auth.isAuthenticated()) {
         <span class="status-dot" aria-hidden="true"></span>
         <a class="account-email" routerLink="/auth/account">{{ auth.session()?.email }}</a>
+        <a class="account-action" routerLink="/customer/profile">Profile</a>
         <button type="button" class="account-action" (click)="logout()">Sign out</button>
       } @else {
         <span class="status-dot status-dot--muted" aria-hidden="true"></span>
