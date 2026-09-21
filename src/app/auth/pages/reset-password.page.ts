@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthFacade } from '../../core/auth/auth.facade';
 
 @Component({
@@ -8,7 +8,7 @@ import { AuthFacade } from '../../core/auth/auth.facade';
   imports: [ReactiveFormsModule, RouterLink],
   styleUrls: ['../auth-page.scss'],
   template: `
-    <div class="auth-page"><section><div class="eyebrow">Account / Reset</div><h1>Start with a clean key.</h1><p class="lede">Use the one-time token from the recovery response to create a new password.</p></section>
+    <div class="auth-page"><section><div class="eyebrow">Account / Reset</div><h1>Start with a clean key.</h1><p class="lede">Use the one-time link from your email to create a new password.</p></section>
       <form class="auth-panel" [formGroup]="form" (ngSubmit)="submit()" novalidate><h2>Reset password</h2>
         <div class="field"><label for="token">Recovery token</label><input id="token" type="text" formControlName="token" autocomplete="off" /></div>
         <div class="field"><label for="newPassword">New password</label><input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" /></div>
@@ -19,7 +19,7 @@ import { AuthFacade } from '../../core/auth/auth.facade';
   `
 })
 export class ResetPasswordPage {
-  readonly auth = inject(AuthFacade); private readonly router = inject(Router); private readonly formBuilder = inject(NonNullableFormBuilder);
-  readonly form = this.formBuilder.group({ token: ['', Validators.required], newPassword: ['', Validators.required] }); error: string | null = null; success = false;
+  readonly auth = inject(AuthFacade); private readonly route = inject(ActivatedRoute); private readonly router = inject(Router); private readonly formBuilder = inject(NonNullableFormBuilder);
+  readonly form = this.formBuilder.group({ token: [this.route.snapshot.queryParamMap.get('token') ?? '', Validators.required], newPassword: ['', Validators.required] }); error: string | null = null; success = false;
   submit() { if (this.form.invalid) { this.form.markAllAsTouched(); return; } this.auth.resetPassword(this.form.getRawValue()).subscribe({ next: () => { this.success = true; setTimeout(() => this.router.navigateByUrl('/auth/login'), 900); }, error: error => this.error = error.message }); }
 }
