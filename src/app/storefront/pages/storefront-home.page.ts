@@ -1,10 +1,12 @@
-import { Component } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { SearchBoxComponent } from '../../shared/components/search-box/search-box.component';
 import { ProductCardModel } from '../../shared/models/product-card.model';
+import { CatalogApiService } from '../../core/catalog/catalog-api.service';
+import { ProductResponse } from '../../core/catalog/catalog.models';
 
 @Component({
   standalone: true,
@@ -25,14 +27,12 @@ import { ProductCardModel } from '../../shared/models/product-card.model';
     <section class="catalog-toolbar" aria-label="Catalog controls">
       <span>{{ products.length }} featured items</span>
       <div class="toolbar-actions">
-        <button type="button" class="filter-button">Filters <span aria-hidden="true">+</span></button>
-        <label>Sort <select aria-label="Sort products"><option>Featured</option><option>Price: low to high</option><option>Newest</option></select></label>
+        <a routerLink="/storefront/products" class="filter-button">Browse all <span aria-hidden="true">→</span></a>
       </div>
     </section>
 
-    @if (searchQuery) {
-      <div class="search-feedback" role="status">Showing the component state for <strong>{{ searchQuery }}</strong>. The feature facade will connect this control to the API.</div>
-    }
+    @if (loading) { <p class="state">Loading featured products...</p> }
+    @if (error) { <p class="state state-error" role="alert">{{ error }}</p> }
 
     <section class="product-grid" aria-label="Featured products">
       @for (product of products; track product.id) {
@@ -40,10 +40,12 @@ import { ProductCardModel } from '../../shared/models/product-card.model';
       }
     </section>
 
-    <section class="next-pattern" aria-labelledby="next-pattern-title">
-      <div><div class="eyebrow">Next shared pattern</div><h2 id="next-pattern-title">Every state gets a place.</h2></div>
-      <app-empty-state title="Cart and checkout ready to compose" message="Cart summary, checkout steps, form feedback and order confirmation will be added by their feature teams." mark="02" />
-    </section>
+    @if (!loading && products.length === 0 && !error) {
+      <section class="next-pattern" aria-labelledby="next-pattern-title">
+        <div><div class="eyebrow">Get started</div><h2 id="next-pattern-title">No featured products yet.</h2></div>
+        <app-empty-state title="Add products in the admin panel" message="Create categories, manufacturers and products in the admin catalog, then mark them as featured to display them here." mark="00" />
+      </section>
+    }
 
     @if (lastAddedProduct) {
       <div class="toast" role="status">{{ lastAddedProduct.name }} is ready for the cart facade.</div>
@@ -73,20 +75,53 @@ import { ProductCardModel } from '../../shared/models/product-card.model';
   `]
 })
 export class StorefrontHomePage {
-  readonly products: ProductCardModel[] = [
-    { id: 1, name: 'Ridge ceramic set', category: 'Table / Objects', price: '$68', compareAtPrice: '$84', imageUrl: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?auto=format&fit=crop&w=900&q=80', rating: 5, reviewCount: 24, badge: 'New' },
-    { id: 2, name: 'Field canvas tote', category: 'Carry / Everyday', price: '$42', imageUrl: 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=900&q=80', rating: 4, reviewCount: 18 },
-    { id: 3, name: 'Still life lamp', category: 'Home / Light', price: '$126', imageUrl: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=900&q=80', rating: 5, reviewCount: 31, badge: 'Limited' },
-    { id: 4, name: 'Archive wool throw', category: 'Home / Textile', price: '$95', imageUrl: 'https://images.unsplash.com/photo-1584100936595-c0654b55a2e2?auto=format&fit=crop&w=900&q=80', rating: 4, reviewCount: 12 }
-  ];
-  searchQuery = '';
+  private readonly api = inject(CatalogApiService);
+  private readonly router = inject(Router);
+
+  products: ProductCardModel[] = [];
+  loading = true;
+  error: string | null = null;
   lastAddedProduct?: ProductCardModel;
 
+  constructor() {
+    this.api.getProducts({ pageSize: 8, sort: 'DisplayOrder' }).subscribe({
+      next: result => {
+        this.products = result.items
+          .filter(p => p.showOnHomepage)
+          .slice(0, 8)
+          .map(toProductCard);
+        if (this.products.length === 0) {
+          this.products = result.items.slice(0, 4).map(toProductCard);
+        }
+        this.loading = false;
+      },
+      error: () => {
+        this.error = 'Unable to load featured products.';
+        this.loading = false;
+      }
+    });
+  }
+
   onSearch(query: string) {
-    this.searchQuery = query;
+    this.router.navigate(['/storefront/products'], { queryParams: { search: query || undefined } });
   }
 
   onAddToCart(product: ProductCardModel) {
     this.lastAddedProduct = product;
   }
+}
+
+const BLANK_IMAGE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23e4e8df'/%3E%3C/svg%3E`;
+
+function toProductCard(p: ProductResponse): ProductCardModel {
+  return {
+    id: p.id,
+    name: p.name,
+    category: '',
+    price: p.price % 1 === 0 ? `$${p.price}` : `$${p.price.toFixed(2)}`,
+    compareAtPrice: p.oldPrice > 0 ? (p.oldPrice % 1 === 0 ? `$${p.oldPrice}` : `$${p.oldPrice.toFixed(2)}`) : undefined,
+    imageUrl: BLANK_IMAGE,
+    rating: undefined,
+    reviewCount: undefined
+  };
 }

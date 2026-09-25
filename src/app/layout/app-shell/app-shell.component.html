@@ -7,7 +7,11 @@
 
     <nav class="primary-nav" aria-label="Primary navigation">
       <a routerLink="/storefront" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Storefront</a>
-      <a routerLink="/admin" routerLinkActive="active">Admin</a>
+      <a routerLink="/storefront/products" routerLinkActive="active">Products</a>
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Admin</a>
+      <a routerLink="/storefront/vendors" routerLinkActive="active">Vendors</a>
+      <a routerLink="/admin/catalog" routerLinkActive="active">Catalog</a>
+      <a routerLink="/admin/vendors" routerLinkActive="active">Vendors (Admin)</a>
     </nav>
 
     <div class="account-status" aria-live="polite">
