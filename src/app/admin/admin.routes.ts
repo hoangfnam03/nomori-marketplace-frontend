@@ -17,5 +17,15 @@ export const adminRoutes: Routes = [
     path: 'vendors',
     canActivate: [permissionGuard(permissionCodes.vendorManage)],
     loadComponent: () => import('./pages/admin-vendors.page').then(page => page.AdminVendorsPage)
+  },
+  {
+    path: 'attributes',
+    canActivate: [permissionGuard(permissionCodes.catalogManage)],
+    loadComponent: () => import('./pages/admin-attribute-specs.page').then(page => page.AdminAttributeSpecsPage)
+  },
+  {
+    path: 'spec-attributes',
+    canActivate: [permissionGuard(permissionCodes.catalogManage)],
+    loadComponent: () => import('./pages/admin-spec-attrs.page').then(page => page.AdminSpecAttrsPage)
   }
 ];

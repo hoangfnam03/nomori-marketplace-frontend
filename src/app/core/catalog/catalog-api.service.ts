@@ -7,6 +7,14 @@ import {
   CategoryResponse, CategoryTreeNode, ManufacturerResponse,
   PagedResult, ProductDetailResponse, ProductResponse
 } from './catalog.models';
+import {
+  ProductAttributeSpec, ProductAttributeDetail,
+  ProductAttributeMapping, ProductAttributeValue, ProductAttributeCombination
+} from './product-attribute.models';
+import {
+  SpecificationAttributeGroup, SpecificationAttributeDef, SpecificationAttributeOption,
+  ProductSpecDetail, ProductTag
+} from './spec-attribute.models';
 
 export interface ProductListParams {
   page?: number;
@@ -163,5 +171,141 @@ export class CatalogApiService {
 
   adminDeleteManufacturer(id: number) {
     return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/catalog/manufacturers/${id}`);
+  }
+
+  // ---- Product Attributes (public) ----
+
+  getProductAttributes(productId: number) {
+    return this.http.get<ProductAttributeDetail>(`${this.apiBaseUrl}/v1/products/${productId}/attributes`);
+  }
+
+  // ---- Product Attributes (admin — specs) ----
+
+  adminGetAttributeSpecs() {
+    return this.http.get<ProductAttributeSpec[]>(`${this.apiBaseUrl}/v1/admin/catalog/product-attributes`);
+  }
+
+  adminCreateAttributeSpec(body: { name: string; description?: string | null; displayOrder?: number }) {
+    return this.http.post<ProductAttributeSpec>(`${this.apiBaseUrl}/v1/admin/catalog/product-attributes`, body);
+  }
+
+  adminUpdateAttributeSpec(id: number, body: { name: string; description?: string | null; displayOrder?: number }) {
+    return this.http.put<ProductAttributeSpec>(`${this.apiBaseUrl}/v1/admin/catalog/product-attributes/${id}`, body);
+  }
+
+  adminDeleteAttributeSpec(id: number) {
+    return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/catalog/product-attributes/${id}`);
+  }
+
+  // ---- Product Attributes (admin — per-product) ----
+
+  adminGetProductAttributes(productId: number) {
+    return this.http.get<ProductAttributeDetail>(`${this.apiBaseUrl}/v1/admin/products/${productId}/attributes`);
+  }
+
+  adminAddMapping(productId: number, body: { productAttributeId: number; textPrompt?: string | null; isRequired?: boolean; controlType?: string; displayOrder?: number }) {
+    return this.http.post<ProductAttributeMapping>(`${this.apiBaseUrl}/v1/admin/products/${productId}/attributes/mappings`, body);
+  }
+
+  adminUpdateMapping(productId: number, id: number, body: { textPrompt?: string | null; isRequired?: boolean; controlType?: string; displayOrder?: number }) {
+    return this.http.put<ProductAttributeMapping>(`${this.apiBaseUrl}/v1/admin/products/${productId}/attributes/mappings/${id}`, body);
+  }
+
+  adminDeleteMapping(productId: number, id: number) {
+    return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/products/${productId}/attributes/mappings/${id}`);
+  }
+
+  adminAddValue(productId: number, mappingId: number, body: { name: string; colorSquaresRgb?: string | null; priceAdjustment?: number; isPreSelected?: boolean; displayOrder?: number }) {
+    return this.http.post<ProductAttributeValue>(`${this.apiBaseUrl}/v1/admin/products/${productId}/attributes/mappings/${mappingId}/values`, body);
+  }
+
+  adminUpdateValue(productId: number, mappingId: number, id: number, body: { name: string; colorSquaresRgb?: string | null; priceAdjustment?: number; isPreSelected?: boolean; displayOrder?: number }) {
+    return this.http.put<ProductAttributeValue>(`${this.apiBaseUrl}/v1/admin/products/${productId}/attributes/mappings/${mappingId}/values/${id}`, body);
+  }
+
+  adminDeleteValue(productId: number, mappingId: number, id: number) {
+    return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/products/${productId}/attributes/mappings/${mappingId}/values/${id}`);
+  }
+
+  adminAddCombination(productId: number, body: { attributesJson: string; stockQuantity?: number; allowOutOfStockOrders?: boolean; sku?: string | null; overriddenPrice?: number | null }) {
+    return this.http.post<ProductAttributeCombination>(`${this.apiBaseUrl}/v1/admin/products/${productId}/attributes/combinations`, body);
+  }
+
+  adminDeleteCombination(productId: number, id: number) {
+    return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/products/${productId}/attributes/combinations/${id}`);
+  }
+
+  // ---- Spec attributes (public) ----
+
+  getProductSpecs(productId: number) {
+    return this.http.get<ProductSpecDetail>(`${this.apiBaseUrl}/v1/products/${productId}/specs`);
+  }
+
+  getProductTags(productId: number) {
+    return this.http.get<ProductTag[]>(`${this.apiBaseUrl}/v1/products/${productId}/tags`);
+  }
+
+  // ---- Spec attributes (admin — global definitions) ----
+
+  adminGetSpecGroups() {
+    return this.http.get<SpecificationAttributeGroup[]>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes/groups`);
+  }
+
+  adminCreateSpecGroup(body: { name: string; displayOrder?: number }) {
+    return this.http.post<SpecificationAttributeGroup>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes/groups`, body);
+  }
+
+  adminUpdateSpecGroup(id: number, body: { name: string; displayOrder?: number }) {
+    return this.http.put<SpecificationAttributeGroup>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes/groups/${id}`, body);
+  }
+
+  adminDeleteSpecGroup(id: number) {
+    return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes/groups/${id}`);
+  }
+
+  adminGetSpecAttrs() {
+    return this.http.get<SpecificationAttributeDef[]>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes`);
+  }
+
+  adminCreateSpecAttr(body: { name: string; groupId?: number | null; displayOrder?: number }) {
+    return this.http.post<SpecificationAttributeDef>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes`, body);
+  }
+
+  adminUpdateSpecAttr(id: number, body: { name: string; groupId?: number | null; displayOrder?: number }) {
+    return this.http.put<SpecificationAttributeDef>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes/${id}`, body);
+  }
+
+  adminDeleteSpecAttr(id: number) {
+    return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes/${id}`);
+  }
+
+  adminGetSpecOptions(specAttrId: number) {
+    return this.http.get<SpecificationAttributeOption[]>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes/${specAttrId}/options`);
+  }
+
+  adminCreateSpecOption(specAttrId: number, body: { name: string; colorSquaresRgb?: string | null; displayOrder?: number }) {
+    return this.http.post<SpecificationAttributeOption>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes/${specAttrId}/options`, body);
+  }
+
+  adminUpdateSpecOption(specAttrId: number, id: number, body: { name: string; colorSquaresRgb?: string | null; displayOrder?: number }) {
+    return this.http.put<SpecificationAttributeOption>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes/${specAttrId}/options/${id}`, body);
+  }
+
+  adminDeleteSpecOption(specAttrId: number, id: number) {
+    return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/catalog/spec-attributes/${specAttrId}/options/${id}`);
+  }
+
+  // ---- Tags (admin) ----
+
+  adminGetAllTags() {
+    return this.http.get<ProductTag[]>(`${this.apiBaseUrl}/v1/admin/catalog/tags`);
+  }
+
+  adminDeleteTag(id: number) {
+    return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/catalog/tags/${id}`);
+  }
+
+  adminSetProductTags(productId: number, tagNames: string[]) {
+    return this.http.put<ProductTag[]>(`${this.apiBaseUrl}/v1/admin/products/${productId}/tags`, { tagNames });
   }
 }
