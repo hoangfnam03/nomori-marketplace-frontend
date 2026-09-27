@@ -25,7 +25,7 @@
 
 ## 2. Thư viện
 
-Dùng **`@jsverse/transloco`** (bản tương thích Angular 18), không cài plugin.
+Dùng **`@jsverse/transloco@7.6.1`**, không cài plugin. Bản 7.x hỗ trợ Angular từ 16 trở lên; bản 8 phụ thuộc một gói còn ở bản beta nên chưa dùng.
 
 Lý do chọn: đổi ngôn ngữ ngay trên trang (R4), có sẵn directive `*transloco` để viết `t('key')` trong template, và chạy được với SSR. `@angular/localize` bị loại vì mỗi ngôn ngữ cần một bản build riêng và phải tải lại trang khi đổi ngôn ngữ.
 
@@ -256,7 +256,7 @@ export function provideI18n() {
       config: { availableLangs: ['vi', 'en'], defaultLang: 'vi', reRenderOnLangChange: true, prodMode: !isDevMode() },
       loader: StaticLoader          // class nhỏ trong cùng file: getTranslation(lang) => of(lang === 'en' ? en : vi)
     }),
-    { provide: APP_INITIALIZER, multi: true, useFactory: initLanguage }   // chọn ngôn ngữ trước khi render
+    { provide: APP_INITIALIZER, multi: true, useFactory: initLanguage }   // chọn ngôn ngữ và nạp sẵn cả vi lẫn en trước khi render
   ];
 }
 
@@ -284,6 +284,10 @@ export function setLanguage(lang: AppLang): void {
 // server.ts
 { provide: REQUEST_LANG, useValue: /(?:^|;\s*)nomori_lang=(vi|en)/.exec(req.headers.cookie ?? '')?.[1] ?? 'vi' }
 ```
+
+`initLanguage` nạp sẵn cả hai bộ bản dịch vào Transloco (cả hai vốn đã nằm trong bundle), để `transloco.translate()` trong TypeScript trả đúng chữ ngay sau khi đổi ngôn ngữ.
+
+**Tắt prerender:** `angular.json` đặt `"prerender": false`. HTML prerender lúc build chỉ có một ngôn ngữ và được `server.ts` phục vụ như file tĩnh trước bước SSR, nên sẽ bỏ qua cookie ngôn ngữ. Khi tắt, mọi trang đi qua SSR và đọc cookie.
 
 Vì server và trình duyệt cùng đọc một cookie, trang render ở server đã đúng ngôn ngữ; khi trình duyệt tiếp quản thì chữ không bị nháy. Các trang cần đăng nhập vốn chỉ render ở trình duyệt (quyết định D3 trong vendor-frontend-design.md), nên không bị ảnh hưởng.
 

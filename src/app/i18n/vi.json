@@ -1,0 +1,553 @@
+{
+  "common": {
+    "actions": {
+      "save": "Lưu",
+      "cancel": "Hủy",
+      "confirm": "Xác nhận",
+      "retry": "Thử lại",
+      "close": "Đóng",
+      "back": "Quay lại",
+      "copy": "Sao chép",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "add": "Thêm",
+      "create": "Tạo",
+      "update": "Cập nhật",
+      "search": "Tìm",
+      "reset": "Đặt lại"
+    },
+    "states": {
+      "loading": "Đang tải...",
+      "saving": "Đang lưu...",
+      "processing": "Đang xử lý...",
+      "empty": "Chưa có dữ liệu.",
+      "notFound": "Không tìm thấy."
+    },
+    "time": {
+      "justNow": "vừa xong",
+      "hoursAgo": "{{count}} giờ trước",
+      "daysAgo": "{{count}} ngày trước"
+    },
+    "emptyState": {
+      "title": "Chưa có gì ở đây",
+      "message": "Khu vực này sẽ có dữ liệu ở các tính năng tiếp theo."
+    },
+    "pagination": {
+      "label": "Phân trang",
+      "prev": "Trước",
+      "next": "Sau",
+      "pageOf": "Trang {{page}} / {{total}}"
+    }
+  },
+  "nav": {
+    "primary": "Menu chính",
+    "home": "Trang chủ Nomori Marketplace",
+    "storefront": "Cửa hàng",
+    "products": "Sản phẩm",
+    "vendors": "Shop",
+    "admin": "Quản trị",
+    "catalog": "Danh mục",
+    "adminVendors": "Shop (Quản trị)",
+    "attributes": "Thuộc tính",
+    "specAttributes": "Thông số",
+    "becomeVendor": "Bán hàng cùng Nomori",
+    "vendorPortal": "Kênh người bán",
+    "vendorApplications": "Đơn đăng ký vendor",
+    "account": {
+      "profile": "Hồ sơ",
+      "signIn": "Đăng nhập",
+      "signOut": "Đăng xuất",
+      "guest": "Khách"
+    },
+    "footer": {
+      "brand": "Nomori Marketplace",
+      "workspace": "Bản nền tảng"
+    }
+  },
+  "language": {
+    "label": "Ngôn ngữ",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "validation": {
+    "required": "Trường này là bắt buộc.",
+    "email": "Email không hợp lệ.",
+    "maxlength": "Tối đa {{requiredLength}} ký tự.",
+    "phone": "Chỉ gồm số, khoảng trắng và + - ( )."
+  },
+  "errors": {
+    "network": "Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.",
+    "unauthorized": "Phiên đăng nhập đã hết hạn.",
+    "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+    "badRequest": "Vui lòng sửa các ô được đánh dấu.",
+    "server": "Đã có lỗi xảy ra. Mã lỗi: {{traceId}}",
+    "vendor_application": {
+      "email_not_verified": "Vui lòng xác thực email trước khi đăng ký mở shop.",
+      "already_vendor": "Tài khoản của bạn đã thuộc một shop.",
+      "already_pending": "Bạn đã có một đơn đang chờ duyệt.",
+      "not_pending": "Đơn này đã được xử lý.",
+      "applicant_already_vendor": "Người nộp đơn đã thuộc một shop khác."
+    },
+    "vendor_member": {
+      "email_already_exists": "Email đã được sử dụng.",
+      "limit_reached": "Shop đã đủ 20 thành viên.",
+      "already_active": "Thành viên này đã kích hoạt tài khoản.",
+      "last_member": "Shop phải còn ít nhất một thành viên."
+    }
+  },
+  "vendorStatus": {
+    "application": {
+      "pending": "Chờ duyệt",
+      "approved": "Đã duyệt",
+      "rejected": "Từ chối",
+      "cancelled": "Đã hủy"
+    },
+    "member": {
+      "pendingSetup": "Chờ kích hoạt",
+      "active": "Hoạt động"
+    },
+    "vendor": {
+      "active": "Đang hoạt động",
+      "inactive": "Đã tắt"
+    }
+  },
+  "auth": {
+    "errors": {
+      "invalidCredentials": "Email hoặc mật khẩu không đúng.",
+      "emailNotVerified": "Vui lòng xác thực email trước khi đăng nhập.",
+      "forbidden": "Bạn không có quyền thực hiện thao tác này.",
+      "emailAlreadyExists": "Email này đã được đăng ký.",
+      "passwordPolicy": "Mật khẩu chưa đáp ứng chính sách mật khẩu.",
+      "passwordRecentlyUsed": "Hãy chọn mật khẩu chưa được dùng gần đây.",
+      "invalidRequest": "Yêu cầu không hợp lệ hoặc đã hết hạn.",
+      "unexpected": "Đã có lỗi xảy ra. Vui lòng thử lại."
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Mật khẩu",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "currentPassword": "Mật khẩu hiện tại",
+      "newPassword": "Mật khẩu mới",
+      "recoveryToken": "Mã khôi phục",
+      "verificationCode": "Mã xác thực",
+      "otpCode": "Mã OTP"
+    },
+    "validation": {
+      "emailInvalid": "Nhập địa chỉ email hợp lệ.",
+      "passwordRequired": "Vui lòng nhập mật khẩu.",
+      "passwordPolicy": "Dùng ít nhất 12 ký tự, gồm chữ hoa, chữ thường, số và ký tự đặc biệt.",
+      "passwordsMismatch": "Mật khẩu xác nhận không khớp."
+    },
+    "links": {
+      "createAccount": "Tạo tài khoản",
+      "forgotPassword": "Quên mật khẩu?",
+      "backToSignIn": "Quay lại đăng nhập",
+      "haveResetToken": "Tôi đã có mã khôi phục",
+      "alreadyHaveAccount": "Đã có tài khoản?",
+      "continueToSignIn": "Tiếp tục đăng nhập",
+      "backToStorefront": "Về cửa hàng",
+      "editProfile": "Sửa hồ sơ"
+    },
+    "dev": {
+      "code": "Mã development: {{code}}",
+      "token": "Token development: {{token}}",
+      "tokenLabel": "Token development:"
+    },
+    "login": {
+      "eyebrow": "Tài khoản / Đăng nhập",
+      "title": "Chào mừng bạn quay lại.",
+      "lede": "Phiên đăng nhập được bảo vệ bằng cookie bảo mật của Nomori Marketplace. Form tự động lấy mã chống CSRF.",
+      "heading": "Đăng nhập",
+      "rememberMe": "Ghi nhớ đăng nhập",
+      "submit": "Đăng nhập",
+      "submitting": "Đang đăng nhập..."
+    },
+    "otp": {
+      "eyebrow": "Tài khoản / Xác thực",
+      "title": "Kiểm tra hộp thư.",
+      "lede": "Nomori đã gửi mã xác thực 6 chữ số tới email của bạn.",
+      "heading": "Mã OTP qua email",
+      "submit": "Xác thực và đăng nhập",
+      "submitting": "Đang xác thực..."
+    },
+    "register": {
+      "eyebrow": "Tài khoản / Đăng ký",
+      "title": "Chỗ cho những món đáng tìm.",
+      "lede": "Tạo tài khoản Nomori Marketplace để lưu thông tin, đơn hàng và những món bạn yêu thích.",
+      "heading": "Tạo tài khoản",
+      "success": "Đã tạo tài khoản. Hãy mở link xác thực trong email trước khi đăng nhập.",
+      "submit": "Tạo tài khoản",
+      "submitting": "Đang tạo..."
+    },
+    "forgot": {
+      "eyebrow": "Tài khoản / Khôi phục",
+      "title": "Một lối để quay lại.",
+      "lede": "Yêu cầu hướng dẫn khôi phục mật khẩu. Ở môi trường development, API trả về token để thử luồng này trên máy.",
+      "heading": "Quên mật khẩu",
+      "sent": "Nếu email đã được đăng ký, hướng dẫn khôi phục đã được gửi tới hộp thư của bạn.",
+      "submit": "Gửi yêu cầu khôi phục",
+      "submitting": "Đang gửi..."
+    },
+    "reset": {
+      "eyebrow": "Tài khoản / Đặt lại",
+      "title": "Bắt đầu với mật khẩu mới.",
+      "lede": "Dùng link dùng một lần trong email để tạo mật khẩu mới.",
+      "heading": "Đặt lại mật khẩu",
+      "success": "Đã đặt lại mật khẩu. Bạn có thể đăng nhập bằng mật khẩu mới.",
+      "submit": "Đặt lại mật khẩu",
+      "submitting": "Đang đặt lại..."
+    },
+    "verify": {
+      "eyebrow": "Tài khoản / Email",
+      "title": "Xác nhận địa chỉ email.",
+      "lede": "Xác thực email giúp việc khôi phục tài khoản và OTP qua email an toàn hơn.",
+      "verifying": "Đang xác thực...",
+      "successTitle": "Đã xác thực email",
+      "successText": "Địa chỉ email của bạn đã sẵn sàng sử dụng.",
+      "failedTitle": "Xác thực thất bại",
+      "missingToken": "Thiếu mã xác thực."
+    },
+    "confirmEmail": {
+      "eyebrow": "Tài khoản / Email",
+      "title": "Xác nhận địa chỉ email mới.",
+      "lede": "Để bảo mật, bạn sẽ đăng nhập lại bằng email mới sau khi xác nhận.",
+      "confirming": "Đang xác nhận...",
+      "successTitle": "Đã đổi email",
+      "successText": "Email mới đã được xác thực. Vui lòng đăng nhập lại.",
+      "failedTitle": "Xác nhận thất bại",
+      "missingToken": "Thiếu mã xác nhận.",
+      "invalid": "Link không hợp lệ, đã hết hạn, hoặc email này không còn dùng được."
+    },
+    "forbidden": {
+      "eyebrow": "Phân quyền / Bị chặn",
+      "title": "Khu vực này bị giới hạn.",
+      "lede": "Phiên đăng nhập của bạn hợp lệ, nhưng không có quyền cần thiết cho khu vực này.",
+      "heading": "Không có quyền truy cập",
+      "text": "Hãy nhờ quản trị viên cập nhật quyền của bạn, hoặc quay về cửa hàng."
+    },
+    "account": {
+      "eyebrow": "Tài khoản / Phiên đăng nhập",
+      "title": "Tài khoản của bạn.",
+      "sessionHeading": "Phiên đăng nhập",
+      "status": "Trạng thái",
+      "authenticated": "Đã đăng nhập",
+      "guest": "Khách",
+      "notSignedIn": "Chưa đăng nhập",
+      "customerId": "Mã khách hàng",
+      "loadPermissions": "Xem quyền",
+      "permissions": "Quyền",
+      "noPermissions": "Chưa được cấp quyền nào",
+      "permissionsError": "Không tải được danh sách quyền.",
+      "emailSecurity": "Bảo mật email",
+      "emailVerified": "Email đã xác thực",
+      "emailNotVerified": "Email chưa xác thực",
+      "sendVerification": "Gửi email xác thực",
+      "sending": "Đang gửi...",
+      "emailOtp": "OTP qua email",
+      "otpEnabled": "Đang bật",
+      "disableOtp": "Tắt OTP qua email",
+      "startOtpSetup": "Bắt đầu cài đặt OTP",
+      "confirmOtp": "Xác nhận OTP",
+      "changePasswordHeading": "Đổi mật khẩu",
+      "passwordChanged": "Đã đổi mật khẩu. Hãy đăng nhập lại bằng mật khẩu mới.",
+      "changePassword": "Đổi mật khẩu",
+      "changing": "Đang đổi..."
+    }
+  },
+  "customer": {
+    "fields": {
+      "email": "Email",
+      "firstName": "Tên",
+      "lastName": "Họ",
+      "gender": "Giới tính",
+      "dateOfBirth": "Ngày sinh",
+      "phone": "Số điện thoại",
+      "address": "Địa chỉ",
+      "city": "Thành phố",
+      "countryCode": "Mã quốc gia"
+    },
+    "gender": {
+      "none": "Không muốn nêu",
+      "male": "Nam",
+      "female": "Nữ",
+      "other": "Khác",
+      "unspecified": "Không xác định"
+    },
+    "links": {
+      "settings": "Cài đặt khách hàng",
+      "backToAccount": "Quay lại tài khoản",
+      "backToProfile": "Quay lại hồ sơ"
+    },
+    "profile": {
+      "eyebrow": "Khách hàng / Hồ sơ",
+      "title": "Hồ sơ của bạn.",
+      "identityHeading": "Thông tin tài khoản",
+      "verification": "Xác thực",
+      "verified": "Đã xác thực",
+      "notVerified": "Chưa xác thực",
+      "username": "Tên đăng nhập",
+      "notSet": "Chưa đặt",
+      "settingsNote": "Quản lý sổ địa chỉ, tùy chọn và việc đổi email trong Cài đặt khách hàng.",
+      "detailsHeading": "Thông tin cá nhân",
+      "updated": "Đã cập nhật hồ sơ.",
+      "save": "Lưu hồ sơ",
+      "errors": {
+        "forbidden": "Bạn không có quyền xem hồ sơ của mình.",
+        "load": "Không tải được hồ sơ.",
+        "save": "Không cập nhật được hồ sơ."
+      }
+    },
+    "settings": {
+      "eyebrow": "Khách hàng / Cài đặt",
+      "title": "Thông tin đi cùng bạn.",
+      "addressBook": "Sổ địa chỉ",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "noAddresses": "Chưa có địa chỉ nào.",
+      "defaultAddress": "Địa chỉ mặc định",
+      "updateAddress": "Cập nhật địa chỉ",
+      "addAddress": "Thêm địa chỉ",
+      "preferences": "Tùy chọn",
+      "no": "Không",
+      "yes": "Có",
+      "savePreferences": "Lưu tùy chọn",
+      "preferencesSaved": "Đã lưu tùy chọn.",
+      "changeEmail": "Đổi email",
+      "newEmail": "Email mới",
+      "currentPassword": "Mật khẩu hiện tại",
+      "sendConfirmation": "Gửi link xác nhận",
+      "emailChangeSent": "Hãy mở hộp thư của email mới và bấm vào link xác nhận.",
+      "attributes": {
+        "preferred_language": "Ngôn ngữ ưa thích",
+        "marketing_opt_in": "Nhận email tiếp thị"
+      },
+      "errors": {
+        "saveAddress": "Không lưu được địa chỉ.",
+        "savePreferences": "Không lưu được tùy chọn.",
+        "emailChange": "Không gửi được yêu cầu đổi email."
+      }
+    }
+  },
+  "storefront": {
+    "breadcrumb": {
+      "label": "Đường dẫn",
+      "home": "Trang chủ"
+    },
+    "search": {
+      "label": "Tìm sản phẩm",
+      "placeholder": "Tìm trên Nomori",
+      "submit": "Tìm"
+    },
+    "card": {
+      "view": "Xem {{name}}",
+      "rating": "{{rating}} trên 5 sao",
+      "reviews": "{{count}} đánh giá",
+      "addToCart": "Thêm vào giỏ"
+    },
+    "home": {
+      "breadcrumb": "Bộ sưu tập nổi bật",
+      "eyebrow": "Cửa hàng / Nổi bật",
+      "title": "Những món đồ có cá tính.",
+      "lede": "Tìm kiếm, bộ lọc, thẻ sản phẩm, giá, đánh giá và giỏ hàng đều đã có chỗ trong cửa hàng.",
+      "controls": "Công cụ danh mục",
+      "featuredCount": "{{count}} sản phẩm nổi bật",
+      "browseAll": "Xem tất cả",
+      "loading": "Đang tải sản phẩm nổi bật...",
+      "featuredProducts": "Sản phẩm nổi bật",
+      "emptyEyebrow": "Bắt đầu",
+      "emptyTitle": "Chưa có sản phẩm nổi bật.",
+      "emptyStateTitle": "Thêm sản phẩm trong trang quản trị",
+      "emptyStateMessage": "Tạo danh mục, nhà sản xuất và sản phẩm trong trang quản trị catalog, rồi đánh dấu nổi bật để hiện ở đây.",
+      "addedToCart": "{{name}} đã sẵn sàng cho giỏ hàng.",
+      "loadError": "Không tải được sản phẩm nổi bật."
+    },
+    "products": {
+      "breadcrumb": "Sản phẩm",
+      "eyebrow": "Cửa hàng / Danh mục",
+      "title": "Khám phá bộ sưu tập.",
+      "filters": "Bộ lọc",
+      "categories": "Danh mục",
+      "all": "Tất cả",
+      "itemCount": "{{count}} sản phẩm",
+      "sort": "Sắp xếp",
+      "sortLabel": "Sắp xếp sản phẩm",
+      "sortFeatured": "Nổi bật",
+      "sortPriceAsc": "Giá: thấp đến cao",
+      "sortPriceDesc": "Giá: cao đến thấp",
+      "sortNewest": "Mới nhất",
+      "loading": "Đang tải sản phẩm...",
+      "emptyTitle": "Không tìm thấy sản phẩm",
+      "emptyMessage": "Hãy thử đổi bộ lọc hoặc từ khóa tìm kiếm.",
+      "loadError": "Không tải được sản phẩm."
+    },
+    "productDetail": {
+      "loading": "Đang tải sản phẩm...",
+      "inStock": "Còn hàng · còn {{count}} sản phẩm",
+      "outOfStock": "Hết hàng",
+      "description": "Mô tả",
+      "brand": "Thương hiệu",
+      "specifications": "Thông số kỹ thuật",
+      "notFound": "Không tìm thấy sản phẩm.",
+      "loadError": "Không tải được sản phẩm."
+    },
+    "vendors": {
+      "eyebrow": "Marketplace",
+      "title": "Shop",
+      "lede": "Khám phá các shop trên Nomori Marketplace.",
+      "loading": "Đang tải danh sách shop...",
+      "empty": "Hiện chưa có shop nào."
+    },
+    "vendorDetail": {
+      "loading": "Đang tải shop...",
+      "eyebrow": "Shop",
+      "invalid": "Shop không hợp lệ.",
+      "notFound": "Không tìm thấy shop.",
+      "loadError": "Không tải được shop."
+    }
+  },
+  "admin": {
+    "common": {
+      "name": "Tên",
+      "email": "Email",
+      "description": "Mô tả",
+      "displayOrder": "Thứ tự hiển thị",
+      "order": "Thứ tự",
+      "status": "Trạng thái",
+      "created": "Ngày tạo",
+      "active": "Đang hoạt động",
+      "none": "không có",
+      "nameRequired": "Vui lòng nhập tên.",
+      "saveFailed": "Lưu thất bại.",
+      "deleteFailed": "Xóa thất bại."
+    },
+    "home": {
+      "eyebrow": "Quản trị / Nền tảng",
+      "title": "Phần vận hành bắt đầu từ đây.",
+      "lede": "Việc gán role được bảo vệ bằng phân quyền ở backend. Trình duyệt chỉ điều phối thao tác và hiển thị trạng thái từ API.",
+      "statusLabel": "Trạng thái",
+      "statusTitle": "Phân quyền đang hoạt động",
+      "statusText": "API danh mục role và gán role đã sẵn sàng.",
+      "rolesEyebrow": "Phân quyền / Role",
+      "rolesTitle": "Gán role cho khách hàng",
+      "rolesLoading": "Đang tải danh mục role...",
+      "customerId": "Mã khách hàng",
+      "loadRoles": "Xem role hiện tại",
+      "saveRoles": "Lưu role",
+      "rolesSaved": "Đã lưu việc gán role.",
+      "auditEyebrow": "Bảo mật / Audit",
+      "auditTitle": "Sự kiện bảo mật gần đây",
+      "loadAudit": "Xem audit log",
+      "noAudit": "Chưa có sự kiện audit nào.",
+      "auditActor": "Khách hàng {{customer}} · {{ip}}",
+      "system": "hệ thống",
+      "unknownIp": "không rõ IP",
+      "errors": {
+        "rolesForbidden": "Bạn không có quyền xem danh sách role.",
+        "rolesLoad": "Không tải được danh sách role.",
+        "customerNotFound": "Không tìm thấy khách hàng.",
+        "customerRolesLoad": "Không tải được role của khách hàng.",
+        "ownAdminRole": "Bạn không thể gỡ role Administrator của chính mình.",
+        "rolesSave": "Không lưu được role của khách hàng.",
+        "auditForbidden": "Bạn không có quyền xem audit log.",
+        "auditLoad": "Không tải được audit log."
+      }
+    },
+    "attributes": {
+      "eyebrow": "Quản trị / Catalog",
+      "title": "Mẫu thuộc tính sản phẩm.",
+      "lede": "Định nghĩa các mẫu thuộc tính dùng lại được (Màu, Size, Chất liệu…) để gán cho bất kỳ sản phẩm nào.",
+      "heading": "Mẫu thuộc tính",
+      "new": "Mẫu mới",
+      "edit": "Sửa mẫu",
+      "empty": "Chưa có mẫu thuộc tính nào.",
+      "confirmDelete": "Xóa mẫu thuộc tính \"{{name}}\"?"
+    },
+    "vendors": {
+      "eyebrow": "Quản trị / Shop",
+      "title": "Quản lý shop.",
+      "lede": "Tạo hồ sơ shop và liên kết với tài khoản khách hàng. Mỗi khách hàng chỉ thuộc một shop.",
+      "heading": "Shop",
+      "search": "Tìm shop...",
+      "new": "Shop mới",
+      "edit": "Sửa shop",
+      "adminComment": "Ghi chú nội bộ",
+      "empty": "Không tìm thấy shop nào.",
+      "nameEmailRequired": "Vui lòng nhập tên và email.",
+      "confirmDelete": "Xóa shop \"{{name}}\"?"
+    },
+    "specs": {
+      "eyebrow": "Quản trị / Catalog",
+      "title": "Thông số kỹ thuật.",
+      "lede": "Định nghĩa các thông số lọc được, hiển thị trên trang sản phẩm (RAM, Kích thước màn hình, Kết nối…), có thể chia theo nhóm.",
+      "tabGroups": "Nhóm",
+      "tabAttributes": "Thông số",
+      "tabOptions": "Giá trị",
+      "groupsHeading": "Nhóm thông số",
+      "newGroup": "Nhóm mới",
+      "editGroup": "Sửa nhóm",
+      "noGroups": "Chưa có nhóm nào.",
+      "attributesHeading": "Thông số kỹ thuật",
+      "newAttribute": "Thông số mới",
+      "editAttribute": "Sửa thông số",
+      "group": "Nhóm",
+      "noAttributes": "Chưa có thông số nào.",
+      "selectAttribute": "Chọn một thông số...",
+      "newOption": "Giá trị mới",
+      "editOption": "Sửa giá trị",
+      "colorHex": "Màu (hex)",
+      "color": "Màu",
+      "selectAttributeHint": "Chọn một thông số ở trên để quản lý các giá trị của nó.",
+      "noOptions": "Chưa có giá trị nào.",
+      "confirmDeleteGroup": "Xóa nhóm này? Các thông số trong nhóm sẽ không còn thuộc nhóm nào.",
+      "confirmDeleteAttribute": "Xóa thông số này? Mọi giá trị và liên kết với sản phẩm sẽ bị xóa.",
+      "confirmDeleteOption": "Xóa giá trị này?"
+    },
+    "catalog": {
+      "eyebrow": "Quản trị / Catalog",
+      "title": "Quản lý catalog sản phẩm.",
+      "lede": "Tạo và xuất bản danh mục, sản phẩm và nhà sản xuất. Mục chưa xuất bản bị ẩn khỏi cửa hàng nhưng vẫn sửa được ở đây.",
+      "categories": "Danh mục",
+      "products": "Sản phẩm",
+      "manufacturers": "Nhà sản xuất",
+      "newCategory": "Danh mục mới",
+      "editCategory": "Sửa danh mục",
+      "parentCategoryId": "Mã danh mục cha",
+      "published": "Đã xuất bản",
+      "showOnHomepage": "Hiện trên trang chủ",
+      "loadingCategories": "Đang tải danh mục...",
+      "noCategories": "Chưa có danh mục nào.",
+      "unpublished": "Chưa xuất bản",
+      "parent": "cha #{{id}}",
+      "searchProducts": "Tìm sản phẩm...",
+      "newProduct": "Sản phẩm mới",
+      "editProduct": "Sửa sản phẩm",
+      "shortDescription": "Mô tả ngắn",
+      "fullDescription": "Mô tả chi tiết",
+      "price": "Giá",
+      "compareAtPrice": "Giá so sánh",
+      "stock": "Tồn kho",
+      "categoryIds": "Mã danh mục",
+      "manufacturerIds": "Mã nhà sản xuất",
+      "commaSeparated": "cách nhau bằng dấu phẩy",
+      "loadingProducts": "Đang tải sản phẩm...",
+      "noProducts": "Chưa có sản phẩm nào.",
+      "stockValue": "tồn kho: {{count}}",
+      "newManufacturer": "Nhà sản xuất mới",
+      "editManufacturer": "Sửa nhà sản xuất",
+      "loadingManufacturers": "Đang tải nhà sản xuất...",
+      "noManufacturers": "Chưa có nhà sản xuất nào.",
+      "confirmDeleteCategory": "Xóa danh mục này?",
+      "confirmDeleteProduct": "Xóa sản phẩm này?",
+      "confirmDeleteManufacturer": "Xóa nhà sản xuất này?",
+      "errors": {
+        "loadCategories": "Không tải được danh mục.",
+        "deleteCategory": "Không xóa được danh mục.",
+        "loadProducts": "Không tải được sản phẩm.",
+        "loadProduct": "Không tải được sản phẩm.",
+        "deleteProduct": "Không xóa được sản phẩm.",
+        "loadManufacturers": "Không tải được nhà sản xuất.",
+        "deleteManufacturer": "Không xóa được nhà sản xuất."
+      }
+    }
+  }
+}

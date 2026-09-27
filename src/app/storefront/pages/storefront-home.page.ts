@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
@@ -10,31 +11,32 @@ import { ProductResponse } from '../../core/catalog/catalog.models';
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, EmptyStateComponent, ProductCardComponent, RouterLink, SearchBoxComponent],
+  imports: [BreadcrumbComponent, EmptyStateComponent, ProductCardComponent, RouterLink, SearchBoxComponent, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <div class="page-heading">
-      <app-breadcrumb [items]="[{ label: 'Featured collection' }]" />
+      <app-breadcrumb [items]="[{ label: t('storefront.home.breadcrumb') }]" />
       <div class="heading-row">
         <div>
-          <div class="eyebrow">Storefront / Component specimen</div>
-          <h1>Objects with a point of view.</h1>
-          <p class="lede">The marketplace surface is ready for catalog data. Search, filters, cards, pricing, reviews and cart actions have a shared home.</p>
+          <div class="eyebrow">{{ t('storefront.home.eyebrow') }}</div>
+          <h1>{{ t('storefront.home.title') }}</h1>
+          <p class="lede">{{ t('storefront.home.lede') }}</p>
         </div>
         <app-search-box (searched)="onSearch($event)" />
       </div>
     </div>
 
-    <section class="catalog-toolbar" aria-label="Catalog controls">
-      <span>{{ products.length }} featured items</span>
+    <section class="catalog-toolbar" [attr.aria-label]="t('storefront.home.controls')">
+      <span>{{ t('storefront.home.featuredCount', { count: products.length }) }}</span>
       <div class="toolbar-actions">
-        <a routerLink="/storefront/products" class="filter-button">Browse all <span aria-hidden="true">→</span></a>
+        <a routerLink="/storefront/products" class="filter-button">{{ t('storefront.home.browseAll') }} <span aria-hidden="true">→</span></a>
       </div>
     </section>
 
-    @if (loading) { <p class="state">Loading featured products...</p> }
-    @if (error) { <p class="state state-error" role="alert">{{ error }}</p> }
+    @if (loading) { <p class="state">{{ t('storefront.home.loading') }}</p> }
+    @if (error) { <p class="state state-error" role="alert">{{ t(error) }}</p> }
 
-    <section class="product-grid" aria-label="Featured products">
+    <section class="product-grid" [attr.aria-label]="t('storefront.home.featuredProducts')">
       @for (product of products; track product.id) {
         <app-product-card [product]="product" (addToCart)="onAddToCart($event)" />
       }
@@ -42,14 +44,15 @@ import { ProductResponse } from '../../core/catalog/catalog.models';
 
     @if (!loading && products.length === 0 && !error) {
       <section class="next-pattern" aria-labelledby="next-pattern-title">
-        <div><div class="eyebrow">Get started</div><h2 id="next-pattern-title">No featured products yet.</h2></div>
-        <app-empty-state title="Add products in the admin panel" message="Create categories, manufacturers and products in the admin catalog, then mark them as featured to display them here." mark="00" />
+        <div><div class="eyebrow">{{ t('storefront.home.emptyEyebrow') }}</div><h2 id="next-pattern-title">{{ t('storefront.home.emptyTitle') }}</h2></div>
+        <app-empty-state [title]="t('storefront.home.emptyStateTitle')" [message]="t('storefront.home.emptyStateMessage')" mark="00" />
       </section>
     }
 
     @if (lastAddedProduct) {
-      <div class="toast" role="status">{{ lastAddedProduct.name }} is ready for the cart facade.</div>
+      <div class="toast" role="status">{{ t('storefront.home.addedToCart', { name: lastAddedProduct.name }) }}</div>
     }
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -96,7 +99,7 @@ export class StorefrontHomePage {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Unable to load featured products.';
+        this.error = 'storefront.home.loadError';
         this.loading = false;
       }
     });

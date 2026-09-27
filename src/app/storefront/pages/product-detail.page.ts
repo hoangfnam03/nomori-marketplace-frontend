@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { ProductDetailResponse } from '../../core/catalog/catalog.models';
@@ -8,18 +9,19 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, RouterLink],
+  imports: [BreadcrumbComponent, RouterLink, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     @if (loading) {
-      <p class="state">Loading product...</p>
+      <p class="state">{{ t('storefront.productDetail.loading') }}</p>
     }
     @if (error) {
-      <p class="state state-error" role="alert">{{ error }}</p>
+      <p class="state state-error" role="alert">{{ t(error) }}</p>
     }
     @if (!loading && !error && detail) {
       <div class="page-heading">
         <app-breadcrumb [items]="[
-          { label: 'Products', url: '/storefront/products' },
+          { label: t('storefront.products.breadcrumb'), url: '/storefront/products' },
           { label: detail.product.name }
         ]" />
       </div>
@@ -48,9 +50,9 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 
           <div class="stock-info">
             @if (detail.product.stockQuantity > 0) {
-              <span class="in-stock">In stock · {{ detail.product.stockQuantity }} available</span>
+              <span class="in-stock">{{ t('storefront.productDetail.inStock', { count: detail.product.stockQuantity }) }}</span>
             } @else {
-              <span class="out-of-stock">Out of stock</span>
+              <span class="out-of-stock">{{ t('storefront.productDetail.outOfStock') }}</span>
             }
           </div>
 
@@ -80,33 +82,33 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
             </div>
           }
 
-          <button type="button" class="add-to-cart" [disabled]="detail.product.stockQuantity === 0">Add to cart</button>
+          <button type="button" class="add-to-cart" [disabled]="detail.product.stockQuantity === 0">{{ t('storefront.card.addToCart') }}</button>
 
           @if (detail.fullDescription) {
             <div class="full-desc">
-              <div class="section-label">Description</div>
+              <div class="section-label">{{ t('storefront.productDetail.description') }}</div>
               <p>{{ detail.fullDescription }}</p>
             </div>
           }
 
           @if (detail.manufacturers.length > 0) {
             <div class="meta-section">
-              <span class="meta-label">Brand</span>
+              <span class="meta-label">{{ t('storefront.productDetail.brand') }}</span>
               <span>{{ detail.manufacturers[0].name }}</span>
             </div>
           }
 
           @if (detail.categories.length > 0) {
             <div class="meta-section">
-              <span class="meta-label">Categories</span>
+              <span class="meta-label">{{ t('storefront.products.categories') }}</span>
               <span>{{ categoryNames(detail) }}</span>
             </div>
           }
 
           @if (tags.length > 0) {
             <div class="tags-section">
-              @for (t of tags; track t.id) {
-                <span class="tag">{{ t.name }}</span>
+              @for (tag of tags; track tag.id) {
+                <span class="tag">{{ tag.name }}</span>
               }
             </div>
           }
@@ -115,7 +117,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 
       @if (specs && (specs.groups.length > 0 || specs.ungrouped.length > 0)) {
         <div class="specs-section">
-          <h2 class="specs-title">Specifications</h2>
+          <h2 class="specs-title">{{ t('storefront.productDetail.specifications') }}</h2>
 
           @if (specs.ungrouped.length > 0) {
             <table class="specs-table">
@@ -156,6 +158,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
         </div>
       }
     }
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -227,7 +230,7 @@ export class ProductDetailPage implements OnInit {
         this.api.getProductTags(id).subscribe({ next: t => { this.tags = t; }, error: () => {} });
       },
       error: err => {
-        this.error = err.status === 404 ? 'Product not found.' : 'Unable to load product.';
+        this.error = err.status === 404 ? 'storefront.productDetail.notFound' : 'storefront.productDetail.loadError';
         this.loading = false;
       }
     });

@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CatalogApiService, SaveCategoryRequest, SaveManufacturerRequest, SaveProductRequest } from '../../core/catalog/catalog-api.service';
 import {
   AdminCategoryResponse, AdminManufacturerResponse,
@@ -40,64 +41,65 @@ interface ManufacturerForm {
 
 @Component({
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <section class="admin-intro" aria-labelledby="catalog-title">
       <div>
-        <div class="eyebrow">Admin / Catalog</div>
-        <h1 id="catalog-title">Manage the product catalog.</h1>
-        <p>Create and publish categories, products and manufacturers. Unpublished items are hidden from the storefront but remain editable here.</p>
+        <div class="eyebrow">{{ t('admin.catalog.eyebrow') }}</div>
+        <h1 id="catalog-title">{{ t('admin.catalog.title') }}</h1>
+        <p>{{ t('admin.catalog.lede') }}</p>
       </div>
     </section>
 
     <div class="tab-bar" role="tablist">
-      <button role="tab" [class.active]="tab === 'categories'" (click)="switchTab('categories')">Categories</button>
-      <button role="tab" [class.active]="tab === 'products'" (click)="switchTab('products')">Products</button>
-      <button role="tab" [class.active]="tab === 'manufacturers'" (click)="switchTab('manufacturers')">Manufacturers</button>
+      <button role="tab" [class.active]="tab === 'categories'" (click)="switchTab('categories')">{{ t('admin.catalog.categories') }}</button>
+      <button role="tab" [class.active]="tab === 'products'" (click)="switchTab('products')">{{ t('admin.catalog.products') }}</button>
+      <button role="tab" [class.active]="tab === 'manufacturers'" (click)="switchTab('manufacturers')">{{ t('admin.catalog.manufacturers') }}</button>
     </div>
 
     <!-- =========== CATEGORIES =========== -->
     @if (tab === 'categories') {
       <div class="panel" role="tabpanel">
         <div class="panel-header">
-          <h2>Categories</h2>
-          <button type="button" class="new-btn" (click)="openCategoryForm()">+ New category</button>
+          <h2>{{ t('admin.catalog.categories') }}</h2>
+          <button type="button" class="new-btn" (click)="openCategoryForm()">+ {{ t('admin.catalog.newCategory') }}</button>
         </div>
 
         @if (catFormOpen) {
-          <form class="inline-form" (ngSubmit)="submitCategory()" [attr.aria-label]="(editingCategoryId ? 'Edit' : 'Create') + ' category'">
-            <div class="form-title">{{ editingCategoryId ? 'Edit category' : 'New category' }}</div>
-            @if (catError) { <p class="form-error" role="alert">{{ catError }}</p> }
-            <label>Name <input type="text" [(ngModel)]="catForm.name" name="name" required /></label>
-            <label>Description <textarea [(ngModel)]="catForm.description" name="description" rows="2"></textarea></label>
-            <label>Parent category ID <input type="number" [(ngModel)]="catForm.parentCategoryId" name="parentCategoryId" min="0" /></label>
+          <form class="inline-form" (ngSubmit)="submitCategory()" [attr.aria-label]="editingCategoryId ? t('admin.catalog.editCategory') : t('admin.catalog.newCategory')">
+            <div class="form-title">{{ editingCategoryId ? t('admin.catalog.editCategory') : t('admin.catalog.newCategory') }}</div>
+            @if (catError) { <p class="form-error" role="alert">{{ t(catError) }}</p> }
+            <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="catForm.name" name="name" required /></label>
+            <label>{{ t('admin.common.description') }} <textarea [(ngModel)]="catForm.description" name="description" rows="2"></textarea></label>
+            <label>{{ t('admin.catalog.parentCategoryId') }} <input type="number" [(ngModel)]="catForm.parentCategoryId" name="parentCategoryId" min="0" /></label>
             <div class="form-row">
-              <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.published" name="published" /> Published</label>
-              <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.showOnHomepage" name="showOnHomepage" /> Show on homepage</label>
-              <label>Display order <input type="number" [(ngModel)]="catForm.displayOrder" name="displayOrder" style="width:80px" /></label>
+              <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.published" name="published" /> {{ t('admin.catalog.published') }}</label>
+              <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.showOnHomepage" name="showOnHomepage" /> {{ t('admin.catalog.showOnHomepage') }}</label>
+              <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="catForm.displayOrder" name="displayOrder" style="width:80px" /></label>
             </div>
             <div class="form-actions">
-              <button type="submit" [disabled]="catSaving">{{ catSaving ? 'Saving...' : 'Save' }}</button>
-              <button type="button" class="cancel-btn" (click)="closeCategoryForm()">Cancel</button>
+              <button type="submit" [disabled]="catSaving">{{ catSaving ? t('common.states.saving') : t('common.actions.save') }}</button>
+              <button type="button" class="cancel-btn" (click)="closeCategoryForm()">{{ t('common.actions.cancel') }}</button>
             </div>
           </form>
         }
 
-        @if (catLoading) { <p class="state">Loading categories...</p> }
-        @if (catLoadError) { <p class="state state-error" role="alert">{{ catLoadError }}</p> }
-        @if (!catLoading && categories.length === 0 && !catLoadError) { <p class="state">No categories yet.</p> }
+        @if (catLoading) { <p class="state">{{ t('admin.catalog.loadingCategories') }}</p> }
+        @if (catLoadError) { <p class="state state-error" role="alert">{{ t(catLoadError) }}</p> }
+        @if (!catLoading && categories.length === 0 && !catLoadError) { <p class="state">{{ t('admin.catalog.noCategories') }}</p> }
 
         <div class="item-list">
           @for (cat of categories; track cat.id) {
             <div class="item-row">
               <div class="item-info">
                 <span class="item-name">{{ cat.name }}</span>
-                @if (!cat.published) { <span class="badge-unpub">Unpublished</span> }
-                @if (cat.parentCategoryId) { <span class="item-meta">parent #{{ cat.parentCategoryId }}</span> }
+                @if (!cat.published) { <span class="badge-unpub">{{ t('admin.catalog.unpublished') }}</span> }
+                @if (cat.parentCategoryId) { <span class="item-meta">{{ t('admin.catalog.parent', { id: cat.parentCategoryId }) }}</span> }
               </div>
               <div class="item-actions">
-                <button type="button" (click)="editCategory(cat)">Edit</button>
-                <button type="button" class="del-btn" (click)="deleteCategory(cat.id)">Delete</button>
+                <button type="button" (click)="editCategory(cat)">{{ t('common.actions.edit') }}</button>
+                <button type="button" class="del-btn" (click)="deleteCategory(cat.id)">{{ t('common.actions.delete') }}</button>
               </div>
             </div>
           }
@@ -105,9 +107,9 @@ interface ManufacturerForm {
 
         @if (catTotalPages > 1) {
           <div class="pagination">
-            <button type="button" [disabled]="catPage <= 1" (click)="loadCategories(catPage - 1)">← Prev</button>
+            <button type="button" [disabled]="catPage <= 1" (click)="loadCategories(catPage - 1)">← {{ t('common.pagination.prev') }}</button>
             <span>{{ catPage }} / {{ catTotalPages }}</span>
-            <button type="button" [disabled]="catPage >= catTotalPages" (click)="loadCategories(catPage + 1)">Next →</button>
+            <button type="button" [disabled]="catPage >= catTotalPages" (click)="loadCategories(catPage + 1)">{{ t('common.pagination.next') }} →</button>
           </div>
         }
       </div>
@@ -117,56 +119,56 @@ interface ManufacturerForm {
     @if (tab === 'products') {
       <div class="panel" role="tabpanel">
         <div class="panel-header">
-          <h2>Products</h2>
+          <h2>{{ t('admin.catalog.products') }}</h2>
           <div class="panel-header-right">
-            <input type="text" class="search-input" placeholder="Search products..." [(ngModel)]="prodSearch" (keydown.enter)="loadProducts(1)" />
-            <button type="button" (click)="loadProducts(1)">Search</button>
-            <button type="button" class="new-btn" (click)="openProductForm()">+ New product</button>
+            <input type="text" class="search-input" [placeholder]="t('admin.catalog.searchProducts')" [(ngModel)]="prodSearch" (keydown.enter)="loadProducts(1)" />
+            <button type="button" (click)="loadProducts(1)">{{ t('common.actions.search') }}</button>
+            <button type="button" class="new-btn" (click)="openProductForm()">+ {{ t('admin.catalog.newProduct') }}</button>
           </div>
         </div>
 
         @if (prodFormOpen) {
-          <form class="inline-form" (ngSubmit)="submitProduct()" [attr.aria-label]="(editingProductId ? 'Edit' : 'Create') + ' product'">
-            <div class="form-title">{{ editingProductId ? 'Edit product' : 'New product' }}</div>
-            @if (prodError) { <p class="form-error" role="alert">{{ prodError }}</p> }
-            <label>Name <input type="text" [(ngModel)]="prodForm.name" name="name" required /></label>
-            <label>Short description <textarea [(ngModel)]="prodForm.shortDescription" name="shortDescription" rows="2"></textarea></label>
-            <label>Full description <textarea [(ngModel)]="prodForm.fullDescription" name="fullDescription" rows="4"></textarea></label>
+          <form class="inline-form" (ngSubmit)="submitProduct()" [attr.aria-label]="editingProductId ? t('admin.catalog.editProduct') : t('admin.catalog.newProduct')">
+            <div class="form-title">{{ editingProductId ? t('admin.catalog.editProduct') : t('admin.catalog.newProduct') }}</div>
+            @if (prodError) { <p class="form-error" role="alert">{{ t(prodError) }}</p> }
+            <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="prodForm.name" name="name" required /></label>
+            <label>{{ t('admin.catalog.shortDescription') }} <textarea [(ngModel)]="prodForm.shortDescription" name="shortDescription" rows="2"></textarea></label>
+            <label>{{ t('admin.catalog.fullDescription') }} <textarea [(ngModel)]="prodForm.fullDescription" name="fullDescription" rows="4"></textarea></label>
             <div class="form-row">
-              <label>Price <input type="number" [(ngModel)]="prodForm.price" name="price" min="0" step="0.01" /></label>
-              <label>Compare at price <input type="number" [(ngModel)]="prodForm.oldPrice" name="oldPrice" min="0" step="0.01" /></label>
-              <label>Stock <input type="number" [(ngModel)]="prodForm.stockQuantity" name="stockQuantity" min="0" /></label>
+              <label>{{ t('admin.catalog.price') }} <input type="number" [(ngModel)]="prodForm.price" name="price" min="0" step="0.01" /></label>
+              <label>{{ t('admin.catalog.compareAtPrice') }} <input type="number" [(ngModel)]="prodForm.oldPrice" name="oldPrice" min="0" step="0.01" /></label>
+              <label>{{ t('admin.catalog.stock') }} <input type="number" [(ngModel)]="prodForm.stockQuantity" name="stockQuantity" min="0" /></label>
             </div>
-            <label>Category IDs <small>(comma-separated)</small> <input type="text" [(ngModel)]="prodForm.categoryIds" name="categoryIds" placeholder="1,2,3" /></label>
-            <label>Manufacturer IDs <small>(comma-separated)</small> <input type="text" [(ngModel)]="prodForm.manufacturerIds" name="manufacturerIds" placeholder="1,2" /></label>
+            <label>{{ t('admin.catalog.categoryIds') }} <small>({{ t('admin.catalog.commaSeparated') }})</small> <input type="text" [(ngModel)]="prodForm.categoryIds" name="categoryIds" placeholder="1,2,3" /></label>
+            <label>{{ t('admin.catalog.manufacturerIds') }} <small>({{ t('admin.catalog.commaSeparated') }})</small> <input type="text" [(ngModel)]="prodForm.manufacturerIds" name="manufacturerIds" placeholder="1,2" /></label>
             <div class="form-row">
-              <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.published" name="published" /> Published</label>
-              <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.showOnHomepage" name="showOnHomepage" /> Show on homepage</label>
-              <label>Display order <input type="number" [(ngModel)]="prodForm.displayOrder" name="displayOrder" style="width:80px" /></label>
+              <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.published" name="published" /> {{ t('admin.catalog.published') }}</label>
+              <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.showOnHomepage" name="showOnHomepage" /> {{ t('admin.catalog.showOnHomepage') }}</label>
+              <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="prodForm.displayOrder" name="displayOrder" style="width:80px" /></label>
             </div>
             <div class="form-actions">
-              <button type="submit" [disabled]="prodSaving">{{ prodSaving ? 'Saving...' : 'Save' }}</button>
-              <button type="button" class="cancel-btn" (click)="closeProductForm()">Cancel</button>
+              <button type="submit" [disabled]="prodSaving">{{ prodSaving ? t('common.states.saving') : t('common.actions.save') }}</button>
+              <button type="button" class="cancel-btn" (click)="closeProductForm()">{{ t('common.actions.cancel') }}</button>
             </div>
           </form>
         }
 
-        @if (prodLoading) { <p class="state">Loading products...</p> }
-        @if (prodLoadError) { <p class="state state-error" role="alert">{{ prodLoadError }}</p> }
-        @if (!prodLoading && products.length === 0 && !prodLoadError) { <p class="state">No products yet.</p> }
+        @if (prodLoading) { <p class="state">{{ t('admin.catalog.loadingProducts') }}</p> }
+        @if (prodLoadError) { <p class="state state-error" role="alert">{{ t(prodLoadError) }}</p> }
+        @if (!prodLoading && products.length === 0 && !prodLoadError) { <p class="state">{{ t('admin.catalog.noProducts') }}</p> }
 
         <div class="item-list">
           @for (prod of products; track prod.id) {
             <div class="item-row">
               <div class="item-info">
                 <span class="item-name">{{ prod.name }}</span>
-                @if (!prod.published) { <span class="badge-unpub">Unpublished</span> }
+                @if (!prod.published) { <span class="badge-unpub">{{ t('admin.catalog.unpublished') }}</span> }
                 <span class="item-meta">{{ formatPrice(prod.price) }}</span>
-                <span class="item-meta">stock: {{ prod.stockQuantity }}</span>
+                <span class="item-meta">{{ t('admin.catalog.stockValue', { count: prod.stockQuantity }) }}</span>
               </div>
               <div class="item-actions">
-                <button type="button" (click)="editProduct(prod)">Edit</button>
-                <button type="button" class="del-btn" (click)="deleteProduct(prod.id)">Delete</button>
+                <button type="button" (click)="editProduct(prod)">{{ t('common.actions.edit') }}</button>
+                <button type="button" class="del-btn" (click)="deleteProduct(prod.id)">{{ t('common.actions.delete') }}</button>
               </div>
             </div>
           }
@@ -174,9 +176,9 @@ interface ManufacturerForm {
 
         @if (prodTotalPages > 1) {
           <div class="pagination">
-            <button type="button" [disabled]="prodPage <= 1" (click)="loadProducts(prodPage - 1)">← Prev</button>
+            <button type="button" [disabled]="prodPage <= 1" (click)="loadProducts(prodPage - 1)">← {{ t('common.pagination.prev') }}</button>
             <span>{{ prodPage }} / {{ prodTotalPages }}</span>
-            <button type="button" [disabled]="prodPage >= prodTotalPages" (click)="loadProducts(prodPage + 1)">Next →</button>
+            <button type="button" [disabled]="prodPage >= prodTotalPages" (click)="loadProducts(prodPage + 1)">{{ t('common.pagination.next') }} →</button>
           </div>
         }
       </div>
@@ -186,41 +188,41 @@ interface ManufacturerForm {
     @if (tab === 'manufacturers') {
       <div class="panel" role="tabpanel">
         <div class="panel-header">
-          <h2>Manufacturers</h2>
-          <button type="button" class="new-btn" (click)="openManufacturerForm()">+ New manufacturer</button>
+          <h2>{{ t('admin.catalog.manufacturers') }}</h2>
+          <button type="button" class="new-btn" (click)="openManufacturerForm()">+ {{ t('admin.catalog.newManufacturer') }}</button>
         </div>
 
         @if (mfrFormOpen) {
-          <form class="inline-form" (ngSubmit)="submitManufacturer()" [attr.aria-label]="(editingManufacturerId ? 'Edit' : 'Create') + ' manufacturer'">
-            <div class="form-title">{{ editingManufacturerId ? 'Edit manufacturer' : 'New manufacturer' }}</div>
-            @if (mfrError) { <p class="form-error" role="alert">{{ mfrError }}</p> }
-            <label>Name <input type="text" [(ngModel)]="mfrForm.name" name="name" required /></label>
-            <label>Description <textarea [(ngModel)]="mfrForm.description" name="description" rows="2"></textarea></label>
+          <form class="inline-form" (ngSubmit)="submitManufacturer()" [attr.aria-label]="editingManufacturerId ? t('admin.catalog.editManufacturer') : t('admin.catalog.newManufacturer')">
+            <div class="form-title">{{ editingManufacturerId ? t('admin.catalog.editManufacturer') : t('admin.catalog.newManufacturer') }}</div>
+            @if (mfrError) { <p class="form-error" role="alert">{{ t(mfrError) }}</p> }
+            <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="mfrForm.name" name="name" required /></label>
+            <label>{{ t('admin.common.description') }} <textarea [(ngModel)]="mfrForm.description" name="description" rows="2"></textarea></label>
             <div class="form-row">
-              <label class="check-label"><input type="checkbox" [(ngModel)]="mfrForm.published" name="published" /> Published</label>
-              <label>Display order <input type="number" [(ngModel)]="mfrForm.displayOrder" name="displayOrder" style="width:80px" /></label>
+              <label class="check-label"><input type="checkbox" [(ngModel)]="mfrForm.published" name="published" /> {{ t('admin.catalog.published') }}</label>
+              <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="mfrForm.displayOrder" name="displayOrder" style="width:80px" /></label>
             </div>
             <div class="form-actions">
-              <button type="submit" [disabled]="mfrSaving">{{ mfrSaving ? 'Saving...' : 'Save' }}</button>
-              <button type="button" class="cancel-btn" (click)="closeManufacturerForm()">Cancel</button>
+              <button type="submit" [disabled]="mfrSaving">{{ mfrSaving ? t('common.states.saving') : t('common.actions.save') }}</button>
+              <button type="button" class="cancel-btn" (click)="closeManufacturerForm()">{{ t('common.actions.cancel') }}</button>
             </div>
           </form>
         }
 
-        @if (mfrLoading) { <p class="state">Loading manufacturers...</p> }
-        @if (mfrLoadError) { <p class="state state-error" role="alert">{{ mfrLoadError }}</p> }
-        @if (!mfrLoading && manufacturers.length === 0 && !mfrLoadError) { <p class="state">No manufacturers yet.</p> }
+        @if (mfrLoading) { <p class="state">{{ t('admin.catalog.loadingManufacturers') }}</p> }
+        @if (mfrLoadError) { <p class="state state-error" role="alert">{{ t(mfrLoadError) }}</p> }
+        @if (!mfrLoading && manufacturers.length === 0 && !mfrLoadError) { <p class="state">{{ t('admin.catalog.noManufacturers') }}</p> }
 
         <div class="item-list">
           @for (mfr of manufacturers; track mfr.id) {
             <div class="item-row">
               <div class="item-info">
                 <span class="item-name">{{ mfr.name }}</span>
-                @if (!mfr.published) { <span class="badge-unpub">Unpublished</span> }
+                @if (!mfr.published) { <span class="badge-unpub">{{ t('admin.catalog.unpublished') }}</span> }
               </div>
               <div class="item-actions">
-                <button type="button" (click)="editManufacturer(mfr)">Edit</button>
-                <button type="button" class="del-btn" (click)="deleteManufacturer(mfr.id)">Delete</button>
+                <button type="button" (click)="editManufacturer(mfr)">{{ t('common.actions.edit') }}</button>
+                <button type="button" class="del-btn" (click)="deleteManufacturer(mfr.id)">{{ t('common.actions.delete') }}</button>
               </div>
             </div>
           }
@@ -228,13 +230,14 @@ interface ManufacturerForm {
 
         @if (mfrTotalPages > 1) {
           <div class="pagination">
-            <button type="button" [disabled]="mfrPage <= 1" (click)="loadManufacturers(mfrPage - 1)">← Prev</button>
+            <button type="button" [disabled]="mfrPage <= 1" (click)="loadManufacturers(mfrPage - 1)">← {{ t('common.pagination.prev') }}</button>
             <span>{{ mfrPage }} / {{ mfrTotalPages }}</span>
-            <button type="button" [disabled]="mfrPage >= mfrTotalPages" (click)="loadManufacturers(mfrPage + 1)">Next →</button>
+            <button type="button" [disabled]="mfrPage >= mfrTotalPages" (click)="loadManufacturers(mfrPage + 1)">{{ t('common.pagination.next') }} →</button>
           </div>
         }
       </div>
     }
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -285,6 +288,7 @@ interface ManufacturerForm {
 })
 export class AdminCatalogPage {
   private readonly api = inject(CatalogApiService);
+  private readonly transloco = inject(TranslocoService);
 
   tab: Tab = 'categories';
 
@@ -343,7 +347,7 @@ export class AdminCatalogPage {
     this.catLoadError = null;
     this.api.adminGetCategories(page).subscribe({
       next: r => { this.categories = r.items; this.catPage = r.page; this.catTotalPages = r.totalPages; this.catLoading = false; },
-      error: () => { this.catLoadError = 'Unable to load categories.'; this.catLoading = false; }
+      error: () => { this.catLoadError = 'admin.catalog.errors.loadCategories'; this.catLoading = false; }
     });
   }
 
@@ -387,15 +391,15 @@ export class AdminCatalogPage {
       : this.api.adminCreateCategory(req);
     obs.subscribe({
       next: () => { this.catSaving = false; this.closeCategoryForm(); this.loadCategories(this.catPage); },
-      error: err => { this.catError = extractError(err, 'Save failed.'); this.catSaving = false; }
+      error: err => { this.catError = extractError(err, 'admin.common.saveFailed'); this.catSaving = false; }
     });
   }
 
   deleteCategory(id: number) {
-    if (!confirm('Delete this category?')) return;
+    if (!confirm(this.transloco.translate('admin.catalog.confirmDeleteCategory'))) return;
     this.api.adminDeleteCategory(id).subscribe({
       next: () => this.loadCategories(this.catPage),
-      error: () => alert('Unable to delete category.')
+      error: () => alert(this.transloco.translate('admin.catalog.errors.deleteCategory'))
     });
   }
 
@@ -406,7 +410,7 @@ export class AdminCatalogPage {
     this.prodLoadError = null;
     this.api.adminGetProducts(page, 50, this.prodSearch || null).subscribe({
       next: r => { this.products = r.items; this.prodPage = r.page; this.prodTotalPages = r.totalPages; this.prodLoading = false; },
-      error: () => { this.prodLoadError = 'Unable to load products.'; this.prodLoading = false; }
+      error: () => { this.prodLoadError = 'admin.catalog.errors.loadProducts'; this.prodLoading = false; }
     });
   }
 
@@ -441,7 +445,7 @@ export class AdminCatalogPage {
         this.prodSaving = false;
         window.scrollTo({ top: 0, behavior: 'smooth' });
       },
-      error: () => { this.prodSaving = false; alert('Unable to load product.'); }
+      error: () => { this.prodSaving = false; alert(this.transloco.translate('admin.catalog.errors.loadProduct')); }
     });
   }
 
@@ -464,15 +468,15 @@ export class AdminCatalogPage {
       : this.api.adminCreateProduct(req);
     obs.subscribe({
       next: () => { this.prodSaving = false; this.closeProductForm(); this.loadProducts(this.prodPage); },
-      error: err => { this.prodError = extractError(err, 'Save failed.'); this.prodSaving = false; }
+      error: err => { this.prodError = extractError(err, 'admin.common.saveFailed'); this.prodSaving = false; }
     });
   }
 
   deleteProduct(id: number) {
-    if (!confirm('Delete this product?')) return;
+    if (!confirm(this.transloco.translate('admin.catalog.confirmDeleteProduct'))) return;
     this.api.adminDeleteProduct(id).subscribe({
       next: () => this.loadProducts(this.prodPage),
-      error: () => alert('Unable to delete product.')
+      error: () => alert(this.transloco.translate('admin.catalog.errors.deleteProduct'))
     });
   }
 
@@ -483,7 +487,7 @@ export class AdminCatalogPage {
     this.mfrLoadError = null;
     this.api.adminGetManufacturers(page).subscribe({
       next: r => { this.manufacturers = r.items; this.mfrPage = r.page; this.mfrTotalPages = r.totalPages; this.mfrLoading = false; },
-      error: () => { this.mfrLoadError = 'Unable to load manufacturers.'; this.mfrLoading = false; }
+      error: () => { this.mfrLoadError = 'admin.catalog.errors.loadManufacturers'; this.mfrLoading = false; }
     });
   }
 
@@ -524,15 +528,15 @@ export class AdminCatalogPage {
       : this.api.adminCreateManufacturer(req);
     obs.subscribe({
       next: () => { this.mfrSaving = false; this.closeManufacturerForm(); this.loadManufacturers(this.mfrPage); },
-      error: err => { this.mfrError = extractError(err, 'Save failed.'); this.mfrSaving = false; }
+      error: err => { this.mfrError = extractError(err, 'admin.common.saveFailed'); this.mfrSaving = false; }
     });
   }
 
   deleteManufacturer(id: number) {
-    if (!confirm('Delete this manufacturer?')) return;
+    if (!confirm(this.transloco.translate('admin.catalog.confirmDeleteManufacturer'))) return;
     this.api.adminDeleteManufacturer(id).subscribe({
       next: () => this.loadManufacturers(this.mfrPage),
-      error: () => alert('Unable to delete manufacturer.')
+      error: () => alert(this.transloco.translate('admin.catalog.errors.deleteManufacturer'))
     });
   }
 
@@ -557,9 +561,7 @@ function parseIds(value: string): number[] {
   return value.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n) && n > 0);
 }
 
-function extractError(err: { error?: { errors?: Record<string, string[]> } }, fallback: string): string {
-  if (err?.error?.errors) {
-    return Object.values(err.error.errors).flat().join(' ');
-  }
-  return fallback;
+/** Returns a translation key for a failed save. */
+function extractError(err: { status?: number }, fallbackKey: string): string {
+  return err?.status === 400 ? 'errors.badRequest' : fallbackKey;
 }

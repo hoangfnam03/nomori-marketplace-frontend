@@ -134,14 +134,18 @@ export class AuthFacade {
     );
   }
 
+  /** Returns a translation key (see src/app/i18n/*.json, group auth.errors). */
   private getErrorMessage(error: { status?: number; message?: string; code?: string | null }) {
-    if (error.status === 401) return 'auth.invalid_credentials';
-    if (error.status === 403 && error.message === 'auth.email_not_verified') return 'Please verify your email before signing in.';
-    if (error.status === 403) return 'auth.forbidden';
-    if (error.status === 409) return 'auth.email_already_exists';
-    if (error.code === 'auth.password_policy') return 'Password does not meet the password policy.';
-    if (error.code === 'auth.password_recently_used') return 'Choose a password that has not been used recently.';
-    if (error.status === 400) return 'auth.invalid_request';
-    return error.message ?? 'common.unexpected_error';
+    // The backend puts business error codes in ProblemDetails.detail, which the interceptor exposes as message.
+    const code = error.code ?? error.message;
+    if (error.status === 0) return 'errors.network';
+    if (error.status === 401) return 'auth.errors.invalidCredentials';
+    if (error.status === 403 && code === 'auth.email_not_verified') return 'auth.errors.emailNotVerified';
+    if (error.status === 403) return 'auth.errors.forbidden';
+    if (error.status === 409) return 'auth.errors.emailAlreadyExists';
+    if (code === 'auth.password_policy') return 'auth.errors.passwordPolicy';
+    if (code === 'auth.password_recently_used') return 'auth.errors.passwordRecentlyUsed';
+    if (error.status === 400) return 'auth.errors.invalidRequest';
+    return 'auth.errors.unexpected';
   }
 }

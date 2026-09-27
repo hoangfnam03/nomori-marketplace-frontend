@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
@@ -11,24 +12,25 @@ import { ProductCardModel } from '../../shared/models/product-card.model';
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, EmptyStateComponent, ProductCardComponent, RouterLink, FormsModule, SearchBoxComponent],
+  imports: [BreadcrumbComponent, EmptyStateComponent, ProductCardComponent, RouterLink, FormsModule, SearchBoxComponent, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <div class="page-heading">
-      <app-breadcrumb [items]="[{ label: 'Products', url: '/storefront/products' }]" />
+      <app-breadcrumb [items]="[{ label: t('storefront.products.breadcrumb'), url: '/storefront/products' }]" />
       <div class="heading-row">
         <div>
-          <div class="eyebrow">Storefront / Catalog</div>
-          <h1>Browse the collection.</h1>
+          <div class="eyebrow">{{ t('storefront.products.eyebrow') }}</div>
+          <h1>{{ t('storefront.products.title') }}</h1>
         </div>
         <app-search-box (searched)="onSearch($event)" />
       </div>
     </div>
 
     <div class="catalog-layout">
-      <aside class="sidebar" aria-label="Filters">
+      <aside class="sidebar" [attr.aria-label]="t('storefront.products.filters')">
         <div class="sidebar-section">
-          <div class="sidebar-label">Categories</div>
-          <button class="sidebar-item" [class.active]="!activeCategoryId" (click)="selectCategory(null)">All</button>
+          <div class="sidebar-label">{{ t('storefront.products.categories') }}</div>
+          <button class="sidebar-item" [class.active]="!activeCategoryId" (click)="selectCategory(null)">{{ t('storefront.products.all') }}</button>
           @for (node of categoryTree; track node.id) {
             <button class="sidebar-item" [class.active]="activeCategoryId === node.id" (click)="selectCategory(node.id)">{{ node.name }}</button>
             @for (child of node.children; track child.id) {
@@ -39,44 +41,45 @@ import { ProductCardModel } from '../../shared/models/product-card.model';
       </aside>
 
       <div class="catalog-main">
-        <section class="catalog-toolbar" aria-label="Catalog controls">
+        <section class="catalog-toolbar" [attr.aria-label]="t('storefront.home.controls')">
           @if (!loading) {
-            <span>{{ totalCount }} item{{ totalCount === 1 ? '' : 's' }}</span>
+            <span>{{ t('storefront.products.itemCount', { count: totalCount }) }}</span>
           }
-          <label class="sort-label">Sort
-            <select aria-label="Sort products" [(ngModel)]="sort" (change)="onSortChange()">
-              <option value="DisplayOrder">Featured</option>
-              <option value="PriceAsc">Price: low to high</option>
-              <option value="PriceDesc">Price: high to low</option>
-              <option value="Newest">Newest</option>
+          <label class="sort-label">{{ t('storefront.products.sort') }}
+            <select [attr.aria-label]="t('storefront.products.sortLabel')" [(ngModel)]="sort" (change)="onSortChange()">
+              <option value="DisplayOrder">{{ t('storefront.products.sortFeatured') }}</option>
+              <option value="PriceAsc">{{ t('storefront.products.sortPriceAsc') }}</option>
+              <option value="PriceDesc">{{ t('storefront.products.sortPriceDesc') }}</option>
+              <option value="Newest">{{ t('storefront.products.sortNewest') }}</option>
             </select>
           </label>
         </section>
 
-        @if (loading) { <p class="state">Loading products...</p> }
-        @if (error) { <p class="state state-error" role="alert">{{ error }}</p> }
+        @if (loading) { <p class="state">{{ t('storefront.products.loading') }}</p> }
+        @if (error) { <p class="state state-error" role="alert">{{ t(error) }}</p> }
 
         @if (!loading && !error) {
           @if (products.length === 0) {
-            <app-empty-state title="No products found" message="Try adjusting your filters or search query." mark="00" />
+            <app-empty-state [title]="t('storefront.products.emptyTitle')" [message]="t('storefront.products.emptyMessage')" mark="00" />
           } @else {
-            <section class="product-grid" aria-label="Products">
+            <section class="product-grid" [attr.aria-label]="t('storefront.products.breadcrumb')">
               @for (product of products; track product.id) {
                 <app-product-card [product]="product" />
               }
             </section>
 
             @if (totalPages > 1) {
-              <nav class="pagination" aria-label="Pagination">
-                <button type="button" [disabled]="page <= 1" (click)="goToPage(page - 1)">← Prev</button>
-                <span class="pagination-info">Page {{ page }} of {{ totalPages }}</span>
-                <button type="button" [disabled]="page >= totalPages" (click)="goToPage(page + 1)">Next →</button>
+              <nav class="pagination" [attr.aria-label]="t('common.pagination.label')">
+                <button type="button" [disabled]="page <= 1" (click)="goToPage(page - 1)">← {{ t('common.pagination.prev') }}</button>
+                <span class="pagination-info">{{ t('common.pagination.pageOf', { page: page, total: totalPages }) }}</span>
+                <button type="button" [disabled]="page >= totalPages" (click)="goToPage(page + 1)">{{ t('common.pagination.next') }} →</button>
               </nav>
             }
           }
         }
       </div>
     </div>
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -154,7 +157,7 @@ export class ProductListPage implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Unable to load products.';
+        this.error = 'storefront.products.loadError';
         this.loading = false;
       }
     });

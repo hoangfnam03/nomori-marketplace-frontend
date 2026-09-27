@@ -1,44 +1,45 @@
 import { Component, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthFacade } from '../../core/auth/auth.facade';
 import { passwordValidators } from '../../core/auth/password-policy';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoDirective],
   styleUrls: ['../auth-page.scss'],
   template: `
-    <div class="account-page">
-      <div class="eyebrow">Account / Session</div>
-      <h1>Your account boundary.</h1>
+    <div class="account-page" *transloco="let t">
+      <div class="eyebrow">{{ t('auth.account.eyebrow') }}</div>
+      <h1>{{ t('auth.account.title') }}</h1>
       <div class="account-grid">
         <section class="auth-panel">
-          <h2>Session</h2>
-          <dl class="session-data"><div><dt>Status</dt><dd>{{ auth.isAuthenticated() ? 'Authenticated' : 'Guest' }}</dd></div><div><dt>Email</dt><dd>{{ auth.session()?.email ?? 'Not signed in' }}</dd></div><div><dt>Customer ID</dt><dd>{{ auth.session()?.customerId ?? '—' }}</dd></div></dl>
-          <button class="submit" type="button" (click)="loadPermissions()" [disabled]="permissionsLoading">Load permissions</button>
-          @if (permissionsError) { <div class="form-error" role="alert">{{ permissionsError }}</div> }
-          @if (permissions) { <div class="permissions"><strong>Permissions</strong><span>{{ permissions.length ? permissions.join(', ') : 'No permissions assigned' }}</span></div> }
-          <div class="security-block"><strong>Email security</strong>
-            @if (auth.session()?.emailVerified) { <span class="form-success">Email verified</span> }
-            @else { <span class="form-error">Email not verified</span><button type="button" class="submit secondary" (click)="sendVerification()" [disabled]="verificationLoading">{{ verificationLoading ? 'Sending...' : 'Send verification email' }}</button> }
-            @if (verificationToken) { <div class="form-success">Development token: {{ verificationToken }}</div> }
+          <h2>{{ t('auth.account.sessionHeading') }}</h2>
+          <dl class="session-data"><div><dt>{{ t('auth.account.status') }}</dt><dd>{{ auth.isAuthenticated() ? t('auth.account.authenticated') : t('auth.account.guest') }}</dd></div><div><dt>{{ t('auth.fields.email') }}</dt><dd>{{ auth.session()?.email ?? t('auth.account.notSignedIn') }}</dd></div><div><dt>{{ t('auth.account.customerId') }}</dt><dd>{{ auth.session()?.customerId ?? '—' }}</dd></div></dl>
+          <button class="submit" type="button" (click)="loadPermissions()" [disabled]="permissionsLoading">{{ t('auth.account.loadPermissions') }}</button>
+          @if (permissionsError) { <div class="form-error" role="alert">{{ t(permissionsError) }}</div> }
+          @if (permissions) { <div class="permissions"><strong>{{ t('auth.account.permissions') }}</strong><span>{{ permissions.length ? permissions.join(', ') : t('auth.account.noPermissions') }}</span></div> }
+          <div class="security-block"><strong>{{ t('auth.account.emailSecurity') }}</strong>
+            @if (auth.session()?.emailVerified) { <span class="form-success">{{ t('auth.account.emailVerified') }}</span> }
+            @else { <span class="form-error">{{ t('auth.account.emailNotVerified') }}</span><button type="button" class="submit secondary" (click)="sendVerification()" [disabled]="verificationLoading">{{ verificationLoading ? t('auth.account.sending') : t('auth.account.sendVerification') }}</button> }
+            @if (verificationToken) { <div class="form-success">{{ t('auth.dev.token', { token: verificationToken }) }}</div> }
           </div>
-          <div class="security-block"><strong>Email OTP</strong>
-            @if (auth.session()?.emailOtpEnabled) { <span class="form-success">Enabled</span><button type="button" class="submit secondary" (click)="disableOtp()">Disable email OTP</button> }
-            @else { <button type="button" class="submit secondary" (click)="setupOtp()" [disabled]="otpLoading || !auth.session()?.emailVerified">{{ otpLoading ? 'Sending...' : 'Start OTP setup' }}</button> }
-            @if (otpChallengeId) { <div class="field"><label for="otpCode">OTP code</label><input id="otpCode" type="text" inputmode="numeric" maxlength="6" [formControl]="otpCode" /></div><button type="button" class="submit" (click)="enableOtp()" [disabled]="otpCode.invalid || otpLoading">Confirm OTP</button> }
-            @if (developmentCode) { <div class="form-success">Development code: {{ developmentCode }}</div> }
-            @if (securityError) { <div class="form-error" role="alert">{{ securityError }}</div> }
+          <div class="security-block"><strong>{{ t('auth.account.emailOtp') }}</strong>
+            @if (auth.session()?.emailOtpEnabled) { <span class="form-success">{{ t('auth.account.otpEnabled') }}</span><button type="button" class="submit secondary" (click)="disableOtp()">{{ t('auth.account.disableOtp') }}</button> }
+            @else { <button type="button" class="submit secondary" (click)="setupOtp()" [disabled]="otpLoading || !auth.session()?.emailVerified">{{ otpLoading ? t('auth.account.sending') : t('auth.account.startOtpSetup') }}</button> }
+            @if (otpChallengeId) { <div class="field"><label for="otpCode">{{ t('auth.fields.otpCode') }}</label><input id="otpCode" type="text" inputmode="numeric" maxlength="6" [formControl]="otpCode" /></div><button type="button" class="submit" (click)="enableOtp()" [disabled]="otpCode.invalid || otpLoading">{{ t('auth.account.confirmOtp') }}</button> }
+            @if (developmentCode) { <div class="form-success">{{ t('auth.dev.code', { code: developmentCode }) }}</div> }
+            @if (securityError) { <div class="form-error" role="alert">{{ t(securityError) }}</div> }
           </div>
         </section>
         <form class="auth-panel" [formGroup]="form" (ngSubmit)="changePassword()" novalidate>
-          <h2>Change password</h2>
-          <div class="field"><label for="currentPassword">Current password</label><input id="currentPassword" type="password" formControlName="currentPassword" autocomplete="current-password" /></div>
-          <div class="field"><label for="newPassword">New password</label><input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" /> @if (form.controls.newPassword.touched && form.controls.newPassword.invalid) { <span class="field-error">Use at least 12 characters with upper/lowercase, a number and a special character.</span> }</div>
-          @if (error) { <div class="form-error" role="alert">{{ error }}</div> } @if (success) { <div class="form-success" role="status">Password changed. Sign in again with the new password.</div> }
-          <button class="submit" type="submit" [disabled]="form.invalid || auth.isLoading()">{{ auth.isLoading() ? 'Changing...' : 'Change password' }}</button>
-          <div class="auth-links"><a routerLink="/customer/profile">Edit profile</a><a routerLink="/storefront">Back to storefront</a></div>
+          <h2>{{ t('auth.account.changePasswordHeading') }}</h2>
+          <div class="field"><label for="currentPassword">{{ t('auth.fields.currentPassword') }}</label><input id="currentPassword" type="password" formControlName="currentPassword" autocomplete="current-password" /></div>
+          <div class="field"><label for="newPassword">{{ t('auth.fields.newPassword') }}</label><input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" /> @if (form.controls.newPassword.touched && form.controls.newPassword.invalid) { <span class="field-error">{{ t('auth.validation.passwordPolicy') }}</span> }</div>
+          @if (error) { <div class="form-error" role="alert">{{ t(error) }}</div> } @if (success) { <div class="form-success" role="status">{{ t('auth.account.passwordChanged') }}</div> }
+          <button class="submit" type="submit" [disabled]="form.invalid || auth.isLoading()">{{ auth.isLoading() ? t('auth.account.changing') : t('auth.account.changePassword') }}</button>
+          <div class="auth-links"><a routerLink="/customer/profile">{{ t('auth.links.editProfile') }}</a><a routerLink="/storefront">{{ t('auth.links.backToStorefront') }}</a></div>
         </form>
       </div>
     </div>
@@ -68,7 +69,7 @@ export class AccountPage {
 
   loadPermissions() {
     this.permissionsLoading = true; this.permissionsError = null;
-    this.auth.getPermissions().subscribe({ next: result => this.permissions = result.permissions, error: error => { this.permissionsError = error.message; this.permissionsLoading = false; }, complete: () => this.permissionsLoading = false });
+    this.auth.getPermissions().subscribe({ next: result => this.permissions = result.permissions, error: () => { this.permissionsError = 'auth.account.permissionsError'; this.permissionsLoading = false; }, complete: () => this.permissionsLoading = false });
   }
 
   changePassword() {

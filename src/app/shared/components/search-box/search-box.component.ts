@@ -1,15 +1,16 @@
 import { Component, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-search-box',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslocoDirective],
   template: `
-    <form class="search-box" role="search" (submit)="submitSearch($event)">
-      <label class="sr-only" for="marketplace-search">Search products</label>
-      <input id="marketplace-search" name="query" [(ngModel)]="query" placeholder="Search the marketplace" autocomplete="off" />
-      <button type="submit" aria-label="Search">Search</button>
+    <form class="search-box" role="search" *transloco="let t" (submit)="submitSearch($event)">
+      <label class="sr-only" for="marketplace-search">{{ t('storefront.search.label') }}</label>
+      <input id="marketplace-search" name="query" [(ngModel)]="query" [placeholder]="t('storefront.search.placeholder')" autocomplete="off" />
+      <button type="submit">{{ t('storefront.search.submit') }}</button>
     </form>
   `,
   styles: [`

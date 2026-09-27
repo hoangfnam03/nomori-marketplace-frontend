@@ -1,23 +1,25 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { VendorPublicResponse } from '../../core/vendors/vendor.models';
 
 @Component({
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <section class="page-hero" aria-labelledby="vendors-title">
-      <div class="eyebrow">Marketplace</div>
-      <h1 id="vendors-title">Vendors</h1>
-      <p>Browse all vendors on Nomori Marketplace.</p>
+      <div class="eyebrow">{{ t('storefront.vendors.eyebrow') }}</div>
+      <h1 id="vendors-title">{{ t('storefront.vendors.title') }}</h1>
+      <p>{{ t('storefront.vendors.lede') }}</p>
     </section>
 
     <div class="page-content">
       @if (loading) {
-        <p class="loading-msg">Loading vendors…</p>
+        <p class="loading-msg">{{ t('storefront.vendors.loading') }}</p>
       } @else if (vendors.length === 0) {
-        <p class="empty-msg">No vendors at the moment.</p>
+        <p class="empty-msg">{{ t('storefront.vendors.empty') }}</p>
       } @else {
         <ul class="vendor-grid" role="list">
           @for (v of vendors; track v.id) {
@@ -37,13 +39,14 @@ import { VendorPublicResponse } from '../../core/vendors/vendor.models';
 
         @if (totalPages > 1) {
           <div class="pagination">
-            <button [disabled]="page === 1" (click)="goPage(page - 1)">‹ Prev</button>
-            <span>Page {{ page }} of {{ totalPages }}</span>
-            <button [disabled]="page === totalPages" (click)="goPage(page + 1)">Next ›</button>
+            <button [disabled]="page === 1" (click)="goPage(page - 1)">‹ {{ t('common.pagination.prev') }}</button>
+            <span>{{ t('common.pagination.pageOf', { page: page, total: totalPages }) }}</span>
+            <button [disabled]="page === totalPages" (click)="goPage(page + 1)">{{ t('common.pagination.next') }} ›</button>
           </div>
         }
       }
     </div>
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }

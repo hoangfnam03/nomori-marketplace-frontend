@@ -1,12 +1,14 @@
 import { Component, input } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 @Component({
   selector: 'app-empty-state',
   standalone: true,
+  imports: [TranslocoDirective],
   template: `
-    <section class="empty-state" [attr.aria-labelledby]="titleId">
+    <section class="empty-state" *transloco="let t" [attr.aria-labelledby]="titleId">
       <span class="mark" aria-hidden="true">{{ mark() }}</span>
-      <div><h2 [id]="titleId">{{ title() }}</h2><p>{{ message() }}</p></div>
+      <div><h2 [id]="titleId">{{ title() || t('common.emptyState.title') }}</h2><p>{{ message() || t('common.emptyState.message') }}</p></div>
     </section>
   `,
   styles: [`
@@ -18,8 +20,8 @@ import { Component, input } from '@angular/core';
   `]
 })
 export class EmptyStateComponent {
-  readonly title = input('Nothing here yet');
-  readonly message = input('This area will be populated by the next feature slice.');
+  readonly title = input('');
+  readonly message = input('');
   readonly mark = input('?');
   readonly titleId = `empty-state-${Math.random().toString(36).slice(2)}`;
 }

@@ -1,23 +1,25 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { VendorPublicResponse } from '../../core/vendors/vendor.models';
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, RouterLink],
+  imports: [BreadcrumbComponent, RouterLink, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     @if (loading) {
-      <p class="state">Loading vendor…</p>
+      <p class="state">{{ t('storefront.vendorDetail.loading') }}</p>
     }
     @if (error) {
-      <p class="state state-error" role="alert">{{ error }}</p>
+      <p class="state state-error" role="alert">{{ t(error) }}</p>
     }
     @if (!loading && !error && vendor) {
       <div class="page-heading">
         <app-breadcrumb [items]="[
-          { label: 'Vendors', url: '/storefront/vendors' },
+          { label: t('storefront.vendors.title'), url: '/storefront/vendors' },
           { label: vendor.name }
         ]" />
       </div>
@@ -28,7 +30,7 @@ import { VendorPublicResponse } from '../../core/vendors/vendor.models';
         </aside>
 
         <div class="vendor-body">
-          <div class="eyebrow">Vendor</div>
+          <div class="eyebrow">{{ t('storefront.vendorDetail.eyebrow') }}</div>
           <h1>{{ vendor.name }}</h1>
           <a [href]="'mailto:' + vendor.email" class="vendor-email">{{ vendor.email }}</a>
 
@@ -40,6 +42,7 @@ import { VendorPublicResponse } from '../../core/vendors/vendor.models';
         </div>
       </div>
     }
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -117,13 +120,13 @@ export class VendorDetailPage implements OnInit {
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id) { this.error = 'Invalid vendor.'; return; }
+    if (!id) { this.error = 'storefront.vendorDetail.invalid'; return; }
     this.loading = true;
     this.api.getVendor(id).subscribe({
       next: v => { this.vendor = v; this.loading = false; },
       error: err => {
         this.loading = false;
-        this.error = err?.status === 404 ? 'Vendor not found.' : 'Failed to load vendor.';
+        this.error = err?.status === 404 ? 'storefront.vendorDetail.notFound' : 'storefront.vendorDetail.loadError';
       }
     });
   }

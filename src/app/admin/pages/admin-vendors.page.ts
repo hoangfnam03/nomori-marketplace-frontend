@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { VendorApiService, SaveVendorRequest } from '../../core/vendors/vendor-api.service';
 import { VendorAdminResponse } from '../../core/vendors/vendor.models';
 
@@ -14,67 +15,68 @@ interface VendorForm {
 
 @Component({
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <section class="admin-intro" aria-labelledby="vendors-title">
       <div>
-        <div class="eyebrow">Admin / Vendors</div>
-        <h1 id="vendors-title">Manage vendors.</h1>
-        <p>Create vendor profiles and link them to customer accounts. Each customer can be assigned to one vendor.</p>
+        <div class="eyebrow">{{ t('admin.vendors.eyebrow') }}</div>
+        <h1 id="vendors-title">{{ t('admin.vendors.title') }}</h1>
+        <p>{{ t('admin.vendors.lede') }}</p>
       </div>
     </section>
 
     <div class="panel">
       <div class="panel-header">
-        <h2>Vendors</h2>
+        <h2>{{ t('admin.vendors.heading') }}</h2>
         <div class="panel-header-actions">
           <input
             type="search"
-            placeholder="Search vendors…"
+            [placeholder]="t('admin.vendors.search')"
             [(ngModel)]="searchTerm"
             (input)="onSearch()"
             name="vendorSearch"
-            aria-label="Search vendors"
+            [attr.aria-label]="t('admin.vendors.search')"
             style="min-width:200px"
           />
-          <button type="button" class="new-btn" (click)="openForm()">+ New vendor</button>
+          <button type="button" class="new-btn" (click)="openForm()">+ {{ t('admin.vendors.new') }}</button>
         </div>
       </div>
 
       @if (formOpen) {
-        <form class="inline-form" (ngSubmit)="submitVendor()" [attr.aria-label]="(editingId ? 'Edit' : 'Create') + ' vendor'">
-          <div class="form-title">{{ editingId ? 'Edit vendor' : 'New vendor' }}</div>
-          @if (formError) { <p class="form-error" role="alert">{{ formError }}</p> }
+        <form class="inline-form" (ngSubmit)="submitVendor()" [attr.aria-label]="editingId ? t('admin.vendors.edit') : t('admin.vendors.new')">
+          <div class="form-title">{{ editingId ? t('admin.vendors.edit') : t('admin.vendors.new') }}</div>
+          @if (formError) { <p class="form-error" role="alert">{{ t(formError) }}</p> }
           <div class="form-row">
-            <label>Name <input type="text" [(ngModel)]="form.name" name="name" required /></label>
-            <label>Email <input type="email" [(ngModel)]="form.email" name="email" required /></label>
+            <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="form.name" name="name" required /></label>
+            <label>{{ t('admin.common.email') }} <input type="email" [(ngModel)]="form.email" name="email" required /></label>
           </div>
-          <label>Description <textarea [(ngModel)]="form.description" name="description" rows="2"></textarea></label>
-          <label>Admin comment <textarea [(ngModel)]="form.adminComment" name="adminComment" rows="2"></textarea></label>
+          <label>{{ t('admin.common.description') }} <textarea [(ngModel)]="form.description" name="description" rows="2"></textarea></label>
+          <label>{{ t('admin.vendors.adminComment') }} <textarea [(ngModel)]="form.adminComment" name="adminComment" rows="2"></textarea></label>
           <div class="form-row">
-            <label class="check-label"><input type="checkbox" [(ngModel)]="form.active" name="active" /> Active</label>
-            <label>Display order <input type="number" [(ngModel)]="form.displayOrder" name="displayOrder" style="width:80px" /></label>
+            <label class="check-label"><input type="checkbox" [(ngModel)]="form.active" name="active" /> {{ t('admin.common.active') }}</label>
+            <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="form.displayOrder" name="displayOrder" style="width:80px" /></label>
           </div>
           <div class="form-actions">
-            <button type="submit" [disabled]="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
-            <button type="button" class="cancel-btn" (click)="closeForm()">Cancel</button>
+            <button type="submit" [disabled]="saving">{{ saving ? t('common.states.saving') : t('common.actions.save') }}</button>
+            <button type="button" class="cancel-btn" (click)="closeForm()">{{ t('common.actions.cancel') }}</button>
           </div>
         </form>
       }
 
       @if (loading) {
-        <p class="loading-msg">Loading…</p>
+        <p class="loading-msg">{{ t('common.states.loading') }}</p>
       } @else if (vendors.length === 0) {
-        <p class="empty-msg">No vendors found.</p>
+        <p class="empty-msg">{{ t('admin.vendors.empty') }}</p>
       } @else {
         <table class="data-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Order</th>
-              <th>Created</th>
+              <th>{{ t('admin.common.name') }}</th>
+              <th>{{ t('admin.common.email') }}</th>
+              <th>{{ t('admin.common.status') }}</th>
+              <th>{{ t('admin.common.order') }}</th>
+              <th>{{ t('admin.common.created') }}</th>
               <th></th>
             </tr>
           </thead>
@@ -85,14 +87,14 @@ interface VendorForm {
                 <td>{{ v.email }}</td>
                 <td>
                   <span [class]="v.active ? 'status-active' : 'status-inactive'">
-                    {{ v.active ? 'Active' : 'Inactive' }}
+                    {{ v.active ? t('vendorStatus.vendor.active') : t('vendorStatus.vendor.inactive') }}
                   </span>
                 </td>
                 <td>{{ v.displayOrder }}</td>
                 <td>{{ formatDate(v.createdOnUtc) }}</td>
                 <td class="row-actions">
-                  <button type="button" class="edit-btn" (click)="openForm(v)">Edit</button>
-                  <button type="button" class="delete-btn" (click)="deleteVendor(v)">Delete</button>
+                  <button type="button" class="edit-btn" (click)="openForm(v)">{{ t('common.actions.edit') }}</button>
+                  <button type="button" class="delete-btn" (click)="deleteVendor(v)">{{ t('common.actions.delete') }}</button>
                 </td>
               </tr>
             }
@@ -101,13 +103,14 @@ interface VendorForm {
 
         @if (totalPages > 1) {
           <div class="pagination">
-            <button [disabled]="page === 1" (click)="goPage(page - 1)">‹ Prev</button>
-            <span>Page {{ page }} of {{ totalPages }}</span>
-            <button [disabled]="page === totalPages" (click)="goPage(page + 1)">Next ›</button>
+            <button [disabled]="page === 1" (click)="goPage(page - 1)">‹ {{ t('common.pagination.prev') }}</button>
+            <span>{{ t('common.pagination.pageOf', { page: page, total: totalPages }) }}</span>
+            <button [disabled]="page === totalPages" (click)="goPage(page + 1)">{{ t('common.pagination.next') }} ›</button>
           </div>
         }
       }
     </div>
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -251,6 +254,7 @@ interface VendorForm {
 })
 export class AdminVendorsPage implements OnInit {
   private readonly api = inject(VendorApiService);
+  private readonly transloco = inject(TranslocoService);
 
   vendors: VendorAdminResponse[] = [];
   loading = false;
@@ -303,7 +307,7 @@ export class AdminVendorsPage implements OnInit {
 
   submitVendor() {
     if (!this.form.name.trim() || !this.form.email.trim()) {
-      this.formError = 'Name and email are required.';
+      this.formError = 'admin.vendors.nameEmailRequired';
       return;
     }
     this.saving = true;
@@ -323,18 +327,18 @@ export class AdminVendorsPage implements OnInit {
       next: () => { this.saving = false; this.closeForm(); this.loadVendors(); },
       error: err => {
         this.saving = false;
-        this.formError = err?.error?.errors ? Object.values(err.error.errors).flat().join(' ') : 'Save failed.';
+        this.formError = err?.status === 400 ? 'errors.badRequest' : 'admin.common.saveFailed';
       }
     });
   }
 
   deleteVendor(v: VendorAdminResponse) {
-    if (!confirm(`Delete vendor "${v.name}"?`)) return;
+    if (!confirm(this.transloco.translate('admin.vendors.confirmDelete', { name: v.name }))) return;
     this.api.adminDeleteVendor(v.id).subscribe({ next: () => this.loadVendors() });
   }
 
   formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   }
 
   private emptyForm(): VendorForm {

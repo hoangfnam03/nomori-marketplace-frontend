@@ -1,48 +1,50 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { ProductAttributeSpec } from '../../core/catalog/product-attribute.models';
 
 @Component({
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <section class="admin-intro" aria-labelledby="attrs-title">
       <div>
-        <div class="eyebrow">Admin / Catalog</div>
-        <h1 id="attrs-title">Product attribute specs.</h1>
-        <p>Define reusable attribute templates (Color, Size, Material…) that can be mapped to any product.</p>
+        <div class="eyebrow">{{ t('admin.attributes.eyebrow') }}</div>
+        <h1 id="attrs-title">{{ t('admin.attributes.title') }}</h1>
+        <p>{{ t('admin.attributes.lede') }}</p>
       </div>
     </section>
 
     <div class="panel">
       <div class="panel-header">
-        <h2>Attribute specs</h2>
-        <button type="button" class="new-btn" (click)="openForm()">+ New spec</button>
+        <h2>{{ t('admin.attributes.heading') }}</h2>
+        <button type="button" class="new-btn" (click)="openForm()">+ {{ t('admin.attributes.new') }}</button>
       </div>
 
       @if (formOpen) {
-        <form class="inline-form" (ngSubmit)="submit()" [attr.aria-label]="(editingId ? 'Edit' : 'Create') + ' attribute spec'">
-          <div class="form-title">{{ editingId ? 'Edit spec' : 'New spec' }}</div>
-          @if (formError) { <p class="form-error" role="alert">{{ formError }}</p> }
-          <label>Name <input type="text" [(ngModel)]="form.name" name="name" required /></label>
-          <label>Description <textarea [(ngModel)]="form.description" name="description" rows="2"></textarea></label>
-          <label>Display order <input type="number" [(ngModel)]="form.displayOrder" name="displayOrder" style="width:80px" /></label>
+        <form class="inline-form" (ngSubmit)="submit()" [attr.aria-label]="editingId ? t('admin.attributes.edit') : t('admin.attributes.new')">
+          <div class="form-title">{{ editingId ? t('admin.attributes.edit') : t('admin.attributes.new') }}</div>
+          @if (formError) { <p class="form-error" role="alert">{{ t(formError) }}</p> }
+          <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="form.name" name="name" required /></label>
+          <label>{{ t('admin.common.description') }} <textarea [(ngModel)]="form.description" name="description" rows="2"></textarea></label>
+          <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="form.displayOrder" name="displayOrder" style="width:80px" /></label>
           <div class="form-actions">
-            <button type="submit" [disabled]="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
-            <button type="button" class="cancel-btn" (click)="closeForm()">Cancel</button>
+            <button type="submit" [disabled]="saving">{{ saving ? t('common.states.saving') : t('common.actions.save') }}</button>
+            <button type="button" class="cancel-btn" (click)="closeForm()">{{ t('common.actions.cancel') }}</button>
           </div>
         </form>
       }
 
       @if (loading) {
-        <p class="loading-msg">Loading…</p>
+        <p class="loading-msg">{{ t('common.states.loading') }}</p>
       } @else if (specs.length === 0) {
-        <p class="empty-msg">No attribute specs yet.</p>
+        <p class="empty-msg">{{ t('admin.attributes.empty') }}</p>
       } @else {
         <table class="data-table">
           <thead>
-            <tr><th>Name</th><th>Description</th><th>Order</th><th></th></tr>
+            <tr><th>{{ t('admin.common.name') }}</th><th>{{ t('admin.common.description') }}</th><th>{{ t('admin.common.order') }}</th><th></th></tr>
           </thead>
           <tbody>
             @for (s of specs; track s.id) {
@@ -51,8 +53,8 @@ import { ProductAttributeSpec } from '../../core/catalog/product-attribute.model
                 <td>{{ s.description || '—' }}</td>
                 <td>{{ s.displayOrder }}</td>
                 <td class="row-actions">
-                  <button type="button" class="edit-btn" (click)="openForm(s)">Edit</button>
-                  <button type="button" class="delete-btn" (click)="deleteSpec(s)">Delete</button>
+                  <button type="button" class="edit-btn" (click)="openForm(s)">{{ t('common.actions.edit') }}</button>
+                  <button type="button" class="delete-btn" (click)="deleteSpec(s)">{{ t('common.actions.delete') }}</button>
                 </td>
               </tr>
             }
@@ -60,6 +62,7 @@ import { ProductAttributeSpec } from '../../core/catalog/product-attribute.model
         </table>
       }
     </div>
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -95,6 +98,7 @@ import { ProductAttributeSpec } from '../../core/catalog/product-attribute.model
 })
 export class AdminAttributeSpecsPage implements OnInit {
   private readonly api = inject(CatalogApiService);
+  private readonly transloco = inject(TranslocoService);
 
   specs: ProductAttributeSpec[] = [];
   loading = false;
@@ -124,7 +128,7 @@ export class AdminAttributeSpecsPage implements OnInit {
   closeForm() { this.formOpen = false; this.editingId = null; }
 
   submit() {
-    if (!this.form.name.trim()) { this.formError = 'Name is required.'; return; }
+    if (!this.form.name.trim()) { this.formError = 'admin.common.nameRequired'; return; }
     this.saving = true; this.formError = '';
     const body = { name: this.form.name, description: this.form.description || null, displayOrder: this.form.displayOrder };
     const req = this.editingId
@@ -132,12 +136,12 @@ export class AdminAttributeSpecsPage implements OnInit {
       : this.api.adminCreateAttributeSpec(body);
     req.subscribe({
       next: () => { this.saving = false; this.closeForm(); this.load(); },
-      error: err => { this.saving = false; this.formError = err?.error?.errors ? Object.values(err.error.errors).flat().join(' ') : 'Save failed.'; }
+      error: err => { this.saving = false; this.formError = err?.status === 400 ? 'errors.badRequest' : 'admin.common.saveFailed'; }
     });
   }
 
   deleteSpec(s: ProductAttributeSpec) {
-    if (!confirm(`Delete attribute spec "${s.name}"?`)) return;
+    if (!confirm(this.transloco.translate('admin.attributes.confirmDelete', { name: s.name }))) return;
     this.api.adminDeleteAttributeSpec(s.id).subscribe({ next: () => this.load() });
   }
 }

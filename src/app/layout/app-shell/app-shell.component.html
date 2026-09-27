@@ -1,32 +1,36 @@
-<div class="shell">
+<div class="shell" *transloco="let t">
   <header class="topbar">
-    <a class="brand" routerLink="/storefront" aria-label="Nomori Marketplace home">
+    <a class="brand" routerLink="/storefront" [attr.aria-label]="t('nav.home')">
       <span class="brand-mark" aria-hidden="true">N</span>
       <span>Nomori Marketplace</span>
     </a>
 
-    <nav class="primary-nav" aria-label="Primary navigation">
-      <a routerLink="/storefront" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Storefront</a>
-      <a routerLink="/storefront/products" routerLinkActive="active">Products</a>
-      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Admin</a>
-      <a routerLink="/storefront/vendors" routerLinkActive="active">Vendors</a>
-      <a routerLink="/admin/catalog" routerLinkActive="active">Catalog</a>
-      <a routerLink="/admin/vendors" routerLinkActive="active">Vendors (Admin)</a>
-      <a routerLink="/admin/attributes" routerLinkActive="active">Attributes</a>
-      <a routerLink="/admin/spec-attributes" routerLinkActive="active">Spec Attrs</a>
+    <nav class="primary-nav" [attr.aria-label]="t('nav.primary')">
+      <a routerLink="/storefront" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ t('nav.storefront') }}</a>
+      <a routerLink="/storefront/products" routerLinkActive="active">{{ t('nav.products') }}</a>
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ t('nav.admin') }}</a>
+      <a routerLink="/storefront/vendors" routerLinkActive="active">{{ t('nav.vendors') }}</a>
+      <a routerLink="/admin/catalog" routerLinkActive="active">{{ t('nav.catalog') }}</a>
+      <a routerLink="/admin/vendors" routerLinkActive="active">{{ t('nav.adminVendors') }}</a>
+      <a routerLink="/admin/attributes" routerLinkActive="active">{{ t('nav.attributes') }}</a>
+      <a routerLink="/admin/spec-attributes" routerLinkActive="active">{{ t('nav.specAttributes') }}</a>
     </nav>
 
-    <div class="account-status" aria-live="polite">
-      @if (auth.isAuthenticated()) {
-        <span class="status-dot" aria-hidden="true"></span>
-        <a class="account-email" routerLink="/auth/account">{{ auth.session()?.email }}</a>
-        <a class="account-action" routerLink="/customer/profile">Profile</a>
-        <button type="button" class="account-action" (click)="logout()">Sign out</button>
-      } @else {
-        <span class="status-dot status-dot--muted" aria-hidden="true"></span>
-        <span>Guest session</span>
-        <a class="account-action" routerLink="/auth/login">Sign in</a>
-      }
+    <div class="topbar-end">
+      <app-language-switcher />
+
+      <div class="account-status" aria-live="polite">
+        @if (auth.isAuthenticated()) {
+          <span class="status-dot" aria-hidden="true"></span>
+          <a class="account-email" routerLink="/auth/account">{{ auth.session()?.email }}</a>
+          <a class="account-action" routerLink="/customer/profile">{{ t('nav.account.profile') }}</a>
+          <button type="button" class="account-action" (click)="logout()">{{ t('nav.account.signOut') }}</button>
+        } @else {
+          <span class="status-dot status-dot--muted" aria-hidden="true"></span>
+          <span>{{ t('nav.account.guest') }}</span>
+          <a class="account-action" routerLink="/auth/login">{{ t('nav.account.signIn') }}</a>
+        }
+      </div>
     </div>
   </header>
 
@@ -35,7 +39,7 @@
   </main>
 
   <footer class="footer">
-    <span>Nomori Marketplace</span>
-    <span>Foundation workspace</span>
+    <span>{{ t('nav.footer.brand') }}</span>
+    <span>{{ t('nav.footer.workspace') }}</span>
   </footer>
 </div>

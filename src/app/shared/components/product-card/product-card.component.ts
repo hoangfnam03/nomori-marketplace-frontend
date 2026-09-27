@@ -1,14 +1,15 @@
 import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { ProductCardModel } from '../../models/product-card.model';
 
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslocoDirective],
   template: `
-    <article class="product-card">
-      <a class="product-image" [routerLink]="['/storefront/products', product().id]" [attr.aria-label]="'View ' + product().name">
+    <article class="product-card" *transloco="let t">
+      <a class="product-image" [routerLink]="['/storefront/products', product().id]" [attr.aria-label]="t('storefront.card.view', { name: product().name })">
         @if (product().badge) { <span class="badge">{{ product().badge }}</span> }
         <img [src]="product().imageUrl" [alt]="product().name" loading="lazy" />
       </a>
@@ -16,10 +17,10 @@ import { ProductCardModel } from '../../models/product-card.model';
         <div class="category">{{ product().category }}</div>
         <h3><a [routerLink]="['/storefront/products', product().id]">{{ product().name }}</a></h3>
         @if (product().rating) {
-          <div class="rating" [attr.aria-label]="product().rating + ' out of 5 stars'">{{ '★'.repeat(product().rating ?? 0) }}<span>{{ product().reviewCount ?? 0 }} reviews</span></div>
+          <div class="rating" [attr.aria-label]="t('storefront.card.rating', { rating: product().rating })">{{ '★'.repeat(product().rating ?? 0) }}<span>{{ t('storefront.card.reviews', { count: product().reviewCount ?? 0 }) }}</span></div>
         }
         <div class="price-row"><strong>{{ product().price }}</strong>@if (product().compareAtPrice) { <del>{{ product().compareAtPrice }}</del> }</div>
-        <button type="button" (click)="addToCart.emit(product())">Add to cart</button>
+        <button type="button" (click)="addToCart.emit(product())">{{ t('storefront.card.addToCart') }}</button>
       </div>
     </article>
   `,

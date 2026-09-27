@@ -1,0 +1,553 @@
+{
+  "common": {
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "retry": "Try again",
+      "close": "Close",
+      "back": "Back",
+      "copy": "Copy",
+      "edit": "Edit",
+      "delete": "Delete",
+      "add": "Add",
+      "create": "Create",
+      "update": "Update",
+      "search": "Search",
+      "reset": "Reset"
+    },
+    "states": {
+      "loading": "Loading...",
+      "saving": "Saving...",
+      "processing": "Processing...",
+      "empty": "Nothing here yet.",
+      "notFound": "Not found."
+    },
+    "time": {
+      "justNow": "just now",
+      "hoursAgo": "{{count}} h ago",
+      "daysAgo": "{{count}} d ago"
+    },
+    "emptyState": {
+      "title": "Nothing here yet",
+      "message": "This area will be populated by the next feature slice."
+    },
+    "pagination": {
+      "label": "Pagination",
+      "prev": "Prev",
+      "next": "Next",
+      "pageOf": "Page {{page}} of {{total}}"
+    }
+  },
+  "nav": {
+    "primary": "Primary navigation",
+    "home": "Nomori Marketplace home",
+    "storefront": "Storefront",
+    "products": "Products",
+    "vendors": "Shops",
+    "admin": "Admin",
+    "catalog": "Catalog",
+    "adminVendors": "Shops (Admin)",
+    "attributes": "Attributes",
+    "specAttributes": "Spec attributes",
+    "becomeVendor": "Sell on Nomori",
+    "vendorPortal": "Seller center",
+    "vendorApplications": "Vendor applications",
+    "account": {
+      "profile": "Profile",
+      "signIn": "Sign in",
+      "signOut": "Sign out",
+      "guest": "Guest session"
+    },
+    "footer": {
+      "brand": "Nomori Marketplace",
+      "workspace": "Foundation workspace"
+    }
+  },
+  "language": {
+    "label": "Language",
+    "vi": "Tiếng Việt",
+    "en": "English"
+  },
+  "validation": {
+    "required": "This field is required.",
+    "email": "Enter a valid email address.",
+    "maxlength": "Use at most {{requiredLength}} characters.",
+    "phone": "Use digits, spaces and + - ( ) only."
+  },
+  "errors": {
+    "network": "Cannot reach the server. Check your connection and try again.",
+    "unauthorized": "Your session has expired.",
+    "forbidden": "You do not have permission to do this.",
+    "badRequest": "Please fix the highlighted fields.",
+    "server": "Something went wrong. Error code: {{traceId}}",
+    "vendor_application": {
+      "email_not_verified": "Verify your email before applying to open a shop.",
+      "already_vendor": "Your account already belongs to a shop.",
+      "already_pending": "You already have an application waiting for review.",
+      "not_pending": "This application has already been processed.",
+      "applicant_already_vendor": "The applicant already belongs to another shop."
+    },
+    "vendor_member": {
+      "email_already_exists": "This email is already in use.",
+      "limit_reached": "The shop already has 20 members.",
+      "already_active": "This member has already activated their account.",
+      "last_member": "A shop must keep at least one member."
+    }
+  },
+  "vendorStatus": {
+    "application": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled"
+    },
+    "member": {
+      "pendingSetup": "Awaiting setup",
+      "active": "Active"
+    },
+    "vendor": {
+      "active": "Active",
+      "inactive": "Inactive"
+    }
+  },
+  "auth": {
+    "errors": {
+      "invalidCredentials": "Incorrect email or password.",
+      "emailNotVerified": "Please verify your email before signing in.",
+      "forbidden": "You do not have permission to do this.",
+      "emailAlreadyExists": "This email is already registered.",
+      "passwordPolicy": "Password does not meet the password policy.",
+      "passwordRecentlyUsed": "Choose a password that has not been used recently.",
+      "invalidRequest": "The request is invalid or has expired.",
+      "unexpected": "Something went wrong. Please try again."
+    },
+    "fields": {
+      "email": "Email",
+      "password": "Password",
+      "confirmPassword": "Confirm password",
+      "currentPassword": "Current password",
+      "newPassword": "New password",
+      "recoveryToken": "Recovery token",
+      "verificationCode": "Verification code",
+      "otpCode": "OTP code"
+    },
+    "validation": {
+      "emailInvalid": "Enter a valid email address.",
+      "passwordRequired": "Password is required.",
+      "passwordPolicy": "Use at least 12 characters with upper/lowercase, a number and a special character.",
+      "passwordsMismatch": "Passwords must match."
+    },
+    "links": {
+      "createAccount": "Create an account",
+      "forgotPassword": "Forgot password?",
+      "backToSignIn": "Back to sign in",
+      "haveResetToken": "I have a reset token",
+      "alreadyHaveAccount": "Already have an account?",
+      "continueToSignIn": "Continue to sign in",
+      "backToStorefront": "Back to storefront",
+      "editProfile": "Edit profile"
+    },
+    "dev": {
+      "code": "Development code: {{code}}",
+      "token": "Development token: {{token}}",
+      "tokenLabel": "Development token:"
+    },
+    "login": {
+      "eyebrow": "Account / Sign in",
+      "title": "Welcome back to your marketplace.",
+      "lede": "Your session is secured by the Nomori Marketplace cookie boundary. The form will obtain CSRF protection automatically.",
+      "heading": "Sign in",
+      "rememberMe": "Keep me signed in",
+      "submit": "Sign in",
+      "submitting": "Signing in..."
+    },
+    "otp": {
+      "eyebrow": "Account / Verification",
+      "title": "Check your inbox.",
+      "lede": "Nomori sent a six-digit verification code to your email address.",
+      "heading": "Email OTP",
+      "submit": "Verify and sign in",
+      "submitting": "Verifying..."
+    },
+    "register": {
+      "eyebrow": "Account / Join",
+      "title": "Make room for things worth finding.",
+      "lede": "Create a Nomori Marketplace account to keep your details, orders and saved objects together.",
+      "heading": "Create account",
+      "success": "Account created. Check your email and open the verification link before signing in.",
+      "submit": "Create account",
+      "submitting": "Creating..."
+    },
+    "forgot": {
+      "eyebrow": "Account / Recovery",
+      "title": "A way back in.",
+      "lede": "Request recovery instructions. In Development, the API returns a token so the flow can be tested locally.",
+      "heading": "Forgot password",
+      "sent": "If the email is registered, recovery instructions have been sent to your inbox.",
+      "submit": "Request recovery",
+      "submitting": "Requesting..."
+    },
+    "reset": {
+      "eyebrow": "Account / Reset",
+      "title": "Start with a clean key.",
+      "lede": "Use the one-time link from your email to create a new password.",
+      "heading": "Reset password",
+      "success": "Password reset. You can sign in with the new password.",
+      "submit": "Reset password",
+      "submitting": "Resetting..."
+    },
+    "verify": {
+      "eyebrow": "Account / Email",
+      "title": "Confirm your address.",
+      "lede": "Email verification keeps account recovery and email OTP secure.",
+      "verifying": "Verifying...",
+      "successTitle": "Email verified",
+      "successText": "Your email address is ready to use.",
+      "failedTitle": "Verification failed",
+      "missingToken": "Missing verification token."
+    },
+    "confirmEmail": {
+      "eyebrow": "Account / Email",
+      "title": "Confirm your new address.",
+      "lede": "For security, you will sign in again with the new email after confirmation.",
+      "confirming": "Confirming...",
+      "successTitle": "Email changed",
+      "successText": "Your new email is verified. Please sign in again.",
+      "failedTitle": "Confirmation failed",
+      "missingToken": "Missing confirmation token.",
+      "invalid": "This link is invalid, expired, or the email is no longer available."
+    },
+    "forbidden": {
+      "eyebrow": "Authorization / Forbidden",
+      "title": "This boundary is restricted.",
+      "lede": "Your session is valid, but it does not include the permission required for this area.",
+      "heading": "Access denied",
+      "text": "Ask an administrator to update your role, or return to the storefront."
+    },
+    "account": {
+      "eyebrow": "Account / Session",
+      "title": "Your account boundary.",
+      "sessionHeading": "Session",
+      "status": "Status",
+      "authenticated": "Authenticated",
+      "guest": "Guest",
+      "notSignedIn": "Not signed in",
+      "customerId": "Customer ID",
+      "loadPermissions": "Load permissions",
+      "permissions": "Permissions",
+      "noPermissions": "No permissions assigned",
+      "permissionsError": "Unable to load permissions.",
+      "emailSecurity": "Email security",
+      "emailVerified": "Email verified",
+      "emailNotVerified": "Email not verified",
+      "sendVerification": "Send verification email",
+      "sending": "Sending...",
+      "emailOtp": "Email OTP",
+      "otpEnabled": "Enabled",
+      "disableOtp": "Disable email OTP",
+      "startOtpSetup": "Start OTP setup",
+      "confirmOtp": "Confirm OTP",
+      "changePasswordHeading": "Change password",
+      "passwordChanged": "Password changed. Sign in again with the new password.",
+      "changePassword": "Change password",
+      "changing": "Changing..."
+    }
+  },
+  "customer": {
+    "fields": {
+      "email": "Email",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "gender": "Gender",
+      "dateOfBirth": "Date of birth",
+      "phone": "Phone",
+      "address": "Address",
+      "city": "City",
+      "countryCode": "Country code"
+    },
+    "gender": {
+      "none": "Prefer not to say",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "unspecified": "Unspecified"
+    },
+    "links": {
+      "settings": "Customer settings",
+      "backToAccount": "Back to account",
+      "backToProfile": "Back to profile"
+    },
+    "profile": {
+      "eyebrow": "Customer / Profile",
+      "title": "Your profile.",
+      "identityHeading": "Account identity",
+      "verification": "Verification",
+      "verified": "Verified",
+      "notVerified": "Not verified",
+      "username": "Username",
+      "notSet": "Not set",
+      "settingsNote": "Manage saved addresses, preferences and a verified email change from Customer settings.",
+      "detailsHeading": "Personal details",
+      "updated": "Profile updated.",
+      "save": "Save profile",
+      "errors": {
+        "forbidden": "You do not have permission to read your profile.",
+        "load": "Unable to load your profile.",
+        "save": "Unable to update your profile."
+      }
+    },
+    "settings": {
+      "eyebrow": "Customer / Settings",
+      "title": "Details that travel.",
+      "addressBook": "Address book",
+      "edit": "Edit",
+      "delete": "Delete",
+      "noAddresses": "No saved addresses.",
+      "defaultAddress": "Default address",
+      "updateAddress": "Update address",
+      "addAddress": "Add address",
+      "preferences": "Preferences",
+      "no": "No",
+      "yes": "Yes",
+      "savePreferences": "Save preferences",
+      "preferencesSaved": "Preferences saved.",
+      "changeEmail": "Change email",
+      "newEmail": "New email",
+      "currentPassword": "Current password",
+      "sendConfirmation": "Send confirmation link",
+      "emailChangeSent": "Check the new email address and open its confirmation link.",
+      "attributes": {
+        "preferred_language": "Preferred language",
+        "marketing_opt_in": "Marketing emails"
+      },
+      "errors": {
+        "saveAddress": "Unable to save address.",
+        "savePreferences": "Unable to save preferences.",
+        "emailChange": "Unable to request email change."
+      }
+    }
+  },
+  "storefront": {
+    "breadcrumb": {
+      "label": "Breadcrumb",
+      "home": "Home"
+    },
+    "search": {
+      "label": "Search products",
+      "placeholder": "Search the marketplace",
+      "submit": "Search"
+    },
+    "card": {
+      "view": "View {{name}}",
+      "rating": "{{rating}} out of 5 stars",
+      "reviews": "{{count}} reviews",
+      "addToCart": "Add to cart"
+    },
+    "home": {
+      "breadcrumb": "Featured collection",
+      "eyebrow": "Storefront / Featured",
+      "title": "Objects with a point of view.",
+      "lede": "Search, filters, cards, pricing, reviews and cart actions have a shared home in the storefront.",
+      "controls": "Catalog controls",
+      "featuredCount": "Featured items: {{count}}",
+      "browseAll": "Browse all",
+      "loading": "Loading featured products...",
+      "featuredProducts": "Featured products",
+      "emptyEyebrow": "Get started",
+      "emptyTitle": "No featured products yet.",
+      "emptyStateTitle": "Add products in the admin panel",
+      "emptyStateMessage": "Create categories, manufacturers and products in the admin catalog, then mark them as featured to display them here.",
+      "addedToCart": "{{name}} is ready for the cart.",
+      "loadError": "Unable to load featured products."
+    },
+    "products": {
+      "breadcrumb": "Products",
+      "eyebrow": "Storefront / Catalog",
+      "title": "Browse the collection.",
+      "filters": "Filters",
+      "categories": "Categories",
+      "all": "All",
+      "itemCount": "Items: {{count}}",
+      "sort": "Sort",
+      "sortLabel": "Sort products",
+      "sortFeatured": "Featured",
+      "sortPriceAsc": "Price: low to high",
+      "sortPriceDesc": "Price: high to low",
+      "sortNewest": "Newest",
+      "loading": "Loading products...",
+      "emptyTitle": "No products found",
+      "emptyMessage": "Try adjusting your filters or search query.",
+      "loadError": "Unable to load products."
+    },
+    "productDetail": {
+      "loading": "Loading product...",
+      "inStock": "In stock · {{count}} available",
+      "outOfStock": "Out of stock",
+      "description": "Description",
+      "brand": "Brand",
+      "specifications": "Specifications",
+      "notFound": "Product not found.",
+      "loadError": "Unable to load product."
+    },
+    "vendors": {
+      "eyebrow": "Marketplace",
+      "title": "Shops",
+      "lede": "Browse all shops on Nomori Marketplace.",
+      "loading": "Loading shops...",
+      "empty": "No shops at the moment."
+    },
+    "vendorDetail": {
+      "loading": "Loading shop...",
+      "eyebrow": "Shop",
+      "invalid": "Invalid shop.",
+      "notFound": "Shop not found.",
+      "loadError": "Failed to load shop."
+    }
+  },
+  "admin": {
+    "common": {
+      "name": "Name",
+      "email": "Email",
+      "description": "Description",
+      "displayOrder": "Display order",
+      "order": "Order",
+      "status": "Status",
+      "created": "Created",
+      "active": "Active",
+      "none": "none",
+      "nameRequired": "Name is required.",
+      "saveFailed": "Save failed.",
+      "deleteFailed": "Delete failed."
+    },
+    "home": {
+      "eyebrow": "Admin / Foundation",
+      "title": "The operational side starts here.",
+      "lede": "Role assignment is protected by the backend permission boundary. The browser only coordinates the workflow and renders the API state.",
+      "statusLabel": "Boundary status",
+      "statusTitle": "Authorization online",
+      "statusText": "Role catalog and assignment API are available.",
+      "rolesEyebrow": "Authorization / Roles",
+      "rolesTitle": "Assign customer roles",
+      "rolesLoading": "Loading role catalog...",
+      "customerId": "Customer ID",
+      "loadRoles": "Load current roles",
+      "saveRoles": "Save roles",
+      "rolesSaved": "Role assignment saved.",
+      "auditEyebrow": "Security / Audit",
+      "auditTitle": "Recent security events",
+      "loadAudit": "Load audit log",
+      "noAudit": "No audit events yet.",
+      "auditActor": "Customer {{customer}} · {{ip}}",
+      "system": "system",
+      "unknownIp": "unknown IP",
+      "errors": {
+        "rolesForbidden": "You do not have permission to read roles.",
+        "rolesLoad": "Unable to load roles.",
+        "customerNotFound": "Customer was not found.",
+        "customerRolesLoad": "Unable to load customer roles.",
+        "ownAdminRole": "You cannot remove your own Administrator role.",
+        "rolesSave": "Unable to save customer roles.",
+        "auditForbidden": "You do not have permission to read audit logs.",
+        "auditLoad": "Unable to load audit logs."
+      }
+    },
+    "attributes": {
+      "eyebrow": "Admin / Catalog",
+      "title": "Product attribute specs.",
+      "lede": "Define reusable attribute templates (Color, Size, Material…) that can be mapped to any product.",
+      "heading": "Attribute specs",
+      "new": "New spec",
+      "edit": "Edit spec",
+      "empty": "No attribute specs yet.",
+      "confirmDelete": "Delete attribute spec \"{{name}}\"?"
+    },
+    "vendors": {
+      "eyebrow": "Admin / Shops",
+      "title": "Manage shops.",
+      "lede": "Create shop profiles and link them to customer accounts. Each customer can be assigned to one shop.",
+      "heading": "Shops",
+      "search": "Search shops...",
+      "new": "New shop",
+      "edit": "Edit shop",
+      "adminComment": "Admin comment",
+      "empty": "No shops found.",
+      "nameEmailRequired": "Name and email are required.",
+      "confirmDelete": "Delete shop \"{{name}}\"?"
+    },
+    "specs": {
+      "eyebrow": "Admin / Catalog",
+      "title": "Specification attributes.",
+      "lede": "Define filterable specs shown on product pages (RAM, Screen size, Connectivity…) organised in optional groups.",
+      "tabGroups": "Groups",
+      "tabAttributes": "Attributes",
+      "tabOptions": "Options",
+      "groupsHeading": "Attribute groups",
+      "newGroup": "New group",
+      "editGroup": "Edit group",
+      "noGroups": "No groups yet.",
+      "attributesHeading": "Specification attributes",
+      "newAttribute": "New attribute",
+      "editAttribute": "Edit attribute",
+      "group": "Group",
+      "noAttributes": "No attributes yet.",
+      "selectAttribute": "Select an attribute...",
+      "newOption": "New option",
+      "editOption": "Edit option",
+      "colorHex": "Color (hex)",
+      "color": "Color",
+      "selectAttributeHint": "Select an attribute above to manage its options.",
+      "noOptions": "No options yet.",
+      "confirmDeleteGroup": "Delete this group? Attributes in it will become ungrouped.",
+      "confirmDeleteAttribute": "Delete this attribute? All its options and product mappings will be removed.",
+      "confirmDeleteOption": "Delete this option?"
+    },
+    "catalog": {
+      "eyebrow": "Admin / Catalog",
+      "title": "Manage the product catalog.",
+      "lede": "Create and publish categories, products and manufacturers. Unpublished items are hidden from the storefront but remain editable here.",
+      "categories": "Categories",
+      "products": "Products",
+      "manufacturers": "Manufacturers",
+      "newCategory": "New category",
+      "editCategory": "Edit category",
+      "parentCategoryId": "Parent category ID",
+      "published": "Published",
+      "showOnHomepage": "Show on homepage",
+      "loadingCategories": "Loading categories...",
+      "noCategories": "No categories yet.",
+      "unpublished": "Unpublished",
+      "parent": "parent #{{id}}",
+      "searchProducts": "Search products...",
+      "newProduct": "New product",
+      "editProduct": "Edit product",
+      "shortDescription": "Short description",
+      "fullDescription": "Full description",
+      "price": "Price",
+      "compareAtPrice": "Compare at price",
+      "stock": "Stock",
+      "categoryIds": "Category IDs",
+      "manufacturerIds": "Manufacturer IDs",
+      "commaSeparated": "comma-separated",
+      "loadingProducts": "Loading products...",
+      "noProducts": "No products yet.",
+      "stockValue": "stock: {{count}}",
+      "newManufacturer": "New manufacturer",
+      "editManufacturer": "Edit manufacturer",
+      "loadingManufacturers": "Loading manufacturers...",
+      "noManufacturers": "No manufacturers yet.",
+      "confirmDeleteCategory": "Delete this category?",
+      "confirmDeleteProduct": "Delete this product?",
+      "confirmDeleteManufacturer": "Delete this manufacturer?",
+      "errors": {
+        "loadCategories": "Unable to load categories.",
+        "deleteCategory": "Unable to delete category.",
+        "loadProducts": "Unable to load products.",
+        "loadProduct": "Unable to load product.",
+        "deleteProduct": "Unable to delete product.",
+        "loadManufacturers": "Unable to load manufacturers.",
+        "deleteManufacturer": "Unable to delete manufacturer."
+      }
+    }
+  }
+}
