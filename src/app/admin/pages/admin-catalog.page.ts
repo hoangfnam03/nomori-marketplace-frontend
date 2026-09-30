@@ -142,6 +142,14 @@ interface ManufacturerForm {
           <h2>Products</h2>
           <div class="panel-header-right">
             <input type="text" class="search-input" placeholder="Search products..." [(ngModel)]="prodSearch" (keydown.enter)="loadProducts(1)" />
+            <select [(ngModel)]="prodFilter" name="prodFilter" (ngModelChange)="loadProducts(1)" aria-label="Filter products">
+              <option value="all">All products</option>
+              <option value="review">Awaiting review</option>
+              <option value="hiddenByAdmin">Hidden by admin</option>
+              <option value="live">Live</option>
+              <option value="draft">Draft</option>
+              <option value="stopped">Stopped</option>
+            </select>
             <button type="button" (click)="loadProducts(1)">Search</button>
             <button type="button" class="new-btn" (click)="openProductForm()">+ New product</button>
           </div>
@@ -191,7 +199,7 @@ interface ManufacturerForm {
               }
             </fieldset>
             <div class="form-row">
-              <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.published" name="published" /> Published</label>
+              <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.published" name="published" /> On sale <small>(never changes a hidden product)</small></label>
               <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.showOnHomepage" name="showOnHomepage" /> Show on homepage</label>
               <label>Display order <input type="number" [(ngModel)]="prodForm.displayOrder" name="displayOrder" style="width:80px" /></label>
             </div>
@@ -211,15 +219,35 @@ interface ManufacturerForm {
             <div class="item-row">
               <div class="item-info">
                 <span class="item-name">{{ prod.name }}</span>
-                @if (!prod.published) { <span class="badge-unpub">Unpublished</span> }
+                <span [class]="prod.status === 'hiddenByAdmin' ? 'badge-unpub' : 'item-meta'">{{ statusLabel(prod.status) }}</span>
+                @if (prod.reviewRequestedOnUtc) { <span class="badge-unpub">Review requested</span> }
                 <span class="item-meta">{{ formatPrice(prod.price) }}</span>
                 <span class="item-meta">shop: {{ prod.vendorName }}</span>
                 <span class="item-meta">stock: {{ prod.stockQuantity }}</span>
               </div>
               <div class="item-actions">
                 <button type="button" (click)="editProduct(prod)">Edit</button>
+                @if (prod.status === 'hiddenByAdmin') {
+                  <button type="button" (click)="unhideProduct(prod)">Unhide</button>
+                } @else {
+                  <button type="button" (click)="startHide(prod)">Hide</button>
+                }
                 <button type="button" class="del-btn" (click)="deleteProduct(prod.id)">Delete</button>
               </div>
+              @if (prod.status === 'hiddenByAdmin' && prod.hiddenReason) {
+                <p class="hidden-reason">Hidden: {{ prod.hiddenReason }}</p>
+              }
+              @if (hidingId === prod.id) {
+                <form class="hide-form" (ngSubmit)="confirmHide(prod)">
+                  <label>Reason (emailed to the shop) *
+                    <textarea [(ngModel)]="hideReason" name="hideReason" rows="2" maxlength="2000"></textarea>
+                  </label>
+                  <div class="form-actions">
+                    <button type="submit" [disabled]="!hideReason.trim() || prodSaving">Hide product</button>
+                    <button type="button" class="cancel-btn" (click)="hidingId = null">Cancel</button>
+                  </div>
+                </form>
+              }
             </div>
           }
         </div>
@@ -324,6 +352,8 @@ interface ManufacturerForm {
     .pick-list { border: 1px solid var(--line); padding: .6rem .9rem; display: grid; gap: .35rem; max-height: 200px; overflow: auto; }
     .pick-list legend { color: var(--muted); font: .7rem var(--mono-font); text-transform: uppercase; padding: 0 .3rem; }
     .muted { color: var(--muted); font-size: .85rem; }
+    .hidden-reason { flex-basis: 100%; margin: .4rem 0 0; color: #7d3026; font-size: .85rem; }
+    .hide-form { flex-basis: 100%; display: grid; gap: .6rem; margin-top: .6rem; }
     .transfer { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
     select { border: 1px solid var(--line-strong); padding: .55rem; background: var(--paper); font: inherit; }
     .item-list { border-top: 1px solid var(--line-strong); }
@@ -370,6 +400,9 @@ export class AdminCatalogPage {
   prodPage = 1;
   prodTotalPages = 1;
   prodSearch = '';
+  prodFilter: 'all' | 'review' | 'hiddenByAdmin' | 'live' | 'draft' | 'stopped' = 'all';
+  hidingId: number | null = null;
+  hideReason = '';
   prodFormOpen = false;
   prodSaving = false;
   prodError: string | null = null;
@@ -482,7 +515,8 @@ export class AdminCatalogPage {
   loadProducts(page: number) {
     this.prodLoading = true;
     this.prodLoadError = null;
-    this.api.adminGetProducts(page, 50, this.prodSearch || null).subscribe({
+    const status = this.prodFilter === 'all' ? null : this.prodFilter === 'review' ? 'hiddenByAdmin' : this.prodFilter;
+    this.api.adminGetProducts(page, 50, this.prodSearch || null, null, status, this.prodFilter === 'review').subscribe({
       next: r => { this.products = r.items; this.prodPage = r.page; this.prodTotalPages = r.totalPages; this.prodLoading = false; },
       error: () => { this.prodLoadError = 'Unable to load products.'; this.prodLoading = false; }
     });
@@ -643,6 +677,34 @@ export class AdminCatalogPage {
     });
   }
 
+  startHide(prod: AdminProductResponse) {
+    this.hidingId = prod.id;
+    this.hideReason = '';
+    this.notice = null;
+  }
+
+  confirmHide(prod: AdminProductResponse) {
+    if (!this.hideReason.trim()) return;
+    this.prodSaving = true;
+    this.notice = null;
+    this.api.adminHideProduct(prod.id, this.hideReason.trim()).subscribe({
+      next: () => { this.prodSaving = false; this.hidingId = null; this.loadProducts(this.prodPage); },
+      error: err => { this.prodSaving = false; this.notice = conflictMessage(err, extractError(err, 'Unable to hide the product.')); }
+    });
+  }
+
+  unhideProduct(prod: AdminProductResponse) {
+    this.notice = null;
+    this.api.adminUnhideProduct(prod.id).subscribe({
+      next: () => this.loadProducts(this.prodPage),
+      error: err => { this.notice = conflictMessage(err, 'Unable to unhide the product.'); }
+    });
+  }
+
+  statusLabel(status: AdminProductResponse['status']) {
+    return { draft: 'Draft', live: 'Live', stopped: 'Stopped', hiddenByAdmin: 'Hidden by admin' }[status];
+  }
+
   transferProduct() {
     if (!this.editingProductId || !this.transferVendorId) return;
     const target = this.shops.find(s => s.id === this.transferVendorId);
@@ -702,7 +764,9 @@ function flattenTree(nodes: AdminCategoryTreeNode[], excludeId: number | null, d
 const conflictMessages: Record<string, string> = {
   'category.has_children': 'This category still has subcategories. Move or delete them first.',
   'category.in_use': 'Products still use this category. Remove it from those products first.',
-  'manufacturer.in_use': 'Products still use this manufacturer. Remove it from those products first.'
+  'manufacturer.in_use': 'Products still use this manufacturer. Remove it from those products first.',
+  'product.already_hidden': 'This product is already hidden.',
+  'product.not_hidden': 'This product is not hidden.'
 };
 
 function conflictMessage(err: { status?: number; message?: string }, fallback: string): string {

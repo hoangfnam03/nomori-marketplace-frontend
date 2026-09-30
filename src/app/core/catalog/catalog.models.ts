@@ -101,6 +101,10 @@ export interface AdminProductResponse {
   displayOrder: number;
   createdOnUtc: string;
   updatedOnUtc: string;
+  status: 'draft' | 'live' | 'stopped' | 'hiddenByAdmin';
+  hiddenReason: string | null;
+  hiddenOnUtc: string | null;
+  reviewRequestedOnUtc: string | null;
 }
 
 export interface AdminProductDetailResponse {

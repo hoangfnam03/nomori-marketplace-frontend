@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AuthFacade } from '../../core/auth/auth.facade';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { ManufacturerResponse, SelectableCategory } from '../../core/catalog/catalog.models';
-import { SaveVendorProductRequest, VendorProduct, VendorProductApiService } from '../../core/catalog/vendor-product-api.service';
+import { ProductStatus, SaveVendorProductRequest, VendorProduct, VendorProductApiService } from '../../core/catalog/vendor-product-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
 interface ProductForm {
@@ -14,12 +14,11 @@ interface ProductForm {
   price: number;
   oldPrice: number;
   stockQuantity: number;
-  published: boolean;
   categoryIds: number[];
   manufacturerIds: number[];
 }
 
-type StatusFilter = 'all' | 'published' | 'draft';
+type StatusFilter = 'all' | ProductStatus;
 
 @Component({
   standalone: true,
@@ -41,8 +40,10 @@ type StatusFilter = 'all' | 'published' | 'draft';
           <div class="actions">
             <select [(ngModel)]="status" (ngModelChange)="onFilterChange()" name="status" aria-label="Filter by status">
               <option value="all">All</option>
-              <option value="published">Published</option>
               <option value="draft">Draft</option>
+              <option value="live">Live</option>
+              <option value="stopped">Stopped</option>
+              <option value="hiddenByAdmin">Hidden by admin</option>
             </select>
             <input type="search" name="search" placeholder="Search products…" [(ngModel)]="search" (input)="onSearch()" aria-label="Search products" />
             <button type="button" class="btn" (click)="openForm()">+ New product</button>
@@ -67,16 +68,33 @@ type StatusFilter = 'all' | 'published' | 'draft';
               <tbody>
                 @for (p of products; track p.id) {
                   <tr>
-                    <td><strong>{{ p.name }}</strong></td>
+                    <td>
+                      <strong>{{ p.name }}</strong>
+                      @if (p.status === 'hiddenByAdmin') {
+                        <div class="hidden-note">
+                          Hidden by an administrator: {{ p.hiddenReason }}
+                          @if (p.reviewRequestedOnUtc) { <br /><span class="muted">Review requested.</span> }
+                        </div>
+                      }
+                    </td>
                     <td>{{ money(p.price) }}@if (p.oldPrice > 0) { <br /><span class="muted">was {{ money(p.oldPrice) }}</span> }</td>
                     <td>{{ p.stockQuantity }}</td>
-                    <td><span [class]="p.published ? 'badge badge-approved' : 'badge'">{{ p.published ? 'Published' : 'Draft' }}</span></td>
+                    <td><span [class]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
                     <td class="row-actions">
                       @if (pendingDelete?.id === p.id) {
                         <span class="muted">Delete this product?</span>
                         <button type="button" class="btn btn-danger btn-small" (click)="remove(p)" [disabled]="busy">Delete</button>
                         <button type="button" class="btn btn-secondary btn-small" (click)="pendingDelete = null">Cancel</button>
                       } @else {
+                        @if (p.status === 'draft' || p.status === 'stopped') {
+                          <button type="button" class="btn btn-small" (click)="changeStatus(p, 'live')" [disabled]="busy">Publish</button>
+                        }
+                        @if (p.status === 'live') {
+                          <button type="button" class="btn btn-secondary btn-small" (click)="changeStatus(p, 'stopped')" [disabled]="busy">Stop selling</button>
+                        }
+                        @if (p.status === 'hiddenByAdmin' && !p.reviewRequestedOnUtc) {
+                          <button type="button" class="btn btn-secondary btn-small" (click)="askReview(p)" [disabled]="busy">Request review</button>
+                        }
                         <button type="button" class="btn btn-secondary btn-small" (click)="edit(p)">Edit</button>
                         <button type="button" class="btn btn-danger btn-small" (click)="pendingDelete = p">Delete</button>
                       }
@@ -146,10 +164,7 @@ type StatusFilter = 'all' | 'published' | 'draft';
               @if (fieldError('manufacturerIds')) { <span class="field-error">{{ fieldError('manufacturerIds') }}</span> }
             </fieldset>
 
-            <label class="check-label">
-              <input type="checkbox" name="published" [(ngModel)]="form.published" /> Published (visible on the storefront)
-            </label>
-            @if (fieldError('published')) { <span class="field-error">{{ fieldError('published') }}</span> }
+            <p class="muted">New products start as drafts. Publish them from the list when they are ready.</p>
 
             <div class="actions">
               <button type="submit" class="btn" [disabled]="busy || !form.name.trim()">{{ busy ? 'Saving…' : 'Save product' }}</button>
@@ -161,6 +176,7 @@ type StatusFilter = 'all' | 'published' | 'draft';
     }
   `,
   styles: [`
+    .hidden-note { margin-top: .3rem; padding: .35rem .6rem; border-left: 3px solid #b74e3c; background: #f8e9e4; color: #7d3026; font-size: .8rem; }
     .pick-list { border: 1px solid var(--line); border-radius: 6px; padding: .6rem .9rem; display: grid; gap: .35rem; max-height: 200px; overflow: auto; }
     .pick-list legend { font-size: .8rem; padding: 0 .3rem; }
   `]
@@ -237,7 +253,6 @@ export class VendorProductsPage implements OnInit {
           shortDescription: full.shortDescription ?? '',
           fullDescription: full.fullDescription ?? '',
           price: full.price, oldPrice: full.oldPrice, stockQuantity: full.stockQuantity,
-          published: full.published,
           categoryIds: [...(full.categoryIds ?? [])],
           manufacturerIds: [...(full.manufacturerIds ?? [])]
         };
@@ -258,7 +273,6 @@ export class VendorProductsPage implements OnInit {
       shortDescription: this.form.shortDescription || null,
       fullDescription: this.form.fullDescription || null,
       price: this.form.price, oldPrice: this.form.oldPrice, stockQuantity: this.form.stockQuantity,
-      published: this.form.published,
       categoryIds: this.form.categoryIds,
       manufacturerIds: this.form.manufacturerIds
     };
@@ -290,6 +304,44 @@ export class VendorProductsPage implements OnInit {
     });
   }
 
+  changeStatus(product: VendorProduct, target: 'live' | 'stopped') {
+    if (!this.vendorId) return;
+    this.busy = true;
+    this.clearErrors();
+    this.api.setStatus(this.vendorId, product.id, target).subscribe({
+      next: () => {
+        this.busy = false;
+        this.notice = target === 'live' ? `“${product.name}” is now on sale.` : `“${product.name}” is no longer on sale.`;
+        this.fetch();
+      },
+      error: err => {
+        this.busy = false;
+        const fields = err?.fieldErrors ? Object.values(err.fieldErrors as Record<string, string[]>).flat().join(' ') : '';
+        this.actionError = fields || this.writeError(err, 'Unable to change the product status.');
+        // The product may have been hidden meanwhile; show its real state.
+        if (err?.status === 409) this.fetch();
+      }
+    });
+  }
+
+  askReview(product: VendorProduct) {
+    if (!this.vendorId) return;
+    this.busy = true;
+    this.clearErrors();
+    this.api.requestReview(this.vendorId, product.id).subscribe({
+      next: () => { this.busy = false; this.notice = 'Review requested. An administrator will look at it.'; this.fetch(); },
+      error: err => { this.busy = false; this.actionError = this.writeError(err, 'Unable to request a review.'); this.fetch(); }
+    });
+  }
+
+  statusLabel(status: ProductStatus) {
+    return { draft: 'Draft', live: 'Live', stopped: 'Stopped', hiddenByAdmin: 'Hidden by admin' }[status];
+  }
+
+  statusClass(status: ProductStatus) {
+    return { draft: 'badge', live: 'badge badge-approved', stopped: 'badge badge-cancelled', hiddenByAdmin: 'badge badge-rejected' }[status];
+  }
+
   toggle(list: number[], id: number) {
     const index = list.indexOf(id);
     if (index >= 0) list.splice(index, 1);
@@ -306,7 +358,7 @@ export class VendorProductsPage implements OnInit {
     this.api.list(this.vendorId, {
       page: this.page,
       search: this.search.trim() || undefined,
-      published: this.status === 'all' ? undefined : this.status === 'published'
+      status: this.status === 'all' ? undefined : this.status
     }).subscribe({
       next: res => { this.products = res.items; this.totalPages = Math.max(res.totalPages, 1); this.loading = false; },
       error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, 'Unable to load products.'); }
@@ -328,6 +380,6 @@ export class VendorProductsPage implements OnInit {
   private clearErrors() { this.formError = ''; this.fieldErrors = {}; this.actionError = ''; this.notice = ''; }
 
   private emptyForm(): ProductForm {
-    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, published: false, categoryIds: [], manufacturerIds: [] };
+    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, categoryIds: [], manufacturerIds: [] };
   }
 }

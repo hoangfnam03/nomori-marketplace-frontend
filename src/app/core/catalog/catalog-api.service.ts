@@ -144,11 +144,23 @@ export class CatalogApiService {
     return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/catalog/categories/${id}`);
   }
 
-  adminGetProducts(page = 1, pageSize = 50, search?: string | null, vendorId?: number | null) {
+  adminGetProducts(page = 1, pageSize = 50, search?: string | null, vendorId?: number | null, status?: string | null, reviewRequested?: boolean) {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (search) params = params.set('search', search);
     if (vendorId) params = params.set('vendorId', vendorId);
+    if (status) params = params.set('status', status);
+    if (reviewRequested) params = params.set('reviewRequested', true);
     return this.http.get<PagedResult<AdminProductResponse>>(`${this.apiBaseUrl}/v1/admin/catalog/products`, { params });
+  }
+
+  /** Hides a product from the storefront. The reason is emailed to the shop and shown to it. */
+  adminHideProduct(id: number, reason: string) {
+    return this.http.post<AdminProductResponse>(`${this.apiBaseUrl}/v1/admin/catalog/products/${id}/hide`, { reason });
+  }
+
+  /** Puts the product back in the state it had before it was hidden. */
+  adminUnhideProduct(id: number) {
+    return this.http.post<AdminProductResponse>(`${this.apiBaseUrl}/v1/admin/catalog/products/${id}/unhide`, {});
   }
 
   /** Moves a product to another shop. The only way to change a product's owner. */

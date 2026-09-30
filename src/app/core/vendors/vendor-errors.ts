@@ -8,6 +8,10 @@ const messages: Record<string, string> = {
   'vendor_member.email_already_exists': 'This email is already in use.',
   'vendor_member.limit_reached': 'The shop has reached its member limit.',
   'vendor_member.already_active': 'This member has already activated their account.',
+  'product.hidden_by_admin': 'An administrator hid this product. You can edit it and ask for a review, but only an administrator can put it back on sale.',
+  'product.not_hidden': 'This product is not hidden.',
+  'product.already_hidden': 'This product is already hidden.',
+  'product.invalid_transition': 'This change is not possible for the product in its current state.',
   'vendor.platform_shop': 'The platform shop cannot be deleted or deactivated.',
   'vendor_member.last_member': 'A shop must keep at least one member.'
 };
