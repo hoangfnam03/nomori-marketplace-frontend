@@ -1,7 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
-import { VendorPublicResponse } from '../../core/vendors/vendor.models';
+import { VendorResponse } from '../../core/vendors/vendor.models';
 
 @Component({
   standalone: true,
@@ -139,7 +139,7 @@ import { VendorPublicResponse } from '../../core/vendors/vendor.models';
 export class VendorListPage implements OnInit {
   private readonly api = inject(VendorApiService);
 
-  vendors: VendorPublicResponse[] = [];
+  vendors: VendorResponse[] = [];
   loading = false;
   page = 1;
   totalPages = 1;

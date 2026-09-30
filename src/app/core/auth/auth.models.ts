@@ -4,6 +4,8 @@ export interface AuthSession {
   email: string | null;
   emailVerified: boolean | null;
   emailOtpEnabled: boolean | null;
+  /** Vendor (shop) the account belongs to, if any. */
+  vendorId: number | null;
 }
 
 export interface CsrfResponse {

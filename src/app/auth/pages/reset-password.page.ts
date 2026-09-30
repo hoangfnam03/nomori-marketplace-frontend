@@ -9,18 +9,18 @@ import { passwordValidators } from '../../core/auth/password-policy';
   imports: [ReactiveFormsModule, RouterLink],
   styleUrls: ['../auth-page.scss'],
   template: `
-    <div class="auth-page"><section><div class="eyebrow">Account / Reset</div><h1>Start with a clean key.</h1><p class="lede">Use the one-time link from your email to create a new password.</p></section>
-      <form class="auth-panel" [formGroup]="form" (ngSubmit)="submit()" novalidate><h2>Reset password</h2>
+    <div class="auth-page"><section><div class="eyebrow">Account / Reset</div><h1>{{ setup ? 'Welcome aboard.' : 'Start with a clean key.' }}</h1><p class="lede">{{ setup ? 'Choose a password to activate your shop account.' : 'Use the one-time link from your email to create a new password.' }}</p></section>
+      <form class="auth-panel" [formGroup]="form" (ngSubmit)="submit()" novalidate><h2>{{ setup ? 'Set your password' : 'Reset password' }}</h2>
         <div class="field"><label for="token">Recovery token</label><input id="token" type="text" formControlName="token" autocomplete="off" /></div>
         <div class="field"><label for="newPassword">New password</label><input id="newPassword" type="password" formControlName="newPassword" autocomplete="new-password" /> @if (form.controls.newPassword.touched && form.controls.newPassword.invalid) { <span class="field-error">Use at least 12 characters with upper/lowercase, a number and a special character.</span> }</div>
-        @if (error) { <div class="form-error" role="alert">{{ error }}</div> } @if (success) { <div class="form-success" role="status">Password reset. You can sign in with the new password.</div> }
-        <button class="submit" type="submit" [disabled]="form.invalid || auth.isLoading()">{{ auth.isLoading() ? 'Resetting...' : 'Reset password' }}</button><div class="auth-links"><a routerLink="/auth/login">Back to sign in</a></div>
+        @if (error) { <div class="form-error" role="alert">{{ error }}</div> } @if (success) { <div class="form-success" role="status">{{ setup ? 'Password set. You can now sign in.' : 'Password reset. You can sign in with the new password.' }}</div> }
+        <button class="submit" type="submit" [disabled]="form.invalid || auth.isLoading()">{{ auth.isLoading() ? 'Saving...' : (setup ? 'Set password' : 'Reset password') }}</button><div class="auth-links"><a routerLink="/auth/login">Back to sign in</a></div>
       </form>
     </div>
   `
 })
 export class ResetPasswordPage {
   readonly auth = inject(AuthFacade); private readonly route = inject(ActivatedRoute); private readonly router = inject(Router); private readonly formBuilder = inject(NonNullableFormBuilder);
-  readonly form = this.formBuilder.group({ token: [this.route.snapshot.queryParamMap.get('token') ?? '', Validators.required], newPassword: ['', passwordValidators] }); error: string | null = null; success = false;
+  readonly form = this.formBuilder.group({ token: [this.route.snapshot.queryParamMap.get('token') ?? '', Validators.required], newPassword: ['', passwordValidators] }); error: string | null = null; success = false; readonly setup = this.route.snapshot.queryParamMap.get('setup') === '1';
   submit() { if (this.form.invalid) { this.form.markAllAsTouched(); return; } this.auth.resetPassword(this.form.getRawValue()).subscribe({ next: () => { this.success = true; setTimeout(() => this.router.navigateByUrl('/auth/login'), 900); }, error: error => this.error = error.message }); }
 }
