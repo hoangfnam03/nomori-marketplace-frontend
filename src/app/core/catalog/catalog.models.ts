@@ -34,6 +34,8 @@ export interface ProductResponse {
   showOnHomepage: boolean;
   displayOrder: number;
   createdOnUtc: string;
+  vendorId: number;
+  vendorName: string | null;
 }
 
 export interface ProductDetailResponse {
@@ -94,6 +96,7 @@ export interface AdminProductResponse {
   stockQuantity: number;
   published: boolean;
   vendorId: number;
+  vendorName: string | null;
   showOnHomepage: boolean;
   displayOrder: number;
   createdOnUtc: string;

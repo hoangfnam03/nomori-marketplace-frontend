@@ -14,6 +14,7 @@ import { ProductCardModel } from '../../models/product-card.model';
       </a>
       <div class="product-info">
         <div class="category">{{ product().category }}</div>
+        @if (product().shopName) { <a class="shop" [routerLink]="['/storefront/vendors', product().shopId]">{{ product().shopName }}</a> }
         <h3><a [routerLink]="['/storefront/products', product().id]">{{ product().name }}</a></h3>
         @if (product().rating) {
           <div class="rating" [attr.aria-label]="product().rating + ' out of 5 stars'">{{ '★'.repeat(product().rating ?? 0) }}<span>{{ product().reviewCount ?? 0 }} reviews</span></div>
@@ -31,6 +32,8 @@ import { ProductCardModel } from '../../models/product-card.model';
     .product-image:hover img { transform: scale(1.04); }
     .badge { position: absolute; top: .75rem; left: .75rem; z-index: 1; padding: .4rem .55rem; background: var(--green); color: var(--paper); font: 500 .65rem/1 var(--mono-font); letter-spacing: .08em; text-transform: uppercase; }
     .product-info { display: flex; flex: 1; flex-direction: column; padding: 1rem; }
+    .shop { display: block; margin-top: .4rem; color: var(--muted); font-size: .75rem; text-decoration: none; }
+    .shop:hover { color: var(--green); text-decoration: underline; }
     .category { color: var(--green); font: 500 .65rem/1 var(--mono-font); letter-spacing: .1em; text-transform: uppercase; }
     h3 { margin: .7rem 0 .55rem; font: 700 1.1rem/1.15 var(--display-font); }
     h3 a { color: var(--ink); text-decoration: none; }

@@ -34,6 +34,9 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
             <div class="eyebrow">{{ detail.categories[0].name }}</div>
           }
           <h1>{{ detail.product.name }}</h1>
+          @if (detail.product.vendorName) {
+            <p class="sold-by">Sold by <a [routerLink]="['/storefront/vendors', detail.product.vendorId]">{{ detail.product.vendorName }}</a></p>
+          }
 
           <div class="price-row">
             <span class="price">{{ formatPrice(detail.product.price) }}</span>
@@ -158,6 +161,8 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
     }
   `,
   styles: [`
+    .sold-by { margin: .2rem 0 1rem; color: var(--muted); font-size: .9rem; }
+    .sold-by a { color: var(--green); }
     :host { display: block; }
     .page-heading { padding: .75rem 0 2rem; animation: rise-in 600ms ease both; }
     .product-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; padding-bottom: 5rem; }

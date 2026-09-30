@@ -25,6 +25,8 @@ export interface ProductListParams {
   maxPrice?: number | null;
   search?: string | null;
   sort?: string;
+  /** Only products sold by this shop. */
+  vendorId?: number | null;
 }
 
 export interface SaveCategoryRequest {
@@ -92,6 +94,7 @@ export class CatalogApiService {
     if (p.maxPrice != null) params = params.set('maxPrice', p.maxPrice);
     if (p.search) params = params.set('search', p.search);
     if (p.sort) params = params.set('sort', p.sort);
+    if (p.vendorId != null) params = params.set('vendorId', p.vendorId);
     return this.http.get<PagedResult<ProductResponse>>(`${this.apiBaseUrl}/v1/catalog/products`, { params });
   }
 
@@ -141,10 +144,16 @@ export class CatalogApiService {
     return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/catalog/categories/${id}`);
   }
 
-  adminGetProducts(page = 1, pageSize = 50, search?: string | null) {
+  adminGetProducts(page = 1, pageSize = 50, search?: string | null, vendorId?: number | null) {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (search) params = params.set('search', search);
+    if (vendorId) params = params.set('vendorId', vendorId);
     return this.http.get<PagedResult<AdminProductResponse>>(`${this.apiBaseUrl}/v1/admin/catalog/products`, { params });
+  }
+
+  /** Moves a product to another shop. The only way to change a product's owner. */
+  adminTransferProduct(id: number, vendorId: number) {
+    return this.http.post<AdminProductResponse>(`${this.apiBaseUrl}/v1/admin/catalog/products/${id}/transfer`, { vendorId });
   }
 
   adminGetProduct(id: number) {
