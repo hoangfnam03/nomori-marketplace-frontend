@@ -12,6 +12,7 @@
       <a routerLink="/storefront/vendors" routerLinkActive="active">Vendors</a>
       <a routerLink="/admin/catalog" routerLinkActive="active">Catalog</a>
       <a routerLink="/admin/vendors" routerLinkActive="active">Vendors (Admin)</a>
+      <a routerLink="/admin/vendor-applications" routerLinkActive="active">Applications</a>
       <a routerLink="/admin/attributes" routerLinkActive="active">Attributes</a>
       <a routerLink="/admin/spec-attributes" routerLinkActive="active">Spec Attrs</a>
     </nav>
@@ -21,6 +22,11 @@
         <span class="status-dot" aria-hidden="true"></span>
         <a class="account-email" routerLink="/auth/account">{{ auth.session()?.email }}</a>
         <a class="account-action" routerLink="/customer/profile">Profile</a>
+        @if (auth.session()?.vendorId) {
+          <a class="account-action" routerLink="/vendor">Vendor portal</a>
+        } @else {
+          <a class="account-action" routerLink="/customer/become-vendor">Sell on Nomori</a>
+        }
         <button type="button" class="account-action" (click)="logout()">Sign out</button>
       } @else {
         <span class="status-dot status-dot--muted" aria-hidden="true"></span>

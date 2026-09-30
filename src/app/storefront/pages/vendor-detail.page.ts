@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
-import { VendorPublicResponse } from '../../core/vendors/vendor.models';
+import { VendorResponse } from '../../core/vendors/vendor.models';
 
 @Component({
   standalone: true,
@@ -111,7 +111,7 @@ export class VendorDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(VendorApiService);
 
-  vendor: VendorPublicResponse | null = null;
+  vendor: VendorResponse | null = null;
   loading = false;
   error = '';
 

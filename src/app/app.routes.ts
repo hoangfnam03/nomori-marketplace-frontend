@@ -19,6 +19,10 @@ export const routes: Routes = [
 				loadChildren: () => import('./customer/customer.routes').then(route => route.customerRoutes)
 			},
 			{
+				path: 'vendor',
+				loadChildren: () => import('./vendor/vendor.routes').then(route => route.vendorRoutes)
+			},
+			{
 				path: 'admin',
 				loadChildren: () => import('./admin/admin.routes').then(route => route.adminRoutes)
 			}
