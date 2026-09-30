@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { MediaImageFieldComponent } from '../../shared/components/media-image-field/media-image-field.component';
 import { CatalogApiService, SaveCategoryRequest, SaveManufacturerRequest, SaveProductRequest } from '../../core/catalog/catalog-api.service';
 import {
   AdminCategoryResponse, AdminManufacturerResponse,
@@ -12,6 +13,7 @@ interface CategoryForm {
   name: string;
   description: string;
   parentCategoryId: number;
+  pictureId: number;
   showOnHomepage: boolean;
   published: boolean;
   displayOrder: number;
@@ -34,13 +36,14 @@ interface ProductForm {
 interface ManufacturerForm {
   name: string;
   description: string;
+  pictureId: number;
   published: boolean;
   displayOrder: number;
 }
 
 @Component({
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, MediaImageFieldComponent],
   template: `
     <section class="admin-intro" aria-labelledby="catalog-title">
       <div>
@@ -71,6 +74,7 @@ interface ManufacturerForm {
             <label>Name <input type="text" [(ngModel)]="catForm.name" name="name" required /></label>
             <label>Description <textarea [(ngModel)]="catForm.description" name="description" rows="2"></textarea></label>
             <label>Parent category ID <input type="number" [(ngModel)]="catForm.parentCategoryId" name="parentCategoryId" min="0" /></label>
+            <app-media-image-field label="Category image" purpose="category" [(pictureId)]="catForm.pictureId" />
             <div class="form-row">
               <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.published" name="published" /> Published</label>
               <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.showOnHomepage" name="showOnHomepage" /> Show on homepage</label>
@@ -196,6 +200,7 @@ interface ManufacturerForm {
             @if (mfrError) { <p class="form-error" role="alert">{{ mfrError }}</p> }
             <label>Name <input type="text" [(ngModel)]="mfrForm.name" name="name" required /></label>
             <label>Description <textarea [(ngModel)]="mfrForm.description" name="description" rows="2"></textarea></label>
+            <app-media-image-field label="Manufacturer image" purpose="manufacturer" [(pictureId)]="mfrForm.pictureId" />
             <div class="form-row">
               <label class="check-label"><input type="checkbox" [(ngModel)]="mfrForm.published" name="published" /> Published</label>
               <label>Display order <input type="number" [(ngModel)]="mfrForm.displayOrder" name="displayOrder" style="width:80px" /></label>
@@ -364,6 +369,7 @@ export class AdminCatalogPage {
     this.catForm = {
       name: cat.name, description: cat.description ?? '',
       parentCategoryId: cat.parentCategoryId,
+      pictureId: cat.pictureId,
       showOnHomepage: cat.showOnHomepage, published: cat.published, displayOrder: cat.displayOrder
     };
     this.catError = null;
@@ -378,6 +384,7 @@ export class AdminCatalogPage {
       name: this.catForm.name,
       description: this.catForm.description || null,
       parentCategoryId: this.catForm.parentCategoryId,
+      pictureId: this.catForm.pictureId,
       showOnHomepage: this.catForm.showOnHomepage,
       published: this.catForm.published,
       displayOrder: this.catForm.displayOrder
@@ -502,7 +509,7 @@ export class AdminCatalogPage {
   editManufacturer(mfr: AdminManufacturerResponse) {
     this.editingManufacturerId = mfr.id;
     this.mfrForm = {
-      name: mfr.name, description: mfr.description ?? '',
+      name: mfr.name, description: mfr.description ?? '', pictureId: mfr.pictureId,
       published: mfr.published, displayOrder: mfr.displayOrder
     };
     this.mfrError = null;
@@ -516,6 +523,7 @@ export class AdminCatalogPage {
     const req: SaveManufacturerRequest = {
       name: this.mfrForm.name,
       description: this.mfrForm.description || null,
+      pictureId: this.mfrForm.pictureId,
       published: this.mfrForm.published,
       displayOrder: this.mfrForm.displayOrder
     };
@@ -541,7 +549,7 @@ export class AdminCatalogPage {
   }
 
   private emptyCatForm(): CategoryForm {
-    return { name: '', description: '', parentCategoryId: 0, showOnHomepage: false, published: true, displayOrder: 0 };
+    return { name: '', description: '', parentCategoryId: 0, pictureId: 0, showOnHomepage: false, published: true, displayOrder: 0 };
   }
 
   private emptyProdForm(): ProductForm {
@@ -549,7 +557,7 @@ export class AdminCatalogPage {
   }
 
   private emptyMfrForm(): ManufacturerForm {
-    return { name: '', description: '', published: true, displayOrder: 0 };
+    return { name: '', description: '', pictureId: 0, published: true, displayOrder: 0 };
   }
 }
 
@@ -557,9 +565,11 @@ function parseIds(value: string): number[] {
   return value.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n) && n > 0);
 }
 
-function extractError(err: { error?: { errors?: Record<string, string[]> } }, fallback: string): string {
-  if (err?.error?.errors) {
-    return Object.values(err.error.errors).flat().join(' ');
+function extractError(err: { error?: { errors?: Record<string, string[]> }; fieldErrors?: Record<string, string[]> }, fallback: string): string {
+  // The error interceptor moves validation errors to `fieldErrors`; keep reading `error.errors` for raw responses.
+  const errors = err?.fieldErrors ?? err?.error?.errors;
+  if (errors) {
+    return Object.values(errors).flat().join(' ');
   }
   return fallback;
 }

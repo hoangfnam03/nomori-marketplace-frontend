@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
+import { MediaApiService } from '../../core/media/media-api.service';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { VendorResponse } from '../../core/vendors/vendor.models';
 
@@ -24,7 +25,11 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
 
       <div class="vendor-layout">
         <aside class="vendor-aside">
-          <div class="vendor-avatar" aria-hidden="true">{{ initial(vendor.name) }}</div>
+          @if (logoUrl(vendor.pictureId); as logo) {
+            <img class="vendor-avatar" [src]="logo" [alt]="vendor.name + ' logo'" />
+          } @else {
+            <div class="vendor-avatar" aria-hidden="true">{{ initial(vendor.name) }}</div>
+          }
         </aside>
 
         <div class="vendor-body">
@@ -59,6 +64,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
     .vendor-aside { flex-shrink: 0; }
 
     .vendor-avatar {
+      object-fit: cover;
       width: 96px;
       height: 96px;
       border-radius: 50%;
@@ -110,6 +116,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
 export class VendorDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(VendorApiService);
+  private readonly media = inject(MediaApiService);
 
   vendor: VendorResponse | null = null;
   loading = false;
@@ -127,6 +134,8 @@ export class VendorDetailPage implements OnInit {
       }
     });
   }
+
+  logoUrl(pictureId: number) { return this.media.url(pictureId); }
 
   initial(name: string) { return name.charAt(0).toUpperCase(); }
 }
