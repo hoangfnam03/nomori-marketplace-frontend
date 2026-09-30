@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { MediaApiService } from '../../core/media/media-api.service';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { VendorResponse } from '../../core/vendors/vendor.models';
 
@@ -23,7 +24,11 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
           @for (v of vendors; track v.id) {
             <li class="vendor-card">
               <a [routerLink]="['/storefront/vendors', v.id]" class="vendor-link">
-                <div class="vendor-avatar" aria-hidden="true">{{ initial(v.name) }}</div>
+                @if (logoUrl(v.pictureId); as logo) {
+                  <img class="vendor-avatar" [src]="logo" [alt]="v.name + ' logo'" />
+                } @else {
+                  <div class="vendor-avatar" aria-hidden="true">{{ initial(v.name) }}</div>
+                }
                 <div class="vendor-info">
                   <div class="vendor-name">{{ v.name }}</div>
                   @if (v.description) {
@@ -92,6 +97,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
     }
 
     .vendor-avatar {
+      object-fit: cover;
       width: 48px;
       height: 48px;
       border-radius: 50%;
@@ -138,6 +144,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
 })
 export class VendorListPage implements OnInit {
   private readonly api = inject(VendorApiService);
+  private readonly media = inject(MediaApiService);
 
   vendors: VendorResponse[] = [];
   loading = false;
@@ -155,6 +162,8 @@ export class VendorListPage implements OnInit {
   }
 
   goPage(p: number) { this.page = p; this.loadVendors(); }
+
+  logoUrl(pictureId: number) { return this.media.url(pictureId); }
 
   initial(name: string) { return name.charAt(0).toUpperCase(); }
 }

@@ -14,6 +14,8 @@ export interface UpdateVendorRequest {
   adminComment?: string | null;
   active?: boolean;
   displayOrder?: number;
+  /** Omit to keep the current logo; 0 removes it. */
+  pictureId?: number;
 }
 
 /** One set of routes for every caller; the API decides what each caller may see. */

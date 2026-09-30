@@ -2,11 +2,13 @@ import { Component, inject, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { MediaImageFieldComponent } from '../../shared/components/media-image-field/media-image-field.component';
 import { UpdateVendorRequest, VendorApiService } from '../../core/vendors/vendor-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 import { VendorMemberResponse, VendorResponse } from '../../core/vendors/vendor.models';
 
 interface VendorForm {
+  pictureId: number;
   name: string;
   email: string;
   description: string;
@@ -17,7 +19,7 @@ interface VendorForm {
 
 @Component({
   standalone: true,
-  imports: [FormsModule, DatePipe, RouterLink],
+  imports: [FormsModule, DatePipe, RouterLink, MediaImageFieldComponent],
   styleUrls: ['../../shared/styles/vendor-pages.scss'],
   template: `
     <section class="page-intro" aria-labelledby="vendors-title">
@@ -102,6 +104,7 @@ interface VendorForm {
             <label>Email <input type="email" [(ngModel)]="form.email" name="email" required maxlength="320" /></label>
           </div>
           <label>Description <textarea [(ngModel)]="form.description" name="description" rows="2"></textarea></label>
+          <app-media-image-field label="Shop logo" purpose="vendorLogo" [vendorId]="editingId" [(pictureId)]="form.pictureId" />
           <label>Admin comment <textarea [(ngModel)]="form.adminComment" name="adminComment" rows="2"></textarea></label>
           <div class="form-row">
             <label class="check-label"><input type="checkbox" [(ngModel)]="form.active" name="active" /> Active</label>
@@ -198,6 +201,7 @@ export class AdminVendorsPage implements OnInit {
   openForm(v: VendorResponse) {
     this.editingId = v.id;
     this.form = {
+      pictureId: v.pictureId,
       name: v.name, email: v.email, description: v.description ?? '',
       adminComment: v.adminComment ?? '', active: v.active ?? true, displayOrder: v.displayOrder
     };
@@ -220,6 +224,7 @@ export class AdminVendorsPage implements OnInit {
       name: this.form.name,
       email: this.form.email,
       description: this.form.description || null,
+      pictureId: this.form.pictureId,
       adminComment: this.form.adminComment || null,
       active: this.form.active,
       displayOrder: this.form.displayOrder
@@ -285,6 +290,6 @@ export class AdminVendorsPage implements OnInit {
   }
 
   private emptyForm(): VendorForm {
-    return { name: '', email: '', description: '', adminComment: '', active: true, displayOrder: 0 };
+    return { pictureId: 0, name: '', email: '', description: '', adminComment: '', active: true, displayOrder: 0 };
   }
 }
