@@ -8,4 +8,7 @@ export interface ProductCardModel {
   rating?: number;
   reviewCount?: number;
   badge?: string;
+  /** Name of the shop selling the product. */
+  shopName?: string | null;
+  shopId?: number;
 }

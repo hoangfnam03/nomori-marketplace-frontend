@@ -122,6 +122,8 @@ function toProductCard(p: ProductResponse): ProductCardModel {
     compareAtPrice: p.oldPrice > 0 ? (p.oldPrice % 1 === 0 ? `$${p.oldPrice}` : `$${p.oldPrice.toFixed(2)}`) : undefined,
     imageUrl: BLANK_IMAGE,
     rating: undefined,
-    reviewCount: undefined
+    reviewCount: undefined,
+    shopName: p.vendorName,
+    shopId: p.vendorId
   };
 }

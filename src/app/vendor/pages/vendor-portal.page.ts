@@ -38,6 +38,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
             <dt>Created</dt><dd>{{ vendor.createdOnUtc | date:'medium' }}</dd>
           </dl>
           <div class="actions">
+            <a class="btn" routerLink="/vendor/products">Manage products</a>
             <a class="btn" routerLink="/vendor/members">Manage members</a>
             <a class="btn btn-secondary" [routerLink]="['/storefront/vendors', vendor.id]">View public page</a>
           </div>

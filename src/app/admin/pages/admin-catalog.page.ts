@@ -1,5 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { VendorApiService } from '../../core/vendors/vendor-api.service';
+import { VendorResponse } from '../../core/vendors/vendor.models';
 import { MediaImageFieldComponent } from '../../shared/components/media-image-field/media-image-field.component';
 import { CatalogApiService, SaveCategoryRequest, SaveManufacturerRequest, SaveProductRequest } from '../../core/catalog/catalog-api.service';
 import {
@@ -26,6 +28,8 @@ interface ParentOption {
 }
 
 interface ProductForm {
+  /** Shop for a new product; 0 means the platform shop. Not used when editing. */
+  vendorId: number;
   name: string;
   shortDescription: string;
   fullDescription: string;
@@ -147,6 +151,23 @@ interface ManufacturerForm {
           <form class="inline-form" (ngSubmit)="submitProduct()" [attr.aria-label]="(editingProductId ? 'Edit' : 'Create') + ' product'">
             <div class="form-title">{{ editingProductId ? 'Edit product' : 'New product' }}</div>
             @if (prodError) { <p class="form-error" role="alert">{{ prodError }}</p> }
+            @if (!editingProductId) {
+              <label>Shop
+                <select [(ngModel)]="prodForm.vendorId" name="vendorId">
+                  <option [ngValue]="0">Nomori Official (platform)</option>
+                  @for (v of shops; track v.id) { <option [ngValue]="v.id">{{ v.name }}</option> }
+                </select>
+              </label>
+            } @else {
+              <div class="transfer">
+                <span class="muted">Shop: <strong>{{ editingVendorName }}</strong></span>
+                <select [(ngModel)]="transferVendorId" name="transferVendorId" aria-label="Transfer to shop">
+                  <option [ngValue]="0">Transfer to…</option>
+                  @for (v of shops; track v.id) { @if (v.id !== editingVendorId) { <option [ngValue]="v.id">{{ v.name }}</option> } }
+                </select>
+                <button type="button" (click)="transferProduct()" [disabled]="!transferVendorId || prodSaving">Transfer</button>
+              </div>
+            }
             <label>Name <input type="text" [(ngModel)]="prodForm.name" name="name" required /></label>
             <label>Short description <textarea [(ngModel)]="prodForm.shortDescription" name="shortDescription" rows="2"></textarea></label>
             <label>Full description <textarea [(ngModel)]="prodForm.fullDescription" name="fullDescription" rows="4"></textarea></label>
@@ -192,6 +213,7 @@ interface ManufacturerForm {
                 <span class="item-name">{{ prod.name }}</span>
                 @if (!prod.published) { <span class="badge-unpub">Unpublished</span> }
                 <span class="item-meta">{{ formatPrice(prod.price) }}</span>
+                <span class="item-meta">shop: {{ prod.vendorName }}</span>
                 <span class="item-meta">stock: {{ prod.stockQuantity }}</span>
               </div>
               <div class="item-actions">
@@ -302,6 +324,7 @@ interface ManufacturerForm {
     .pick-list { border: 1px solid var(--line); padding: .6rem .9rem; display: grid; gap: .35rem; max-height: 200px; overflow: auto; }
     .pick-list legend { color: var(--muted); font: .7rem var(--mono-font); text-transform: uppercase; padding: 0 .3rem; }
     .muted { color: var(--muted); font-size: .85rem; }
+    .transfer { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
     select { border: 1px solid var(--line-strong); padding: .55rem; background: var(--paper); font: inherit; }
     .item-list { border-top: 1px solid var(--line-strong); }
     .item-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .75rem .25rem; border-bottom: 1px solid var(--line); }
@@ -321,6 +344,7 @@ interface ManufacturerForm {
 })
 export class AdminCatalogPage {
   private readonly api = inject(CatalogApiService);
+  private readonly vendorApi = inject(VendorApiService);
 
   tab: Tab = 'categories';
 
@@ -352,6 +376,10 @@ export class AdminCatalogPage {
   editingProductId: number | null = null;
   prodForm: ProductForm = this.emptyProdForm();
   categoryOptions: ParentOption[] = [];
+  shops: VendorResponse[] = [];
+  editingVendorId = 0;
+  editingVendorName = '';
+  transferVendorId = 0;
   manufacturerOptions: AdminManufacturerResponse[] = [];
 
   // ----- Manufacturers -----
@@ -478,7 +506,11 @@ export class AdminCatalogPage {
     this.api.adminGetProduct(prod.id).subscribe({
       next: (detail: AdminProductDetailResponse) => {
         this.editingProductId = prod.id;
+        this.editingVendorId = prod.vendorId;
+        this.editingVendorName = prod.vendorName ?? `#${prod.vendorId}`;
+        this.transferVendorId = 0;
         this.prodForm = {
+          vendorId: prod.vendorId,
           name: prod.name,
           shortDescription: prod.shortDescription ?? '',
           fullDescription: prod.fullDescription ?? '',
@@ -509,7 +541,9 @@ export class AdminCatalogPage {
       published: this.prodForm.published, showOnHomepage: this.prodForm.showOnHomepage,
       displayOrder: this.prodForm.displayOrder,
       categoryIds: this.prodForm.categoryIds,
-      manufacturerIds: this.prodForm.manufacturerIds
+      manufacturerIds: this.prodForm.manufacturerIds,
+      // The owner is only chosen on creation. Updates never send it; the API rejects attempts to change it.
+      ...(this.editingProductId || !this.prodForm.vendorId ? {} : { vendorId: this.prodForm.vendorId })
     };
     const obs = this.editingProductId
       ? this.api.adminUpdateProduct(this.editingProductId, req)
@@ -609,7 +643,26 @@ export class AdminCatalogPage {
     });
   }
 
+  transferProduct() {
+    if (!this.editingProductId || !this.transferVendorId) return;
+    const target = this.shops.find(s => s.id === this.transferVendorId);
+    if (!confirm(`Move this product to "${target?.name ?? 'the selected shop'}"?`)) return;
+    this.prodSaving = true;
+    this.prodError = null;
+    this.api.adminTransferProduct(this.editingProductId, this.transferVendorId).subscribe({
+      next: moved => {
+        this.prodSaving = false;
+        this.editingVendorId = moved.vendorId;
+        this.editingVendorName = moved.vendorName ?? target?.name ?? '';
+        this.transferVendorId = 0;
+        this.loadProducts(this.prodPage);
+      },
+      error: err => { this.prodError = extractError(err, 'Transfer failed.'); this.prodSaving = false; }
+    });
+  }
+
   private loadTaxonomyOptions() {
+    this.vendorApi.getVendors(1, 100).subscribe({ next: r => { this.shops = r.items.filter(v => v.active !== false); }, error: () => { this.shops = []; } });
     this.api.adminGetCategoryTree().subscribe({
       next: tree => { this.categoryTree = tree; this.categoryOptions = flattenTree(tree, null); },
       error: () => { this.categoryOptions = []; }
@@ -629,7 +682,7 @@ export class AdminCatalogPage {
   }
 
   private emptyProdForm(): ProductForm {
-    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, published: true, showOnHomepage: false, displayOrder: 0, categoryIds: [], manufacturerIds: [] };
+    return { vendorId: 0, name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, published: true, showOnHomepage: false, displayOrder: 0, categoryIds: [], manufacturerIds: [] };
   }
 
   private emptyMfrForm(): ManufacturerForm {

@@ -188,7 +188,9 @@ function toProductCard(p: ProductResponse): ProductCardModel {
     compareAtPrice: p.oldPrice > 0 ? formatPrice(p.oldPrice) : undefined,
     imageUrl: BLANK_IMAGE,
     rating: undefined,
-    reviewCount: undefined
+    reviewCount: undefined,
+    shopName: p.vendorName,
+    shopId: p.vendorId
   };
 }
 

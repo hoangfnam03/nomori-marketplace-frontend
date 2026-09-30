@@ -8,6 +8,7 @@ const messages: Record<string, string> = {
   'vendor_member.email_already_exists': 'This email is already in use.',
   'vendor_member.limit_reached': 'The shop has reached its member limit.',
   'vendor_member.already_active': 'This member has already activated their account.',
+  'vendor.platform_shop': 'The platform shop cannot be deleted or deactivated.',
   'vendor_member.last_member': 'A shop must keep at least one member.'
 };
 
