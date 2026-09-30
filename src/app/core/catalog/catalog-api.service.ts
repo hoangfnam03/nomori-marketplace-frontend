@@ -2,7 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { API_BASE_URL } from '../config/api-config';
 import {
-  AdminCategoryResponse, AdminManufacturerResponse,
+  AdminCategoryResponse, AdminCategoryTreeNode, SelectableCategory, AdminManufacturerResponse,
   AdminProductDetailResponse, AdminProductResponse,
   CategoryResponse, CategoryTreeNode, ManufacturerResponse,
   PagedResult, ProductDetailResponse, ProductResponse
@@ -34,6 +34,7 @@ export interface SaveCategoryRequest {
   pictureId?: number;
   showOnHomepage?: boolean;
   published?: boolean;
+  restrictFromVendors?: boolean;
   displayOrder?: number;
 }
 
@@ -112,6 +113,16 @@ export class CatalogApiService {
   adminGetCategories(page = 1, pageSize = 50) {
     const params = new HttpParams().set('page', page).set('pageSize', pageSize);
     return this.http.get<PagedResult<AdminCategoryResponse>>(`${this.apiBaseUrl}/v1/admin/catalog/categories`, { params });
+  }
+
+  /** Whole tree including unpublished categories. */
+  adminGetCategoryTree() {
+    return this.http.get<AdminCategoryTreeNode[]>(`${this.apiBaseUrl}/v1/admin/catalog/categories/tree`);
+  }
+
+  /** Categories a shop member may attach products to. Requires the vendor portal permission. */
+  getSelectableCategories() {
+    return this.http.get<SelectableCategory[]>(`${this.apiBaseUrl}/v1/catalog/categories/selectable`);
   }
 
   adminGetCategory(id: number) {

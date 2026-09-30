@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { MediaImageFieldComponent } from '../../shared/components/media-image-field/media-image-field.component';
 import { CatalogApiService, SaveCategoryRequest, SaveManufacturerRequest, SaveProductRequest } from '../../core/catalog/catalog-api.service';
 import {
-  AdminCategoryResponse, AdminManufacturerResponse,
+  AdminCategoryResponse, AdminCategoryTreeNode, AdminManufacturerResponse,
   AdminProductDetailResponse, AdminProductResponse
 } from '../../core/catalog/catalog.models';
 
@@ -16,7 +16,13 @@ interface CategoryForm {
   pictureId: number;
   showOnHomepage: boolean;
   published: boolean;
+  restrictFromVendors: boolean;
   displayOrder: number;
+}
+
+interface ParentOption {
+  id: number;
+  label: string;
 }
 
 interface ProductForm {
@@ -29,8 +35,8 @@ interface ProductForm {
   published: boolean;
   showOnHomepage: boolean;
   displayOrder: number;
-  categoryIds: string;
-  manufacturerIds: string;
+  categoryIds: number[];
+  manufacturerIds: number[];
 }
 
 interface ManufacturerForm {
@@ -59,6 +65,8 @@ interface ManufacturerForm {
       <button role="tab" [class.active]="tab === 'manufacturers'" (click)="switchTab('manufacturers')">Manufacturers</button>
     </div>
 
+    @if (notice) { <p class="form-error notice" role="alert">{{ notice }}</p> }
+
     <!-- =========== CATEGORIES =========== -->
     @if (tab === 'categories') {
       <div class="panel" role="tabpanel">
@@ -73,11 +81,17 @@ interface ManufacturerForm {
             @if (catError) { <p class="form-error" role="alert">{{ catError }}</p> }
             <label>Name <input type="text" [(ngModel)]="catForm.name" name="name" required /></label>
             <label>Description <textarea [(ngModel)]="catForm.description" name="description" rows="2"></textarea></label>
-            <label>Parent category ID <input type="number" [(ngModel)]="catForm.parentCategoryId" name="parentCategoryId" min="0" /></label>
+            <label>Parent category
+              <select [(ngModel)]="catForm.parentCategoryId" name="parentCategoryId">
+                <option [ngValue]="0">None (top level)</option>
+                @for (opt of parentOptions; track opt.id) { <option [ngValue]="opt.id">{{ opt.label }}</option> }
+              </select>
+            </label>
             <app-media-image-field label="Category image" purpose="category" [(pictureId)]="catForm.pictureId" />
             <div class="form-row">
               <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.published" name="published" /> Published</label>
               <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.showOnHomepage" name="showOnHomepage" /> Show on homepage</label>
+              <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.restrictFromVendors" name="restrictFromVendors" /> Restrict sellers <small>(sellers cannot add products here)</small></label>
               <label>Display order <input type="number" [(ngModel)]="catForm.displayOrder" name="displayOrder" style="width:80px" /></label>
             </div>
             <div class="form-actions">
@@ -141,8 +155,20 @@ interface ManufacturerForm {
               <label>Compare at price <input type="number" [(ngModel)]="prodForm.oldPrice" name="oldPrice" min="0" step="0.01" /></label>
               <label>Stock <input type="number" [(ngModel)]="prodForm.stockQuantity" name="stockQuantity" min="0" /></label>
             </div>
-            <label>Category IDs <small>(comma-separated)</small> <input type="text" [(ngModel)]="prodForm.categoryIds" name="categoryIds" placeholder="1,2,3" /></label>
-            <label>Manufacturer IDs <small>(comma-separated)</small> <input type="text" [(ngModel)]="prodForm.manufacturerIds" name="manufacturerIds" placeholder="1,2" /></label>
+            <fieldset class="pick-list">
+              <legend>Categories <small>(up to 10)</small></legend>
+              @if (categoryOptions.length === 0) { <span class="muted">No categories yet.</span> }
+              @for (opt of categoryOptions; track opt.id) {
+                <label class="check-label"><input type="checkbox" [checked]="prodForm.categoryIds.includes(opt.id)" (change)="toggleId(prodForm.categoryIds, opt.id)" [name]="'cat' + opt.id" /> {{ opt.label }}</label>
+              }
+            </fieldset>
+            <fieldset class="pick-list">
+              <legend>Manufacturers <small>(up to 10)</small></legend>
+              @if (manufacturerOptions.length === 0) { <span class="muted">No manufacturers yet.</span> }
+              @for (m of manufacturerOptions; track m.id) {
+                <label class="check-label"><input type="checkbox" [checked]="prodForm.manufacturerIds.includes(m.id)" (change)="toggleId(prodForm.manufacturerIds, m.id)" [name]="'mfr' + m.id" /> {{ m.name }}</label>
+              }
+            </fieldset>
             <div class="form-row">
               <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.published" name="published" /> Published</label>
               <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.showOnHomepage" name="showOnHomepage" /> Show on homepage</label>
@@ -272,6 +298,11 @@ interface ManufacturerForm {
     .del-btn { background: transparent; color: #8d3128; border-color: #c9a09c; font-size: .78rem; padding: .4rem .7rem; }
     .del-btn:hover { background: #8d3128; color: var(--paper); }
     .form-error { color: #8d3128; font-size: .88rem; margin: 0; }
+    .notice { margin: 1rem 0; padding: .75rem 1rem; border-left: 3px solid #b74e3c; background: #f8e9e4; }
+    .pick-list { border: 1px solid var(--line); padding: .6rem .9rem; display: grid; gap: .35rem; max-height: 200px; overflow: auto; }
+    .pick-list legend { color: var(--muted); font: .7rem var(--mono-font); text-transform: uppercase; padding: 0 .3rem; }
+    .muted { color: var(--muted); font-size: .85rem; }
+    select { border: 1px solid var(--line-strong); padding: .55rem; background: var(--paper); font: inherit; }
     .item-list { border-top: 1px solid var(--line-strong); }
     .item-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .75rem .25rem; border-bottom: 1px solid var(--line); }
     .item-info { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; min-width: 0; }
@@ -304,6 +335,9 @@ export class AdminCatalogPage {
   catError: string | null = null;
   editingCategoryId: number | null = null;
   catForm: CategoryForm = this.emptyCatForm();
+  parentOptions: ParentOption[] = [];
+  private categoryTree: AdminCategoryTreeNode[] = [];
+  notice: string | null = null;
 
   // ----- Products -----
   products: AdminProductResponse[] = [];
@@ -317,6 +351,8 @@ export class AdminCatalogPage {
   prodError: string | null = null;
   editingProductId: number | null = null;
   prodForm: ProductForm = this.emptyProdForm();
+  categoryOptions: ParentOption[] = [];
+  manufacturerOptions: AdminManufacturerResponse[] = [];
 
   // ----- Manufacturers -----
   manufacturers: AdminManufacturerResponse[] = [];
@@ -356,6 +392,8 @@ export class AdminCatalogPage {
     this.editingCategoryId = null;
     this.catForm = this.emptyCatForm();
     this.catError = null;
+    this.notice = null;
+    this.loadParentOptions(null);
     this.catFormOpen = true;
   }
 
@@ -370,9 +408,12 @@ export class AdminCatalogPage {
       name: cat.name, description: cat.description ?? '',
       parentCategoryId: cat.parentCategoryId,
       pictureId: cat.pictureId,
-      showOnHomepage: cat.showOnHomepage, published: cat.published, displayOrder: cat.displayOrder
+      showOnHomepage: cat.showOnHomepage, published: cat.published,
+      restrictFromVendors: cat.restrictFromVendors, displayOrder: cat.displayOrder
     };
     this.catError = null;
+    this.notice = null;
+    this.loadParentOptions(cat.id);
     this.catFormOpen = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -387,6 +428,7 @@ export class AdminCatalogPage {
       pictureId: this.catForm.pictureId,
       showOnHomepage: this.catForm.showOnHomepage,
       published: this.catForm.published,
+      restrictFromVendors: this.catForm.restrictFromVendors,
       displayOrder: this.catForm.displayOrder
     };
     const obs = this.editingCategoryId
@@ -400,9 +442,10 @@ export class AdminCatalogPage {
 
   deleteCategory(id: number) {
     if (!confirm('Delete this category?')) return;
+    this.notice = null;
     this.api.adminDeleteCategory(id).subscribe({
       next: () => this.loadCategories(this.catPage),
-      error: () => alert('Unable to delete category.')
+      error: err => { this.notice = conflictMessage(err, 'Unable to delete category.'); }
     });
   }
 
@@ -421,6 +464,7 @@ export class AdminCatalogPage {
     this.editingProductId = null;
     this.prodForm = this.emptyProdForm();
     this.prodError = null;
+    this.loadTaxonomyOptions();
     this.prodFormOpen = true;
   }
 
@@ -440,10 +484,11 @@ export class AdminCatalogPage {
           fullDescription: prod.fullDescription ?? '',
           price: prod.price, oldPrice: prod.oldPrice, stockQuantity: prod.stockQuantity,
           published: prod.published, showOnHomepage: prod.showOnHomepage, displayOrder: prod.displayOrder,
-          categoryIds: detail.categoryIds.join(','),
-          manufacturerIds: detail.manufacturerIds.join(',')
+          categoryIds: [...detail.categoryIds],
+          manufacturerIds: [...detail.manufacturerIds]
         };
         this.prodError = null;
+        this.loadTaxonomyOptions();
         this.prodFormOpen = true;
         this.prodSaving = false;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -463,8 +508,8 @@ export class AdminCatalogPage {
       stockQuantity: this.prodForm.stockQuantity,
       published: this.prodForm.published, showOnHomepage: this.prodForm.showOnHomepage,
       displayOrder: this.prodForm.displayOrder,
-      categoryIds: parseIds(this.prodForm.categoryIds),
-      manufacturerIds: parseIds(this.prodForm.manufacturerIds)
+      categoryIds: this.prodForm.categoryIds,
+      manufacturerIds: this.prodForm.manufacturerIds
     };
     const obs = this.editingProductId
       ? this.api.adminUpdateProduct(this.editingProductId, req)
@@ -538,9 +583,40 @@ export class AdminCatalogPage {
 
   deleteManufacturer(id: number) {
     if (!confirm('Delete this manufacturer?')) return;
+    this.notice = null;
     this.api.adminDeleteManufacturer(id).subscribe({
       next: () => this.loadManufacturers(this.mfrPage),
-      error: () => alert('Unable to delete manufacturer.')
+      error: err => { this.notice = conflictMessage(err, 'Unable to delete manufacturer.'); }
+    });
+  }
+
+  // ---- Taxonomy pickers ----
+
+  toggleId(list: number[], id: number) {
+    const index = list.indexOf(id);
+    if (index >= 0) list.splice(index, 1);
+    else list.push(id);
+  }
+
+  /** Parent choices: every category except the one being edited and its own subcategories. */
+  private loadParentOptions(editingId: number | null) {
+    this.api.adminGetCategoryTree().subscribe({
+      next: tree => {
+        this.categoryTree = tree;
+        this.parentOptions = flattenTree(tree, editingId);
+      },
+      error: () => { this.parentOptions = []; this.catError = 'Unable to load the category list.'; }
+    });
+  }
+
+  private loadTaxonomyOptions() {
+    this.api.adminGetCategoryTree().subscribe({
+      next: tree => { this.categoryTree = tree; this.categoryOptions = flattenTree(tree, null); },
+      error: () => { this.categoryOptions = []; }
+    });
+    this.api.adminGetManufacturers(1, 100).subscribe({
+      next: r => { this.manufacturerOptions = r.items; },
+      error: () => { this.manufacturerOptions = []; }
     });
   }
 
@@ -549,11 +625,11 @@ export class AdminCatalogPage {
   }
 
   private emptyCatForm(): CategoryForm {
-    return { name: '', description: '', parentCategoryId: 0, pictureId: 0, showOnHomepage: false, published: true, displayOrder: 0 };
+    return { name: '', description: '', parentCategoryId: 0, pictureId: 0, showOnHomepage: false, published: true, restrictFromVendors: false, displayOrder: 0 };
   }
 
   private emptyProdForm(): ProductForm {
-    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, published: true, showOnHomepage: false, displayOrder: 0, categoryIds: '', manufacturerIds: '' };
+    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, published: true, showOnHomepage: false, displayOrder: 0, categoryIds: [], manufacturerIds: [] };
   }
 
   private emptyMfrForm(): ManufacturerForm {
@@ -561,8 +637,23 @@ export class AdminCatalogPage {
   }
 }
 
-function parseIds(value: string): number[] {
-  return value.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n) && n > 0);
+/** Flattens the tree into indented labels, skipping one category and its subcategories. */
+function flattenTree(nodes: AdminCategoryTreeNode[], excludeId: number | null, depth = 0): ParentOption[] {
+  return nodes.flatMap(node => {
+    if (node.id === excludeId) return [];
+    const label = `${'— '.repeat(depth)}${node.name}${node.published ? '' : ' (unpublished)'}`;
+    return [{ id: node.id, label }, ...flattenTree(node.children, excludeId, depth + 1)];
+  });
+}
+
+const conflictMessages: Record<string, string> = {
+  'category.has_children': 'This category still has subcategories. Move or delete them first.',
+  'category.in_use': 'Products still use this category. Remove it from those products first.',
+  'manufacturer.in_use': 'Products still use this manufacturer. Remove it from those products first.'
+};
+
+function conflictMessage(err: { status?: number; message?: string }, fallback: string): string {
+  return (err.status === 409 && err.message && conflictMessages[err.message]) || fallback;
 }
 
 function extractError(err: { error?: { errors?: Record<string, string[]> }; fieldErrors?: Record<string, string[]> }, fallback: string): string {

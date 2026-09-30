@@ -59,9 +59,29 @@ export interface AdminCategoryResponse {
   pictureId: number;
   showOnHomepage: boolean;
   published: boolean;
+  /** When true, sellers cannot attach products to this category. */
+  restrictFromVendors: boolean;
   displayOrder: number;
   createdOnUtc: string;
   updatedOnUtc: string;
+}
+
+export interface AdminCategoryTreeNode {
+  id: number;
+  name: string;
+  parentCategoryId: number;
+  displayOrder: number;
+  published: boolean;
+  restrictFromVendors: boolean;
+  children: AdminCategoryTreeNode[];
+}
+
+/** A category a seller may attach products to, with its full path, for example "Fashion > Women". */
+export interface SelectableCategory {
+  id: number;
+  name: string;
+  parentCategoryId: number;
+  path: string;
 }
 
 export interface AdminProductResponse {
