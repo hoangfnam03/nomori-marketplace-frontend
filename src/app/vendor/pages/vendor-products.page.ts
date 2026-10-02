@@ -110,7 +110,7 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
                         </div>
                       }
                     </td>
-                    <td>{{ money(p.price) }}@if (p.oldPrice > 0) { <br /><span class="muted">was {{ money(p.oldPrice) }}</span> }</td>
+                    <td>{{ money(p.price) }}@if (p.oldPrice > 0) { <br /><span class="muted">was {{ money(p.oldPrice) }}</span> }@if (p.specialPrice) { <br /><span class="muted">special {{ money(p.specialPrice) }}</span> }</td>
                     <td>{{ p.trackInventory ? p.stockQuantity : '∞' }}@if (p.isLowStock) { <br /><span class="badge badge-pending">Low stock</span> }</td>
                     <td><span [class]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
                     <td class="row-actions">

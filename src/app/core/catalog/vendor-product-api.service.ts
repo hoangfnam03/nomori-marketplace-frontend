@@ -28,6 +28,12 @@ export interface VendorProduct {
   pictureIds: number[] | null;
   /** First picture id, or 0 when none. */
   mainPictureId: number;
+  /** A lower price for a while; always below price. Null when none. */
+  specialPrice: number | null;
+  specialPriceStartUtc: string | null;
+  specialPriceEndUtc: string | null;
+  /** Quantity prices; only present when a single product is read. */
+  tierPrices: { quantity: number; price: number }[] | null;
   trackInventory: boolean;
   lowStockThreshold: number;
   /** Tracked and at or below the threshold. */
@@ -59,6 +65,15 @@ export interface SaveVendorProductRequest {
   availableStartUtc?: string | null;
   availableEndUtc?: string | null;
 }
+
+export interface SavePricingRequest {
+  specialPrice: number | null;
+  specialPriceStartUtc: string | null;
+  specialPriceEndUtc: string | null;
+  tierPrices: { quantity: number; price: number }[];
+}
+
+export type SavedPricing = SavePricingRequest;
 
 export interface StockLevel {
   onHand: number;
@@ -198,6 +213,11 @@ export class VendorProductApiService {
     return this.http.get<PagedResult<StockMovement>>(`${this.base}/${vendorId}/products/${id}/stock-movements`, {
       params: new HttpParams().set('page', page).set('pageSize', pageSize)
     });
+  }
+
+  /** Replace the special price, its window and all tier prices in one call. */
+  setPricing(vendorId: number, id: number, body: SavePricingRequest) {
+    return this.http.put<SavedPricing>(`${this.base}/${vendorId}/products/${id}/pricing`, body);
   }
 
   getOptions(vendorId: number) {

@@ -40,6 +40,30 @@ export interface ProductResponse {
   mainPictureId: number;
   /** Not tracked, or something on hand. The exact available quantity is on the product page. */
   inStock: boolean;
+  /** What one unit costs now: the special price while its window is open, otherwise price. */
+  finalPrice: number;
+  /** True while a special price applies; price is then the regular price to strike through. */
+  onSale: boolean;
+}
+
+/** From quantity units on, each unit costs price. */
+export interface TierPrice {
+  quantity: number;
+  price: number;
+}
+
+/** The server's answer to "what does this cost": every pricing rule is applied there, never in the browser. */
+export interface PriceQuote {
+  productId: number;
+  combinationId: number | null;
+  quantity: number;
+  currencyCode: string;
+  regularPrice: number;
+  unitPrice: number;
+  /** The price to strike through, when there is one. */
+  comparePrice: number | null;
+  lineTotal: number;
+  appliedRule: 'base' | 'special' | 'tier' | 'variant_override';
 }
 
 /** Counts for the filter panel, taken without the selected manufacturers, tags and specification values. */
@@ -68,6 +92,8 @@ export interface ProductDetailResponse {
   manufacturers: ManufacturerResponse[];
   /** Related products that are on sale now, in the order the shop chose. */
   relatedProducts: ProductResponse[];
+  /** Quantity prices, lowest quantity first. */
+  tierPrices: TierPrice[];
   /** False for products without a stock limit: always available. */
   trackInventory: boolean;
   /** What can still be bought: on hand minus what customers hold. Ignore when trackInventory is false. */
