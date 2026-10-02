@@ -5,7 +5,7 @@ import {
   AdminCategoryResponse, AdminCategoryTreeNode, SelectableCategory, AdminManufacturerResponse,
   AdminProductDetailResponse, AdminProductResponse,
   CategoryResponse, CategoryTreeNode, ManufacturerResponse,
-  PagedResult, ProductDetailResponse, ProductFacets, ProductResponse, ProductSuggestion
+  PagedResult, PriceQuote, ProductDetailResponse, ProductFacets, ProductResponse, ProductSuggestion
 } from './catalog.models';
 import {
   ProductAttributeSpec, ProductAttributeDetail, PublicAttributeDetail,
@@ -121,6 +121,13 @@ export class CatalogApiService {
     for (const tag of p.tags ?? []) params = params.append('tags', tag);
     for (const id of p.specOptionIds ?? []) params = params.append('specOptionIds', id);
     return params;
+  }
+
+  /** Price of a quantity with the chosen variant values; the server applies special, tier and variant rules. */
+  getPriceQuote(id: number, quantity: number, valueIds: number[]) {
+    let params = new HttpParams().set('quantity', quantity);
+    for (const valueId of valueIds) params = params.append('valueIds', valueId);
+    return this.http.get<PriceQuote>(`${this.apiBaseUrl}/v1/catalog/products/${id}/price`, { params });
   }
 
   getProduct(id: number) {

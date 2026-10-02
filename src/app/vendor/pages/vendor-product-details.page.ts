@@ -6,6 +6,7 @@ import { AuthFacade } from '../../core/auth/auth.facade';
 import {
   InventoryOverview, OptionCatalog, SaveVariantsRequest, StockMovement, StockReason, VariantAttributeInput, VariantCombinationInput, VariantsResponse, VendorProduct, VendorProductApiService
 } from '../../core/catalog/vendor-product-api.service';
+import { CurrencyService } from '../../core/money/currency.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
 const MAX_ATTRIBUTES = 3;
@@ -13,7 +14,26 @@ const MAX_VALUES = 20;
 const MAX_COMBINATIONS = 100;
 const MAX_TAGS = 20;
 
-type Section = 'variants' | 'specs' | 'tags' | 'inventory';
+type Section = 'variants' | 'specs' | 'tags' | 'inventory' | 'pricing';
+
+const MAX_TIERS = 20;
+
+/** UTC ISO string to the value of a datetime-local input (local time), and back. */
+function toLocalInput(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fromLocalInput(value: string): string | null {
+  return value ? new Date(value).toISOString() : null;
+}
+
+interface TierRow {
+  quantity: number | null;
+  price: number | null;
+}
 
 const REASONS: { value: StockReason; label: string }[] = [
   { value: 'restock', label: 'Restock (goods received)' },
@@ -41,6 +61,59 @@ const REASONS: { value: StockReason; label: string }[] = [
         <div class="actions"><button type="button" class="btn" (click)="load()">Try again</button></div>
       </div></div>
     } @else {
+      <!-- Pricing -->
+      <div class="panel">
+        <div class="panel-header"><h2>Pricing</h2></div>
+        <div class="panel-body">
+          <p class="muted">
+            The regular price is {{ product ? currency.formatPrimary(product.price) : '' }} ({{ currency.primary().code }}). A special price and quantity prices must be lower than it;
+            customers get the lowest price that applies to them.
+          </p>
+          @if (messages.pricing) { <p class="banner banner-ok" role="status">{{ messages.pricing }}</p> }
+          @if (errors.pricing) { <p class="banner" role="alert">{{ errors.pricing }}</p> }
+          <form class="form" (ngSubmit)="savePricing()" novalidate>
+            <div class="form-row">
+              <label>Special price ({{ currency.primary().code }})
+                <input type="number" name="specialPrice" [(ngModel)]="pricingForm.specialPrice" min="0" [step]="currency.step()" />
+                <span class="hint">Leave empty for none.</span>
+                @if (pricingFieldError('specialPrice')) { <span class="field-error">{{ pricingFieldError('specialPrice') }}</span> }
+              </label>
+              <label>Special price from
+                <input type="datetime-local" name="specialStart" [(ngModel)]="pricingForm.start" [disabled]="!hasSpecial()" />
+                <span class="hint">Empty means right away.</span>
+              </label>
+              <label>Special price until
+                <input type="datetime-local" name="specialEnd" [(ngModel)]="pricingForm.end" [disabled]="!hasSpecial()" />
+                <span class="hint">Empty means no end.</span>
+                @if (pricingFieldError('specialPriceEndUtc')) { <span class="field-error">{{ pricingFieldError('specialPriceEndUtc') }}</span> }
+              </label>
+            </div>
+
+            <fieldset class="block">
+              <legend>Quantity prices <span class="hint">(up to {{ maxTiers }}; each larger quantity needs a lower price)</span></legend>
+              @if (pricingForm.tiers.length === 0) { <span class="muted">No quantity prices.</span> }
+              @for (tier of pricingForm.tiers; track $index; let i = $index) {
+                <div class="tier-row">
+                  <label>From quantity
+                    <input type="number" [name]="'tierQty' + i" [(ngModel)]="tier.quantity" min="2" step="1" [attr.aria-label]="'Quantity of step ' + (i + 1)" />
+                  </label>
+                  <label>Price each ({{ currency.primary().code }})
+                    <input type="number" [name]="'tierPrice' + i" [(ngModel)]="tier.price" min="0" [step]="currency.step()" [attr.aria-label]="'Price of step ' + (i + 1)" />
+                  </label>
+                  <button type="button" class="btn btn-danger btn-small" (click)="removeTier(i)">Remove</button>
+                </div>
+              }
+              <div class="actions"><button type="button" class="btn btn-secondary btn-small" (click)="addTier()" [disabled]="pricingForm.tiers.length >= maxTiers">+ Quantity price</button></div>
+              @if (pricingFieldError('tierPrices')) { <span class="field-error">{{ pricingFieldError('tierPrices') }}</span> }
+            </fieldset>
+
+            <div class="actions">
+              <button type="submit" class="btn" [disabled]="busy.pricing">{{ busy.pricing ? 'Saving…' : 'Save pricing' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
       <!-- Inventory -->
       <div class="panel">
         <div class="panel-header"><h2>Inventory</h2></div>
@@ -242,12 +315,14 @@ const REASONS: { value: StockReason; label: string }[] = [
     .value-row { display: grid; grid-template-columns: 2fr 1.2fr 1fr auto; gap: .5rem; align-items: center; }
     a.btn { text-decoration: none; display: inline-block; }
     .sub { font-size: .85rem; margin: .5rem 0 0; }
+    .tier-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: .75rem; align-items: end; }
   `]
 })
 export class VendorProductDetailsPage implements OnInit {
   private readonly api = inject(VendorProductApiService);
   private readonly auth = inject(AuthFacade);
   private readonly route = inject(ActivatedRoute);
+  readonly currency = inject(CurrencyService);
 
   readonly maxAttributes = MAX_ATTRIBUTES;
   readonly maxValues = MAX_VALUES;
@@ -265,9 +340,13 @@ export class VendorProductDetailsPage implements OnInit {
   specIds: number[] = [];
   tagText = '';
 
-  busy: Record<Section, boolean> = { variants: false, specs: false, tags: false, inventory: false };
-  errors: Record<Section, string> = { variants: '', specs: '', tags: '', inventory: '' };
-  messages: Record<Section, string> = { variants: '', specs: '', tags: '', inventory: '' };
+  busy: Record<Section, boolean> = { variants: false, specs: false, tags: false, inventory: false, pricing: false };
+  errors: Record<Section, string> = { variants: '', specs: '', tags: '', inventory: '', pricing: '' };
+  messages: Record<Section, string> = { variants: '', specs: '', tags: '', inventory: '', pricing: '' };
+
+  readonly maxTiers = MAX_TIERS;
+  pricingForm: { specialPrice: number | null; start: string; end: string; tiers: TierRow[] } = { specialPrice: null, start: '', end: '', tiers: [] };
+  pricingFieldErrors: Record<string, string[]> = {};
 
   readonly reasons = REASONS;
   inventory: InventoryOverview | null = null;
@@ -300,6 +379,7 @@ export class VendorProductDetailsPage implements OnInit {
     this.api.get(this.vendorId, this.productId).subscribe({
       next: product => {
         this.product = product;
+        this.applyPricing(product.specialPrice, product.specialPriceStartUtc, product.specialPriceEndUtc, product.tierPrices ?? []);
         this.api.getOptions(this.vendorId).subscribe({
           next: catalog => {
             this.catalog = catalog;
@@ -324,6 +404,59 @@ export class VendorProductDetailsPage implements OnInit {
         });
       },
       error: fail
+    });
+  }
+
+  // ---- Pricing ----
+
+  private applyPricing(special: number | null, start: string | null, end: string | null, tiers: { quantity: number; price: number }[]) {
+    this.pricingForm = {
+      specialPrice: special,
+      start: toLocalInput(start),
+      end: toLocalInput(end),
+      tiers: tiers.map(t => ({ quantity: t.quantity, price: t.price }))
+    };
+  }
+
+  addTier() {
+    if (this.pricingForm.tiers.length >= MAX_TIERS) return;
+    const last = this.pricingForm.tiers[this.pricingForm.tiers.length - 1];
+    this.pricingForm.tiers = [...this.pricingForm.tiers, { quantity: last?.quantity ? last.quantity * 2 : 5, price: null }];
+  }
+
+  removeTier(index: number) { this.pricingForm.tiers = this.pricingForm.tiers.filter((_, i) => i !== index); }
+
+  /** An empty number input gives null or an empty string; both mean no special price. */
+  hasSpecial(): boolean {
+    const value = this.pricingForm.specialPrice;
+    return value !== null && (value as unknown) !== '';
+  }
+
+  pricingFieldError(field: string) { return this.pricingFieldErrors[field]?.[0] ?? ''; }
+
+  savePricing() {
+    this.clear('pricing');
+    this.pricingFieldErrors = {};
+    const special = this.pricingForm.specialPrice === null || (this.pricingForm.specialPrice as unknown) === '' ? null : Number(this.pricingForm.specialPrice);
+    const tiers = this.pricingForm.tiers.filter(t => t.quantity !== null && t.price !== null)
+      .map(t => ({ quantity: Number(t.quantity), price: Number(t.price) }));
+    this.busy.pricing = true;
+    this.api.setPricing(this.vendorId, this.productId, {
+      specialPrice: special,
+      specialPriceStartUtc: special === null ? null : fromLocalInput(this.pricingForm.start),
+      specialPriceEndUtc: special === null ? null : fromLocalInput(this.pricingForm.end),
+      tierPrices: tiers
+    }).subscribe({
+      next: saved => {
+        this.busy.pricing = false;
+        this.applyPricing(saved.specialPrice, saved.specialPriceStartUtc, saved.specialPriceEndUtc, saved.tierPrices);
+        this.messages.pricing = 'Pricing saved.';
+      },
+      error: err => {
+        this.busy.pricing = false;
+        this.pricingFieldErrors = err?.fieldErrors ?? {};
+        this.errors.pricing = Object.keys(this.pricingFieldErrors).length ? '' : this.writeError(err, 'Unable to save the pricing.');
+      }
     });
   }
 

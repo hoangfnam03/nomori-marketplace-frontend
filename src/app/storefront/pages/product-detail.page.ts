@@ -1,16 +1,17 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { MediaApiService } from '../../core/media/media-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
-import { ProductDetailResponse } from '../../core/catalog/catalog.models';
+import { PriceQuote, ProductDetailResponse, TierPrice } from '../../core/catalog/catalog.models';
 import { PublicAttributeCombination, PublicAttributeDetail } from '../../core/catalog/product-attribute.models';
 import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute.models';
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, RouterLink],
+  imports: [BreadcrumbComponent, FormsModule, RouterLink],
   template: `
     @if (loading) {
       <p class="state">Loading product...</p>
@@ -54,11 +55,27 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
           }
 
           <div class="price-row">
-            <span class="price">{{ formatPrice(currentPrice()) }}</span>
-            @if (detail.product.oldPrice > 0 && !combination()?.overriddenPrice) {
-              <span class="compare-price">{{ formatPrice(detail.product.oldPrice) }}</span>
+            <span class="price">{{ formatPrice(unitPrice()) }}</span>
+            @if (comparePrice(); as compare) {
+              <span class="compare-price">{{ formatPrice(compare) }}</span>
             }
+            @if (quote?.appliedRule === 'special' || (!quote && detail.product.onSale)) { <span class="sale-tag">Sale</span> }
           </div>
+          @if (quoteError) { <p class="quote-error" role="alert">{{ quoteError }}</p> }
+
+          @if (detail.tierPrices.length > 0) {
+            <table class="tiers" aria-label="Quantity prices">
+              <caption>Buy more, pay less</caption>
+              <tbody>
+                @for (t of detail.tierPrices; track t.quantity) {
+                  <tr [class.active]="activeTier()?.quantity === t.quantity">
+                    <th scope="row">{{ t.quantity }}+ units</th>
+                    <td>{{ formatPrice(t.price) }} each</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
 
           @if (detail.product.shortDescription) {
             <p class="short-desc">{{ detail.product.shortDescription }}</p>
@@ -101,6 +118,12 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
               }
             </div>
           }
+
+          <div class="quantity-row">
+            <label for="quantity">Quantity</label>
+            <input id="quantity" type="number" name="quantity" min="1" max="10000" step="1" [(ngModel)]="quantity" (ngModelChange)="onQuantityChange()" />
+            @if (quote && !needsChoice()) { <span class="line-total">Total {{ formatPrice(quote.lineTotal) }}</span> }
+          </div>
 
           <button type="button" class="add-to-cart" [disabled]="needsChoice() || currentStock() === 0">Add to cart</button>
 
@@ -145,7 +168,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
                 @if (media.url(r.mainPictureId); as url) { <img [src]="url" alt="" loading="lazy" /> }
                 @else { <span class="related-empty" aria-hidden="true"></span> }
                 <span class="related-name">{{ r.name }}</span>
-                <span class="related-price">{{ formatPrice(r.price) }}</span>
+                <span class="related-price">{{ formatPrice(r.finalPrice) }}</span>
               </a>
             }
           </div>
@@ -233,6 +256,16 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
     .swatch:hover { border-color: var(--ink); }
     .swatch.selected { border-color: var(--ink); outline: 2px solid var(--ink); outline-offset: 2px; }
     .muted-note, .sku { color: var(--muted); }
+    .sale-tag { align-self: center; padding: .2rem .5rem; background: var(--green); color: var(--paper); font: 700 .65rem var(--mono-font); letter-spacing: .08em; text-transform: uppercase; }
+    .quote-error { color: #8d3128; font-size: .85rem; margin: 0 0 1rem; }
+    .tiers { border-collapse: collapse; margin: 0 0 1.25rem; font-size: .85rem; }
+    .tiers caption { text-align: left; color: var(--muted); font: 700 .68rem var(--mono-font); letter-spacing: .1em; text-transform: uppercase; padding-bottom: .4rem; }
+    .tiers th { text-align: left; font-weight: 500; padding: .25rem 1.5rem .25rem 0; color: var(--muted); }
+    .tiers tr.active th, .tiers tr.active td { color: var(--ink); font-weight: 700; }
+    .quantity-row { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+    .quantity-row label { font: 700 .68rem var(--mono-font); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .quantity-row input { width: 5.5rem; border: 1px solid var(--line-strong); padding: .5rem .6rem; background: transparent; color: var(--ink); font: inherit; }
+    .line-total { color: var(--muted); font: .78rem var(--mono-font); }
     .full-desc { border-top: 1px solid var(--line); padding-top: 1.5rem; margin-top: 1.5rem; }
     .section-label { color: var(--muted); font: 700 .68rem var(--mono-font); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .6rem; }
     .full-desc p { color: var(--muted); font-size: .95rem; line-height: 1.75; margin: 0; }
@@ -272,6 +305,11 @@ export class ProductDetailPage implements OnInit {
   attrs: PublicAttributeDetail | null = null;
   /** Chosen value id per attribute mapping id. */
   selected: Record<number, number> = {};
+  quantity = 1;
+  /** The server's price for the current choice; null until it answers or while a choice is missing. */
+  quote: PriceQuote | null = null;
+  quoteError = '';
+  private quoteRequest = 0;
   specs: ProductSpecDetail | null = null;
   tags: ProductTag[] = [];
   loading = true;
@@ -285,7 +323,8 @@ export class ProductDetailPage implements OnInit {
         this.detail = detail;
         this.selectedPictureId = detail.pictureIds[0] ?? 0;
         this.loading = false;
-        this.api.getProductAttributes(id).subscribe({ next: a => { this.attrs = a; this.preselect(a); }, error: () => {} });
+        this.api.getProductAttributes(id).subscribe({ next: a => { this.attrs = a; this.preselect(a); this.refreshQuote(); }, error: () => {} });
+        this.refreshQuote();
         this.api.getProductSpecs(id).subscribe({ next: s => { this.specs = s; }, error: () => {} });
         this.api.getProductTags(id).subscribe({ next: t => { this.tags = t; }, error: () => {} });
       },
@@ -306,6 +345,50 @@ export class ProductDetailPage implements OnInit {
 
   choose(mappingId: number, valueId: number) {
     this.selected = { ...this.selected, [mappingId]: valueId };
+    this.refreshQuote();
+  }
+
+  onQuantityChange() {
+    const value = Number(this.quantity);
+    // Only a whole quantity in range is asked about; anything else keeps the last good price on screen.
+    if (!Number.isInteger(value) || value < 1 || value > 10000) { this.quoteError = 'Enter a quantity between 1 and 10,000.'; return; }
+    this.quantity = value;
+    this.refreshQuote();
+  }
+
+  /** Asks the server for the price of this quantity and choice. Only the newest answer is used. */
+  private refreshQuote() {
+    if (!this.detail) return;
+    this.quoteError = '';
+    if (this.needsChoice()) { this.quote = null; return; }
+
+    const request = ++this.quoteRequest;
+    this.api.getPriceQuote(this.detail.product.id, this.quantity, Object.values(this.selected)).subscribe({
+      next: quote => { if (request === this.quoteRequest) this.quote = quote; },
+      error: err => {
+        if (request !== this.quoteRequest) return;
+        this.quote = null;
+        this.quoteError = err?.status === 400 && err?.fieldErrors
+          ? Object.values(err.fieldErrors as Record<string, string[]>).flat().join(' ')
+          : 'Unable to get the price. Try again.';
+      }
+    });
+  }
+
+  /** Price of one unit: the server's quote, or the product's current price until it arrives. */
+  unitPrice(): number { return this.quote?.unitPrice ?? this.detail?.product.finalPrice ?? 0; }
+
+  /** The price to strike through. */
+  comparePrice(): number | null {
+    if (this.quote) return this.quote.comparePrice;
+    const p = this.detail?.product;
+    if (!p) return null;
+    return p.onSale ? p.price : p.oldPrice > 0 ? p.oldPrice : null;
+  }
+
+  /** The tier step the current quantity reaches, to highlight it in the table. */
+  activeTier(): TierPrice | null {
+    return [...(this.detail?.tierPrices ?? [])].filter(t => t.quantity <= this.quantity).sort((a, b) => b.quantity - a.quantity)[0] ?? null;
   }
 
   /** The product has variants and the customer has not chosen a value for every attribute yet. */
@@ -326,15 +409,6 @@ export class ProductDetailPage implements OnInit {
         return this.attrs!.mappings.every(m => key[String(m.id)] === this.selected[m.id]);
       } catch { return false; }
     }) ?? null;
-  }
-
-  /** A combination price replaces the product price; otherwise the product price plus the chosen values' adjustments. */
-  currentPrice(): number {
-    const price = this.detail?.product.price ?? 0;
-    const combo = this.combination();
-    if (combo?.overriddenPrice) return combo.overriddenPrice;
-    const adjustment = (this.attrs?.mappings ?? []).reduce((sum, m) => sum + (m.values.find(v => v.id === this.selected[m.id])?.priceAdjustment ?? 0), 0);
-    return price + adjustment;
   }
 
   currentStock(): number {
