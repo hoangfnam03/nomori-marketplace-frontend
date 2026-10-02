@@ -67,7 +67,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
             @if (needsChoice()) {
               <span class="muted-note">Choose {{ missingChoices() }} to see price and availability.</span>
             } @else if (currentStock() > 0) {
-              <span class="in-stock">In stock · {{ currentStock() }} available</span>
+              <span class="in-stock">In stock@if (detail.trackInventory) { · {{ currentStock() }} available }</span>
             } @else {
               <span class="out-of-stock">Out of stock</span>
             }
@@ -336,8 +336,10 @@ export class ProductDetailPage implements OnInit {
   }
 
   currentStock(): number {
+    // Products without a stock limit are always available, whatever the stored numbers say.
+    if (this.detail && !this.detail.trackInventory) return Number.MAX_SAFE_INTEGER;
     if (this.attrs && this.attrs.combinations.length > 0) return this.combination()?.stockQuantity ?? 0;
-    return this.detail?.product.stockQuantity ?? 0;
+    return this.detail?.availableQuantity ?? this.detail?.product.stockQuantity ?? 0;
   }
 
   selectedPictureUrl() { return this.media.url(this.selectedPictureId); }

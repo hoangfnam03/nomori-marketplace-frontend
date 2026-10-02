@@ -28,6 +28,10 @@ export interface VendorProduct {
   pictureIds: number[] | null;
   /** First picture id, or 0 when none. */
   mainPictureId: number;
+  trackInventory: boolean;
+  lowStockThreshold: number;
+  /** Tracked and at or below the threshold. */
+  isLowStock: boolean;
   sku: string | null;
   gtin: string | null;
   manufacturerPartNumber: string | null;
@@ -54,6 +58,34 @@ export interface SaveVendorProductRequest {
   manufacturerPartNumber?: string | null;
   availableStartUtc?: string | null;
   availableEndUtc?: string | null;
+}
+
+export interface StockLevel {
+  onHand: number;
+  reserved: number;
+  /** What customers can still buy. */
+  available: number;
+}
+
+export interface InventoryOverview {
+  trackInventory: boolean;
+  lowStockThreshold: number;
+  isLowStock: boolean;
+  stock: StockLevel;
+  combinations: { id: number; sku: string | null; attributesJson: string; stock: StockLevel }[];
+}
+
+export type StockReason = 'restock' | 'correction' | 'damage' | 'return';
+
+export interface StockMovement {
+  id: number;
+  combinationId: number | null;
+  delta: number;
+  quantityAfter: number;
+  reason: string;
+  reference: string | null;
+  note: string | null;
+  createdOnUtc: string;
 }
 
 /** Platform-owned definitions a seller can pick from. */
@@ -104,10 +136,11 @@ export class VendorProductApiService {
   private readonly http = inject(HttpClient);
   private readonly base = `${inject(API_BASE_URL)}/v1/vendors`;
 
-  list(vendorId: number, options: { page?: number; pageSize?: number; search?: string; status?: ProductStatus } = {}) {
+  list(vendorId: number, options: { page?: number; pageSize?: number; search?: string; status?: ProductStatus; lowStock?: boolean } = {}) {
     let params = new HttpParams().set('page', options.page ?? 1).set('pageSize', options.pageSize ?? 20);
     if (options.search) params = params.set('search', options.search);
     if (options.status) params = params.set('status', options.status);
+    if (options.lowStock) params = params.set('lowStock', true);
     return this.http.get<PagedResult<VendorProduct>>(`${this.base}/${vendorId}/products`, { params });
   }
 
@@ -146,6 +179,25 @@ export class VendorProductApiService {
   /** Copy a product into a new draft of the same shop (no SKU, pictures or related products). */
   copy(vendorId: number, id: number) {
     return this.http.post<VendorProduct>(`${this.base}/${vendorId}/products/${id}/copy`, {});
+  }
+
+  getInventory(vendorId: number, id: number) {
+    return this.http.get<InventoryOverview>(`${this.base}/${vendorId}/products/${id}/inventory`);
+  }
+
+  /** Change stock by a signed amount. A product with variants needs the combination id. */
+  adjustStock(vendorId: number, id: number, body: { combinationId: number | null; delta: number; reason: StockReason; note?: string | null }) {
+    return this.http.post<InventoryOverview>(`${this.base}/${vendorId}/products/${id}/stock-adjustments`, body);
+  }
+
+  setInventorySettings(vendorId: number, id: number, body: { trackInventory: boolean; lowStockThreshold: number }) {
+    return this.http.put<InventoryOverview>(`${this.base}/${vendorId}/products/${id}/inventory-settings`, body);
+  }
+
+  getStockMovements(vendorId: number, id: number, page = 1, pageSize = 10) {
+    return this.http.get<PagedResult<StockMovement>>(`${this.base}/${vendorId}/products/${id}/stock-movements`, {
+      params: new HttpParams().set('page', page).set('pageSize', pageSize)
+    });
   }
 
   getOptions(vendorId: number) {

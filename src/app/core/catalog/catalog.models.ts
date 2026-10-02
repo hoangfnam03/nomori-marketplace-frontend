@@ -49,6 +49,10 @@ export interface ProductDetailResponse {
   manufacturers: ManufacturerResponse[];
   /** Related products that are on sale now, in the order the shop chose. */
   relatedProducts: ProductResponse[];
+  /** False for products without a stock limit: always available. */
+  trackInventory: boolean;
+  /** What can still be bought: on hand minus what customers hold. Ignore when trackInventory is false. */
+  availableQuantity: number;
 }
 
 export interface ManufacturerResponse {
