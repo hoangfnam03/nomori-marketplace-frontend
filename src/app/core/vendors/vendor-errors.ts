@@ -20,6 +20,10 @@ const messages: Record<string, string> = {
   'currency.code_exists': 'A currency with this code already exists.',
   'cart.own_product': 'You cannot buy products from your own shop.',
   'cart.line_limit': 'Your cart is full (50 different items). Remove something to add more.',
+  'country.code_exists': 'A country with this code already exists.',
+  'country.in_use': 'Saved addresses use this country, so it cannot be deleted. Unpublish it instead.',
+  'state.code_exists': 'This country already has a state with this code.',
+  'state.in_use': 'Saved addresses use this state, so it cannot be deleted. Unpublish it instead.',
   'vendor.platform_shop': 'The platform shop cannot be deleted or deactivated.',
   'vendor_member.last_member': 'A shop must keep at least one member.'
 };
