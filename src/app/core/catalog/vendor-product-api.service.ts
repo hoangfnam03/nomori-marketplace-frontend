@@ -28,6 +28,14 @@ export interface VendorProduct {
   pictureIds: number[] | null;
   /** First picture id, or 0 when none. */
   mainPictureId: number;
+  sku: string | null;
+  gtin: string | null;
+  manufacturerPartNumber: string | null;
+  /** Optional sale window (UTC). A live product outside it is not shown to customers. */
+  availableStartUtc: string | null;
+  availableEndUtc: string | null;
+  /** Related product ids in display order; only present when a single product is read. */
+  relatedProductIds: number[] | null;
   createdOnUtc: string;
   updatedOnUtc: string;
 }
@@ -41,6 +49,11 @@ export interface SaveVendorProductRequest {
   stockQuantity: number;
   categoryIds: number[];
   manufacturerIds: number[];
+  sku?: string | null;
+  gtin?: string | null;
+  manufacturerPartNumber?: string | null;
+  availableStartUtc?: string | null;
+  availableEndUtc?: string | null;
 }
 
 /** Product routes of one shop. The API answers 404 to anyone who is not a member of that shop. */
@@ -81,6 +94,16 @@ export class VendorProductApiService {
   /** Replace the ordered pictures of a product (maximum 10; the first is the main picture). */
   setPictures(vendorId: number, id: number, pictureIds: number[]) {
     return this.http.put<{ pictureIds: number[] }>(`${this.base}/${vendorId}/products/${id}/pictures`, { pictureIds });
+  }
+
+  /** Replace the ordered related products of a product (maximum 12, products of the same shop). */
+  setRelated(vendorId: number, id: number, productIds: number[]) {
+    return this.http.put<{ relatedProductIds: number[] }>(`${this.base}/${vendorId}/products/${id}/related`, { productIds });
+  }
+
+  /** Copy a product into a new draft of the same shop (no SKU, pictures or related products). */
+  copy(vendorId: number, id: number) {
+    return this.http.post<VendorProduct>(`${this.base}/${vendorId}/products/${id}/copy`, {});
   }
 
   delete(vendorId: number, id: number) {

@@ -47,6 +47,8 @@ export interface ProductDetailResponse {
   pictureIds: number[];
   categories: CategoryResponse[];
   manufacturers: ManufacturerResponse[];
+  /** Related products that are on sale now, in the order the shop chose. */
+  relatedProducts: ProductResponse[];
 }
 
 export interface ManufacturerResponse {

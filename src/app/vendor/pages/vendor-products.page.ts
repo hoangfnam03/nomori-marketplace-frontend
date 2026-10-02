@@ -20,6 +20,27 @@ interface ProductForm {
   categoryIds: number[];
   manufacturerIds: number[];
   pictureIds: number[];
+  sku: string;
+  gtin: string;
+  manufacturerPartNumber: string;
+  /** Local date and time for a datetime-local input, or empty for no bound. */
+  availableStart: string;
+  availableEnd: string;
+  relatedProductIds: number[];
+}
+
+const MAX_RELATED = 12;
+
+/** UTC ISO string to the value of a datetime-local input (local time), and back. */
+function toLocalInput(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fromLocalInput(value: string): string | null {
+  return value ? new Date(value).toISOString() : null;
 }
 
 type StatusFilter = 'all' | ProductStatus;
@@ -78,6 +99,8 @@ type StatusFilter = 'all' | ProductStatus;
                     </td>
                     <td>
                       <strong>{{ p.name }}</strong>
+                      @if (p.sku) { <span class="muted sku">SKU {{ p.sku }}</span> }
+                      @if (scheduleNote(p); as note) { <div class="muted">{{ note }}</div> }
                       @if (p.status === 'hiddenByAdmin') {
                         <div class="hidden-note">
                           Hidden by an administrator: {{ p.hiddenReason }}
@@ -103,6 +126,7 @@ type StatusFilter = 'all' | ProductStatus;
                         @if (p.status === 'hiddenByAdmin' && !p.reviewRequestedOnUtc) {
                           <button type="button" class="btn btn-secondary btn-small" (click)="askReview(p)" [disabled]="busy">Request review</button>
                         }
+                        <button type="button" class="btn btn-secondary btn-small" (click)="copy(p)" [disabled]="busy">Copy</button>
                         <button type="button" class="btn btn-secondary btn-small" (click)="edit(p)">Edit</button>
                         <button type="button" class="btn btn-danger btn-small" (click)="pendingDelete = p">Delete</button>
                       }
@@ -137,7 +161,8 @@ type StatusFilter = 'all' | ProductStatus;
             </label>
             <label>Description
               <textarea name="fullDescription" rows="4" [(ngModel)]="form.fullDescription"></textarea>
-              <span class="hint">Plain text. Formatting is not supported yet.</span>
+              <span class="hint">Basic HTML is kept: p, br, strong, em, u, s, h2–h4, ul, ol, li, blockquote and links (http, https, mailto). Anything else is removed when you save.</span>
+              @if (fieldError('fullDescription')) { <span class="field-error">{{ fieldError('fullDescription') }}</span> }
             </label>
             <div class="form-row">
               <label>Price *
@@ -152,6 +177,34 @@ type StatusFilter = 'all' | ProductStatus;
               <label>Stock
                 <input type="number" name="stockQuantity" [(ngModel)]="form.stockQuantity" min="0" />
                 @if (fieldError('stockQuantity')) { <span class="field-error">{{ fieldError('stockQuantity') }}</span> }
+              </label>
+            </div>
+
+            <div class="form-row">
+              <label>SKU
+                <input type="text" name="sku" [(ngModel)]="form.sku" maxlength="100" />
+                <span class="hint">Unique inside your shop.</span>
+                @if (fieldError('sku')) { <span class="field-error">{{ fieldError('sku') }}</span> }
+              </label>
+              <label>GTIN
+                <input type="text" name="gtin" [(ngModel)]="form.gtin" maxlength="14" inputmode="numeric" />
+                <span class="hint">8, 12, 13 or 14 digits.</span>
+                @if (fieldError('gtin')) { <span class="field-error">{{ fieldError('gtin') }}</span> }
+              </label>
+              <label>Manufacturer part number
+                <input type="text" name="manufacturerPartNumber" [(ngModel)]="form.manufacturerPartNumber" maxlength="100" />
+                @if (fieldError('manufacturerPartNumber')) { <span class="field-error">{{ fieldError('manufacturerPartNumber') }}</span> }
+              </label>
+            </div>
+            <div class="form-row">
+              <label>On sale from
+                <input type="datetime-local" name="availableStart" [(ngModel)]="form.availableStart" />
+                <span class="hint">Optional. Empty means as soon as it is published.</span>
+              </label>
+              <label>On sale until
+                <input type="datetime-local" name="availableEnd" [(ngModel)]="form.availableEnd" />
+                <span class="hint">Optional. Empty means no end.</span>
+                @if (fieldError('availableEndUtc')) { <span class="field-error">{{ fieldError('availableEndUtc') }}</span> }
               </label>
             </div>
 
@@ -197,6 +250,30 @@ type StatusFilter = 'all' | ProductStatus;
               @if (fieldError('pictureIds')) { <span class="field-error">{{ fieldError('pictureIds') }}</span> }
             </fieldset>
 
+            <fieldset class="pick-list">
+              <legend>Related products <span class="hint">(up to {{ maxRelated }}; shown on the product page in this order)</span></legend>
+              @if (!editingId) {
+                <span class="muted">Save the product first, then edit it to add related products.</span>
+              } @else if (relatedCandidates.length === 0) {
+                <span class="muted">Your shop has no other products.</span>
+              } @else {
+                @for (c of relatedCandidates; track c.id) {
+                  <label class="check-label">
+                    <input type="checkbox" [checked]="form.relatedProductIds.includes(c.id)" (change)="toggleRelated(c.id)"
+                      [disabled]="!form.relatedProductIds.includes(c.id) && form.relatedProductIds.length >= maxRelated" [name]="'rel' + c.id" />
+                    {{ c.name }}
+                    @if (form.relatedProductIds.includes(c.id)) {
+                      <span class="order-buttons">
+                        <button type="button" class="btn btn-secondary btn-small" (click)="moveRelated(c.id, -1)" [disabled]="form.relatedProductIds[0] === c.id" [attr.aria-label]="'Move ' + c.name + ' earlier'">←</button>
+                        <button type="button" class="btn btn-secondary btn-small" (click)="moveRelated(c.id, 1)" [disabled]="form.relatedProductIds[form.relatedProductIds.length - 1] === c.id" [attr.aria-label]="'Move ' + c.name + ' later'">→</button>
+                      </span>
+                    }
+                  </label>
+                }
+              }
+              @if (fieldError('relatedProductIds')) { <span class="field-error">{{ fieldError('relatedProductIds') }}</span> }
+            </fieldset>
+
             <p class="muted">New products start as drafts. Publish them from the list when they are ready.</p>
 
             <div class="actions">
@@ -213,6 +290,8 @@ type StatusFilter = 'all' | ProductStatus;
     .pick-list { border: 1px solid var(--line); border-radius: 6px; padding: .6rem .9rem; display: grid; gap: .35rem; max-height: 200px; overflow: auto; }
     .pick-list legend { font-size: .8rem; padding: 0 .3rem; }
     .thumb-cell { width: 56px; }
+    .sku { display: block; font-size: .75rem; }
+    .order-buttons { margin-left: .5rem; display: inline-flex; gap: .25rem; }
     .thumb { width: 48px; height: 48px; object-fit: cover; display: block; border: 1px solid var(--line); background: #e4e8df; }
     .pictures { border: 1px solid var(--line); border-radius: 6px; padding: .6rem .9rem; display: grid; gap: .6rem; justify-items: start; }
     .pictures legend { font-size: .8rem; padding: 0 .3rem; }
@@ -234,6 +313,10 @@ export class VendorProductsPage implements OnInit {
   private readonly media = inject(MediaApiService);
 
   readonly maxPictures = MAX_PICTURES;
+  readonly maxRelated = MAX_RELATED;
+  /** Other products of the shop that can be picked as related; loaded when a product is edited. */
+  relatedCandidates: VendorProduct[] = [];
+  private originalRelatedIds: number[] = [];
   readonly accept = MEDIA_ACCEPT;
   uploading = false;
   pictureError = '';
@@ -293,6 +376,8 @@ export class VendorProductsPage implements OnInit {
     this.editingId = null;
     this.form = this.emptyForm();
     this.originalPictureIds = [];
+    this.originalRelatedIds = [];
+    this.relatedCandidates = [];
     this.sessionUploads.clear();
     this.clearErrors();
     this.formOpen = true;
@@ -312,10 +397,18 @@ export class VendorProductsPage implements OnInit {
           price: full.price, oldPrice: full.oldPrice, stockQuantity: full.stockQuantity,
           categoryIds: [...(full.categoryIds ?? [])],
           manufacturerIds: [...(full.manufacturerIds ?? [])],
-          pictureIds: [...(full.pictureIds ?? [])]
+          pictureIds: [...(full.pictureIds ?? [])],
+          sku: full.sku ?? '',
+          gtin: full.gtin ?? '',
+          manufacturerPartNumber: full.manufacturerPartNumber ?? '',
+          availableStart: toLocalInput(full.availableStartUtc),
+          availableEnd: toLocalInput(full.availableEndUtc),
+          relatedProductIds: [...(full.relatedProductIds ?? [])]
         };
         this.originalPictureIds = [...this.form.pictureIds];
+        this.originalRelatedIds = [...this.form.relatedProductIds];
         this.sessionUploads.clear();
+        this.loadRelatedCandidates(full.id);
         this.formOpen = true;
       },
       error: err => { this.actionError = vendorErrorMessage(err, 'Unable to load the product.'); }
@@ -334,7 +427,12 @@ export class VendorProductsPage implements OnInit {
       fullDescription: this.form.fullDescription || null,
       price: this.form.price, oldPrice: this.form.oldPrice, stockQuantity: this.form.stockQuantity,
       categoryIds: this.form.categoryIds,
-      manufacturerIds: this.form.manufacturerIds
+      manufacturerIds: this.form.manufacturerIds,
+      sku: this.form.sku.trim() || null,
+      gtin: this.form.gtin.trim() || null,
+      manufacturerPartNumber: this.form.manufacturerPartNumber.trim() || null,
+      availableStartUtc: fromLocalInput(this.form.availableStart),
+      availableEndUtc: fromLocalInput(this.form.availableEnd)
     };
     const request = this.editingId
       ? this.api.update(this.vendorId, this.editingId, body)
@@ -353,10 +451,10 @@ export class VendorProductsPage implements OnInit {
   private savePictures(saved: VendorProduct) {
     const unchanged = this.form.pictureIds.length === this.originalPictureIds.length
       && this.form.pictureIds.every((id, i) => id === this.originalPictureIds[i]);
-    if (!this.vendorId || unchanged) { this.finishSave(saved); return; }
+    if (!this.vendorId || unchanged) { this.saveRelated(saved); return; }
 
     this.api.setPictures(this.vendorId, saved.id, this.form.pictureIds).subscribe({
-      next: () => this.finishSave(saved),
+      next: () => this.saveRelated(saved),
       error: err => {
         // The product text is already saved; keep editing that product so only the pictures need fixing.
         this.busy = false;
@@ -364,6 +462,24 @@ export class VendorProductsPage implements OnInit {
         this.fieldErrors = err?.fieldErrors ?? {};
         const detail = Object.keys(this.fieldErrors).length ? '' : this.writeError(err, 'Unable to save the pictures.');
         this.formError = `“${saved.name}” was saved, but its pictures were not. ${detail}`.trim();
+        this.fetch();
+      }
+    });
+  }
+
+  /** Related products are another separate call; only for a product that already exists, and skipped when unchanged. */
+  private saveRelated(saved: VendorProduct) {
+    const unchanged = this.form.relatedProductIds.length === this.originalRelatedIds.length
+      && this.form.relatedProductIds.every((id, i) => id === this.originalRelatedIds[i]);
+    if (!this.vendorId || !this.editingId || unchanged) { this.finishSave(saved); return; }
+
+    this.api.setRelated(this.vendorId, saved.id, this.form.relatedProductIds).subscribe({
+      next: () => this.finishSave(saved),
+      error: err => {
+        this.busy = false;
+        this.fieldErrors = err?.fieldErrors ?? {};
+        const detail = Object.keys(this.fieldErrors).length ? '' : this.writeError(err, 'Unable to save the related products.');
+        this.formError = `“${saved.name}” was saved, but its related products were not. ${detail}`.trim();
         this.fetch();
       }
     });
@@ -427,6 +543,46 @@ export class VendorProductsPage implements OnInit {
     this.form.pictureIds = ids;
     // An image uploaded in this session and never saved is deleted again; the API refuses (409) if it is attached.
     if (this.sessionUploads.delete(id)) this.media.delete(id).subscribe({ error: () => undefined });
+  }
+
+  copy(product: VendorProduct) {
+    if (!this.vendorId) return;
+    this.busy = true;
+    this.clearErrors();
+    this.api.copy(this.vendorId, product.id).subscribe({
+      next: created => {
+        this.busy = false;
+        this.notice = `“${product.name}” copied as “${created.name}”. Add pictures and a SKU, then publish it.`;
+        this.fetch();
+      },
+      error: err => { this.busy = false; this.actionError = this.writeError(err, 'Unable to copy the product.'); }
+    });
+  }
+
+  toggleRelated(id: number) {
+    const ids = this.form.relatedProductIds;
+    this.form.relatedProductIds = ids.includes(id) ? ids.filter(x => x !== id) : [...ids, id];
+  }
+
+  moveRelated(id: number, delta: number) {
+    const ids = [...this.form.relatedProductIds];
+    const index = ids.indexOf(id);
+    const target = index + delta;
+    if (index < 0 || target < 0 || target >= ids.length) return;
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    this.form.relatedProductIds = ids;
+  }
+
+  /** Tells the shop why a live product may not be visible: its sale window has not started or has ended. */
+  scheduleNote(product: VendorProduct): string {
+    const now = Date.now();
+    if (product.availableStartUtc && new Date(product.availableStartUtc).getTime() > now) {
+      return `Scheduled: on sale from ${new Date(product.availableStartUtc).toLocaleString()}`;
+    }
+    if (product.availableEndUtc && new Date(product.availableEndUtc).getTime() <= now) {
+      return `Sale window ended ${new Date(product.availableEndUtc).toLocaleString()}`;
+    }
+    return '';
   }
 
   remove(product: VendorProduct) {
@@ -500,6 +656,14 @@ export class VendorProductsPage implements OnInit {
     });
   }
 
+  private loadRelatedCandidates(excludeId: number) {
+    if (!this.vendorId) return;
+    this.api.list(this.vendorId, { pageSize: 100 }).subscribe({
+      next: res => { this.relatedCandidates = res.items.filter(p => p.id !== excludeId); },
+      error: () => { this.relatedCandidates = []; }
+    });
+  }
+
   private loadOptions() {
     this.catalog.getSelectableCategories().subscribe({ next: c => { this.categories = c; }, error: () => { this.categories = []; } });
     this.catalog.getManufacturers(1, 100).subscribe({ next: r => { this.manufacturers = r.items; }, error: () => { this.manufacturers = []; } });
@@ -515,6 +679,6 @@ export class VendorProductsPage implements OnInit {
   private clearErrors() { this.formError = ''; this.fieldErrors = {}; this.actionError = ''; this.notice = ''; }
 
   private emptyForm(): ProductForm {
-    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, categoryIds: [], manufacturerIds: [], pictureIds: [] };
+    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, categoryIds: [], manufacturerIds: [], pictureIds: [], sku: '', gtin: '', manufacturerPartNumber: '', availableStart: '', availableEnd: '', relatedProductIds: [] };
   }
 }
