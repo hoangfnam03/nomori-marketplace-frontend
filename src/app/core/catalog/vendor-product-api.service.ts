@@ -56,6 +56,48 @@ export interface SaveVendorProductRequest {
   availableEndUtc?: string | null;
 }
 
+/** Platform-owned definitions a seller can pick from. */
+export interface OptionCatalog {
+  attributes: { id: number; name: string }[];
+  specAttributes: { id: number; name: string; groupName: string | null; options: { id: number; name: string }[] }[];
+}
+
+export interface VariantValueInput {
+  name: string;
+  colorSquaresRgb: string | null;
+  priceAdjustment: number;
+}
+
+export interface VariantAttributeInput {
+  productAttributeId: number;
+  isRequired: boolean;
+  values: VariantValueInput[];
+}
+
+/** One index per attribute (in attribute order) into that attribute's values. */
+export interface VariantCombinationInput {
+  valueIndexes: number[];
+  sku: string | null;
+  stockQuantity: number;
+  overriddenPrice: number | null;
+}
+
+export interface SaveVariantsRequest {
+  attributes: VariantAttributeInput[];
+  combinations: VariantCombinationInput[];
+}
+
+export interface VariantsResponse {
+  mappings: {
+    id: number;
+    isRequired: boolean;
+    displayOrder: number;
+    attribute: { id: number; name: string };
+    values: { id: number; name: string; colorSquaresRgb: string | null; priceAdjustment: number; displayOrder: number }[];
+  }[];
+  combinations: { id: number; attributesJson: string; stockQuantity: number; sku: string | null; overriddenPrice: number | null }[];
+}
+
 /** Product routes of one shop. The API answers 404 to anyone who is not a member of that shop. */
 @Injectable({ providedIn: 'root' })
 export class VendorProductApiService {
@@ -104,6 +146,35 @@ export class VendorProductApiService {
   /** Copy a product into a new draft of the same shop (no SKU, pictures or related products). */
   copy(vendorId: number, id: number) {
     return this.http.post<VendorProduct>(`${this.base}/${vendorId}/products/${id}/copy`, {});
+  }
+
+  getOptions(vendorId: number) {
+    return this.http.get<OptionCatalog>(`${this.base}/${vendorId}/product-options`);
+  }
+
+  getVariants(vendorId: number, id: number) {
+    return this.http.get<VariantsResponse>(`${this.base}/${vendorId}/products/${id}/variants`);
+  }
+
+  /** Replace attributes, values and combinations. The product stock becomes the sum of the combination stocks. */
+  setVariants(vendorId: number, id: number, body: SaveVariantsRequest) {
+    return this.http.put<VariantsResponse>(`${this.base}/${vendorId}/products/${id}/variants`, body);
+  }
+
+  getSpecs(vendorId: number, id: number) {
+    return this.http.get<{ optionIds: number[] }>(`${this.base}/${vendorId}/products/${id}/specs`);
+  }
+
+  setSpecs(vendorId: number, id: number, optionIds: number[]) {
+    return this.http.put<{ optionIds: number[] }>(`${this.base}/${vendorId}/products/${id}/specs`, { optionIds });
+  }
+
+  getTags(vendorId: number, id: number) {
+    return this.http.get<{ tagNames: string[] }>(`${this.base}/${vendorId}/products/${id}/tags`);
+  }
+
+  setTags(vendorId: number, id: number, tagNames: string[]) {
+    return this.http.put<{ tagNames: string[] }>(`${this.base}/${vendorId}/products/${id}/tags`, { tagNames });
   }
 
   delete(vendorId: number, id: number) {

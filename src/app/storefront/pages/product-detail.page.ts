@@ -4,7 +4,7 @@ import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcru
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { MediaApiService } from '../../core/media/media-api.service';
 import { ProductDetailResponse } from '../../core/catalog/catalog.models';
-import { ProductAttributeDetail } from '../../core/catalog/product-attribute.models';
+import { PublicAttributeCombination, PublicAttributeDetail } from '../../core/catalog/product-attribute.models';
 import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute.models';
 
 @Component({
@@ -53,8 +53,8 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
           }
 
           <div class="price-row">
-            <span class="price">{{ formatPrice(detail.product.price) }}</span>
-            @if (detail.product.oldPrice > 0) {
+            <span class="price">{{ formatPrice(currentPrice()) }}</span>
+            @if (detail.product.oldPrice > 0 && !combination()?.overriddenPrice) {
               <span class="compare-price">{{ formatPrice(detail.product.oldPrice) }}</span>
             }
           </div>
@@ -64,28 +64,32 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
           }
 
           <div class="stock-info">
-            @if (detail.product.stockQuantity > 0) {
-              <span class="in-stock">In stock · {{ detail.product.stockQuantity }} available</span>
+            @if (needsChoice()) {
+              <span class="muted-note">Choose {{ missingChoices() }} to see price and availability.</span>
+            } @else if (currentStock() > 0) {
+              <span class="in-stock">In stock · {{ currentStock() }} available</span>
             } @else {
               <span class="out-of-stock">Out of stock</span>
             }
+            @if (combination()?.sku; as sku) { <span class="sku"> · SKU {{ sku }}</span> }
           </div>
 
           @if (attrs && attrs.mappings.length > 0) {
             <div class="attrs-section">
-              @for (m of attrs.mappings; track m.mapping.id) {
+              @for (m of attrs.mappings; track m.id) {
                 <div class="attr-group">
-                  <div class="attr-label">{{ m.prompt || m.attribute.name }}</div>
+                  <div class="attr-label">{{ m.prompt || m.attribute.name }}@if (m.isRequired) { <span aria-hidden="true"> *</span> }</div>
                   @if (m.controlType === 'ColorSquares') {
                     <div class="attr-swatches" role="group" [attr.aria-label]="m.attribute.name">
                       @for (v of m.values; track v.id) {
-                        <button type="button" class="swatch" [style.background]="v.colorSquaresRgb || '#ccc'" [title]="v.name" [attr.aria-label]="v.name"></button>
+                        <button type="button" class="swatch" [class.selected]="selected[m.id] === v.id" [attr.aria-pressed]="selected[m.id] === v.id"
+                          [style.background]="v.colorSquaresRgb || '#ccc'" [title]="v.name" [attr.aria-label]="v.name" (click)="choose(m.id, v.id)"></button>
                       }
                     </div>
                   } @else {
                     <div class="attr-options" role="group" [attr.aria-label]="m.attribute.name">
                       @for (v of m.values; track v.id) {
-                        <button type="button" class="attr-option" [class.selected]="v.isPreSelected">
+                        <button type="button" class="attr-option" [class.selected]="selected[m.id] === v.id" [attr.aria-pressed]="selected[m.id] === v.id" (click)="choose(m.id, v.id)">
                           {{ v.name }}
                           @if (v.priceAdjustment !== 0) { <span class="adj">{{ v.priceAdjustment > 0 ? '+' : '' }}{{ formatPrice(v.priceAdjustment) }}</span> }
                         </button>
@@ -97,7 +101,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
             </div>
           }
 
-          <button type="button" class="add-to-cart" [disabled]="detail.product.stockQuantity === 0">Add to cart</button>
+          <button type="button" class="add-to-cart" [disabled]="needsChoice() || currentStock() === 0">Add to cart</button>
 
           @if (detail.fullDescription) {
             <div class="full-desc">
@@ -226,6 +230,8 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
     .attr-swatches { display: flex; flex-wrap: wrap; gap: .5rem; }
     .swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer; }
     .swatch:hover { border-color: var(--ink); }
+    .swatch.selected { border-color: var(--ink); outline: 2px solid var(--ink); outline-offset: 2px; }
+    .muted-note, .sku { color: var(--muted); }
     .full-desc { border-top: 1px solid var(--line); padding-top: 1.5rem; margin-top: 1.5rem; }
     .section-label { color: var(--muted); font: 700 .68rem var(--mono-font); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .6rem; }
     .full-desc p { color: var(--muted); font-size: .95rem; line-height: 1.75; margin: 0; }
@@ -261,7 +267,9 @@ export class ProductDetailPage implements OnInit {
   readonly media = inject(MediaApiService);
 
   detail: ProductDetailResponse | null = null;
-  attrs: ProductAttributeDetail | null = null;
+  attrs: PublicAttributeDetail | null = null;
+  /** Chosen value id per attribute mapping id. */
+  selected: Record<number, number> = {};
   specs: ProductSpecDetail | null = null;
   tags: ProductTag[] = [];
   loading = true;
@@ -275,7 +283,7 @@ export class ProductDetailPage implements OnInit {
         this.detail = detail;
         this.selectedPictureId = detail.pictureIds[0] ?? 0;
         this.loading = false;
-        this.api.getProductAttributes(id).subscribe({ next: a => { this.attrs = a; }, error: () => {} });
+        this.api.getProductAttributes(id).subscribe({ next: a => { this.attrs = a; this.preselect(a); }, error: () => {} });
         this.api.getProductSpecs(id).subscribe({ next: s => { this.specs = s; }, error: () => {} });
         this.api.getProductTags(id).subscribe({ next: t => { this.tags = t; }, error: () => {} });
       },
@@ -284,6 +292,52 @@ export class ProductDetailPage implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  private preselect(attrs: PublicAttributeDetail) {
+    this.selected = {};
+    for (const m of attrs.mappings) {
+      const first = m.values.find(v => v.isPreSelected);
+      if (first) this.selected[m.id] = first.id;
+    }
+  }
+
+  choose(mappingId: number, valueId: number) {
+    this.selected = { ...this.selected, [mappingId]: valueId };
+  }
+
+  /** The product has variants and the customer has not chosen a value for every attribute yet. */
+  needsChoice(): boolean {
+    return !!this.attrs && this.attrs.combinations.length > 0 && this.attrs.mappings.some(m => this.selected[m.id] === undefined);
+  }
+
+  missingChoices(): string {
+    return (this.attrs?.mappings ?? []).filter(m => this.selected[m.id] === undefined).map(m => m.prompt || m.attribute.name).join(', ');
+  }
+
+  /** The combination that matches every chosen value, if there is one. */
+  combination(): PublicAttributeCombination | null {
+    if (!this.attrs || this.attrs.combinations.length === 0 || this.needsChoice()) return null;
+    return this.attrs.combinations.find(c => {
+      try {
+        const key = JSON.parse(c.attributesJson) as Record<string, number>;
+        return this.attrs!.mappings.every(m => key[String(m.id)] === this.selected[m.id]);
+      } catch { return false; }
+    }) ?? null;
+  }
+
+  /** A combination price replaces the product price; otherwise the product price plus the chosen values' adjustments. */
+  currentPrice(): number {
+    const price = this.detail?.product.price ?? 0;
+    const combo = this.combination();
+    if (combo?.overriddenPrice) return combo.overriddenPrice;
+    const adjustment = (this.attrs?.mappings ?? []).reduce((sum, m) => sum + (m.values.find(v => v.id === this.selected[m.id])?.priceAdjustment ?? 0), 0);
+    return price + adjustment;
+  }
+
+  currentStock(): number {
+    if (this.attrs && this.attrs.combinations.length > 0) return this.combination()?.stockQuantity ?? 0;
+    return this.detail?.product.stockQuantity ?? 0;
   }
 
   selectedPictureUrl() { return this.media.url(this.selectedPictureId); }

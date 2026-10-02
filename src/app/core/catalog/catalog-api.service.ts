@@ -8,7 +8,7 @@ import {
   PagedResult, ProductDetailResponse, ProductResponse
 } from './catalog.models';
 import {
-  ProductAttributeSpec, ProductAttributeDetail,
+  ProductAttributeSpec, ProductAttributeDetail, PublicAttributeDetail,
   ProductAttributeMapping, ProductAttributeValue, ProductAttributeCombination
 } from './product-attribute.models';
 import {
@@ -208,7 +208,7 @@ export class CatalogApiService {
   // ---- Product Attributes (public) ----
 
   getProductAttributes(productId: number) {
-    return this.http.get<ProductAttributeDetail>(`${this.apiBaseUrl}/v1/products/${productId}/attributes`);
+    return this.http.get<PublicAttributeDetail>(`${this.apiBaseUrl}/v1/products/${productId}/attributes`);
   }
 
   // ---- Product Attributes (admin — specs) ----

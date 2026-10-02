@@ -126,6 +126,7 @@ type StatusFilter = 'all' | ProductStatus;
                         @if (p.status === 'hiddenByAdmin' && !p.reviewRequestedOnUtc) {
                           <button type="button" class="btn btn-secondary btn-small" (click)="askReview(p)" [disabled]="busy">Request review</button>
                         }
+                        <a class="btn btn-secondary btn-small" [routerLink]="['/vendor/products', p.id, 'details']">Details</a>
                         <button type="button" class="btn btn-secondary btn-small" (click)="copy(p)" [disabled]="busy">Copy</button>
                         <button type="button" class="btn btn-secondary btn-small" (click)="edit(p)">Edit</button>
                         <button type="button" class="btn btn-danger btn-small" (click)="pendingDelete = p">Delete</button>
@@ -175,7 +176,8 @@ type StatusFilter = 'all' | ProductStatus;
                 @if (fieldError('oldPrice')) { <span class="field-error">{{ fieldError('oldPrice') }}</span> }
               </label>
               <label>Stock
-                <input type="number" name="stockQuantity" [(ngModel)]="form.stockQuantity" min="0" />
+                <input type="number" name="stockQuantity" [(ngModel)]="form.stockQuantity" min="0" [disabled]="hasVariants" />
+                @if (hasVariants) { <span class="hint">Set by the variants: the sum of their stocks.</span> }
                 @if (fieldError('stockQuantity')) { <span class="field-error">{{ fieldError('stockQuantity') }}</span> }
               </label>
             </div>
@@ -314,6 +316,8 @@ export class VendorProductsPage implements OnInit {
 
   readonly maxPictures = MAX_PICTURES;
   readonly maxRelated = MAX_RELATED;
+  /** True when the edited product has variants; its stock then comes from them. */
+  hasVariants = false;
   /** Other products of the shop that can be picked as related; loaded when a product is edited. */
   relatedCandidates: VendorProduct[] = [];
   private originalRelatedIds: number[] = [];
@@ -378,6 +382,7 @@ export class VendorProductsPage implements OnInit {
     this.originalPictureIds = [];
     this.originalRelatedIds = [];
     this.relatedCandidates = [];
+    this.hasVariants = false;
     this.sessionUploads.clear();
     this.clearErrors();
     this.formOpen = true;
@@ -409,6 +414,8 @@ export class VendorProductsPage implements OnInit {
         this.originalRelatedIds = [...this.form.relatedProductIds];
         this.sessionUploads.clear();
         this.loadRelatedCandidates(full.id);
+        this.hasVariants = false;
+        this.api.getVariants(this.vendorId!, full.id).subscribe({ next: v => { this.hasVariants = v.combinations.length > 0; }, error: () => undefined });
         this.formOpen = true;
       },
       error: err => { this.actionError = vendorErrorMessage(err, 'Unable to load the product.'); }
