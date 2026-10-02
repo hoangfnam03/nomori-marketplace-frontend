@@ -102,7 +102,8 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
           @if (detail.fullDescription) {
             <div class="full-desc">
               <div class="section-label">Description</div>
-              <p>{{ detail.fullDescription }}</p>
+              <!-- Sanitized by the API on save; Angular sanitizes again when binding. -->
+              <div class="rich" [innerHTML]="detail.fullDescription"></div>
             </div>
           }
 
@@ -129,6 +130,22 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
           }
         </div>
       </div>
+
+      @if (detail.relatedProducts.length > 0) {
+        <section class="related" aria-labelledby="related-title">
+          <h2 id="related-title" class="specs-title">Related products</h2>
+          <div class="related-grid">
+            @for (r of detail.relatedProducts; track r.id) {
+              <a class="related-card" [routerLink]="['/storefront/products', r.id]">
+                @if (media.url(r.mainPictureId); as url) { <img [src]="url" alt="" loading="lazy" /> }
+                @else { <span class="related-empty" aria-hidden="true"></span> }
+                <span class="related-name">{{ r.name }}</span>
+                <span class="related-price">{{ formatPrice(r.price) }}</span>
+              </a>
+            }
+          </div>
+        </section>
+      }
 
       @if (specs && (specs.groups.length > 0 || specs.ungrouped.length > 0)) {
         <div class="specs-section">
@@ -212,6 +229,15 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
     .full-desc { border-top: 1px solid var(--line); padding-top: 1.5rem; margin-top: 1.5rem; }
     .section-label { color: var(--muted); font: 700 .68rem var(--mono-font); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .6rem; }
     .full-desc p { color: var(--muted); font-size: .95rem; line-height: 1.75; margin: 0; }
+    .rich { color: var(--muted); font-size: .95rem; line-height: 1.75; }
+    .rich p { margin: 0 0 .8rem; }
+    .rich a { color: var(--green); }
+    .related { border-top: 1px solid var(--line); padding: 2.5rem 0 3rem; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.25rem; }
+    .related-card { display: grid; gap: .4rem; color: inherit; text-decoration: none; }
+    .related-card img, .related-empty { width: 100%; aspect-ratio: 4/5; object-fit: cover; background: #e4e8df; display: block; }
+    .related-name { font-weight: 600; font-size: .9rem; }
+    .related-price { color: var(--muted); font-size: .85rem; }
     .meta-section { display: flex; gap: 1rem; padding: .75rem 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
     .meta-label { flex: 0 0 100px; color: var(--muted); font: .72rem var(--mono-font); text-transform: uppercase; padding-top: .1em; }
     .state { color: var(--muted); padding: 3rem 0; }
