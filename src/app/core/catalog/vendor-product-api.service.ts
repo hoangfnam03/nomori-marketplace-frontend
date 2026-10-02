@@ -24,6 +24,10 @@ export interface VendorProduct {
   /** Only present when a single product is read or saved; lists leave them out. */
   categoryIds: number[] | null;
   manufacturerIds: number[] | null;
+  /** Picture ids in display order; only present when a single product is read. */
+  pictureIds: number[] | null;
+  /** First picture id, or 0 when none. */
+  mainPictureId: number;
   createdOnUtc: string;
   updatedOnUtc: string;
 }
@@ -72,6 +76,11 @@ export class VendorProductApiService {
   /** Ask an administrator to look at a hidden product again. */
   requestReview(vendorId: number, id: number) {
     return this.http.post<VendorProduct>(`${this.base}/${vendorId}/products/${id}/review-request`, {});
+  }
+
+  /** Replace the ordered pictures of a product (maximum 10; the first is the main picture). */
+  setPictures(vendorId: number, id: number, pictureIds: number[]) {
+    return this.http.put<{ pictureIds: number[] }>(`${this.base}/${vendorId}/products/${id}/pictures`, { pictureIds });
   }
 
   delete(vendorId: number, id: number) {

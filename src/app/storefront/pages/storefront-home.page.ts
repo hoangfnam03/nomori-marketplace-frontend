@@ -1,3 +1,4 @@
+import { MediaApiService } from '../../core/media/media-api.service';
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
@@ -77,6 +78,7 @@ import { ProductResponse } from '../../core/catalog/catalog.models';
 export class StorefrontHomePage {
   private readonly api = inject(CatalogApiService);
   private readonly router = inject(Router);
+  private readonly media = inject(MediaApiService);
 
   products: ProductCardModel[] = [];
   loading = true;
@@ -89,9 +91,9 @@ export class StorefrontHomePage {
         this.products = result.items
           .filter(p => p.showOnHomepage)
           .slice(0, 8)
-          .map(toProductCard);
+          .map(p => toProductCard(p, this.media.url(p.mainPictureId)));
         if (this.products.length === 0) {
-          this.products = result.items.slice(0, 4).map(toProductCard);
+          this.products = result.items.slice(0, 4).map(p => toProductCard(p, this.media.url(p.mainPictureId)));
         }
         this.loading = false;
       },
@@ -113,14 +115,14 @@ export class StorefrontHomePage {
 
 const BLANK_IMAGE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23e4e8df'/%3E%3C/svg%3E`;
 
-function toProductCard(p: ProductResponse): ProductCardModel {
+function toProductCard(p: ProductResponse, pictureUrl: string | null): ProductCardModel {
   return {
     id: p.id,
     name: p.name,
     category: '',
     price: p.price % 1 === 0 ? `$${p.price}` : `$${p.price.toFixed(2)}`,
     compareAtPrice: p.oldPrice > 0 ? (p.oldPrice % 1 === 0 ? `$${p.oldPrice}` : `$${p.oldPrice.toFixed(2)}`) : undefined,
-    imageUrl: BLANK_IMAGE,
+    imageUrl: pictureUrl ?? BLANK_IMAGE,
     rating: undefined,
     reviewCount: undefined,
     shopName: p.vendorName,

@@ -6,6 +6,9 @@ import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { ManufacturerResponse, SelectableCategory } from '../../core/catalog/catalog.models';
 import { ProductStatus, SaveVendorProductRequest, VendorProduct, VendorProductApiService } from '../../core/catalog/vendor-product-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
+import { MEDIA_ACCEPT, MEDIA_MAX_BYTES, MediaApiService } from '../../core/media/media-api.service';
+
+const MAX_PICTURES = 10;
 
 interface ProductForm {
   name: string;
@@ -16,6 +19,7 @@ interface ProductForm {
   stockQuantity: number;
   categoryIds: number[];
   manufacturerIds: number[];
+  pictureIds: number[];
 }
 
 type StatusFilter = 'all' | ProductStatus;
@@ -64,10 +68,14 @@ type StatusFilter = 'all' | ProductStatus;
         } @else {
           <div class="table-scroll">
             <table class="data-table">
-              <thead><tr><th>Name</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th></th><th>Name</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
               <tbody>
                 @for (p of products; track p.id) {
                   <tr>
+                    <td class="thumb-cell">
+                      @if (pictureUrl(p.mainPictureId); as url) { <img class="thumb" [src]="url" alt="" loading="lazy" /> }
+                      @else { <span class="thumb empty" aria-hidden="true"></span> }
+                    </td>
                     <td>
                       <strong>{{ p.name }}</strong>
                       @if (p.status === 'hiddenByAdmin') {
@@ -164,6 +172,31 @@ type StatusFilter = 'all' | ProductStatus;
               @if (fieldError('manufacturerIds')) { <span class="field-error">{{ fieldError('manufacturerIds') }}</span> }
             </fieldset>
 
+            <fieldset class="pictures">
+              <legend>Pictures <span class="hint">(up to {{ maxPictures }}; the first one is the main picture; one is needed to publish)</span></legend>
+              @if (form.pictureIds.length === 0) { <span class="muted">No pictures yet.</span> }
+              <div class="picture-grid">
+                @for (id of form.pictureIds; track id; let i = $index; let last = $last) {
+                  <figure class="picture">
+                    <img [src]="pictureUrl(id)" [alt]="'Picture ' + (i + 1)" />
+                    @if (i === 0) { <figcaption class="main-tag">Main</figcaption> }
+                    <div class="picture-actions">
+                      <button type="button" class="btn btn-secondary btn-small" (click)="movePicture(i, -1)" [disabled]="i === 0 || uploading" [attr.aria-label]="'Move picture ' + (i + 1) + ' earlier'">←</button>
+                      <button type="button" class="btn btn-secondary btn-small" (click)="movePicture(i, 1)" [disabled]="last || uploading" [attr.aria-label]="'Move picture ' + (i + 1) + ' later'">→</button>
+                      <button type="button" class="btn btn-danger btn-small" (click)="removePicture(i)" [disabled]="uploading" [attr.aria-label]="'Remove picture ' + (i + 1)">Remove</button>
+                    </div>
+                  </figure>
+                }
+              </div>
+              <label class="pick" [class.disabled]="uploading || form.pictureIds.length >= maxPictures">
+                <input type="file" [accept]="accept" multiple (change)="onPictureFiles($event)" [disabled]="uploading || form.pictureIds.length >= maxPictures" />
+                {{ uploading ? 'Uploading…' : 'Add pictures' }}
+              </label>
+              <span class="hint">JPEG, PNG, GIF or WebP, up to 5 MB each. Pictures are saved with the product.</span>
+              @if (pictureError) { <span class="field-error" role="alert">{{ pictureError }}</span> }
+              @if (fieldError('pictureIds')) { <span class="field-error">{{ fieldError('pictureIds') }}</span> }
+            </fieldset>
+
             <p class="muted">New products start as drafts. Publish them from the list when they are ready.</p>
 
             <div class="actions">
@@ -179,12 +212,34 @@ type StatusFilter = 'all' | ProductStatus;
     .hidden-note { margin-top: .3rem; padding: .35rem .6rem; border-left: 3px solid #b74e3c; background: #f8e9e4; color: #7d3026; font-size: .8rem; }
     .pick-list { border: 1px solid var(--line); border-radius: 6px; padding: .6rem .9rem; display: grid; gap: .35rem; max-height: 200px; overflow: auto; }
     .pick-list legend { font-size: .8rem; padding: 0 .3rem; }
+    .thumb-cell { width: 56px; }
+    .thumb { width: 48px; height: 48px; object-fit: cover; display: block; border: 1px solid var(--line); background: #e4e8df; }
+    .pictures { border: 1px solid var(--line); border-radius: 6px; padding: .6rem .9rem; display: grid; gap: .6rem; justify-items: start; }
+    .pictures legend { font-size: .8rem; padding: 0 .3rem; }
+    .picture-grid { display: flex; flex-wrap: wrap; gap: .75rem; }
+    .picture { margin: 0; display: grid; gap: .35rem; width: 120px; }
+    .picture img { width: 120px; height: 120px; object-fit: cover; border: 1px solid var(--line); }
+    .main-tag { font: .65rem var(--mono-font); text-transform: uppercase; color: var(--green); }
+    .picture-actions { display: flex; gap: .25rem; flex-wrap: wrap; }
+    .pick { border: 1px solid var(--green); color: var(--green); padding: .35rem .8rem; font-size: .8rem; font-weight: 600; cursor: pointer; }
+    .pick.disabled { opacity: .5; cursor: not-allowed; }
+    .pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .pick:focus-within { outline: 2px solid var(--green); outline-offset: 2px; }
   `]
 })
 export class VendorProductsPage implements OnInit {
   private readonly api = inject(VendorProductApiService);
   private readonly catalog = inject(CatalogApiService);
   private readonly auth = inject(AuthFacade);
+  private readonly media = inject(MediaApiService);
+
+  readonly maxPictures = MAX_PICTURES;
+  readonly accept = MEDIA_ACCEPT;
+  uploading = false;
+  pictureError = '';
+  private originalPictureIds: number[] = [];
+  /** Pictures uploaded in this form session, so a removed one can be deleted again. */
+  private readonly sessionUploads = new Set<number>();
 
   vendorId: number | null = null;
   products: VendorProduct[] = [];
@@ -237,6 +292,8 @@ export class VendorProductsPage implements OnInit {
   openForm() {
     this.editingId = null;
     this.form = this.emptyForm();
+    this.originalPictureIds = [];
+    this.sessionUploads.clear();
     this.clearErrors();
     this.formOpen = true;
   }
@@ -254,15 +311,18 @@ export class VendorProductsPage implements OnInit {
           fullDescription: full.fullDescription ?? '',
           price: full.price, oldPrice: full.oldPrice, stockQuantity: full.stockQuantity,
           categoryIds: [...(full.categoryIds ?? [])],
-          manufacturerIds: [...(full.manufacturerIds ?? [])]
+          manufacturerIds: [...(full.manufacturerIds ?? [])],
+          pictureIds: [...(full.pictureIds ?? [])]
         };
+        this.originalPictureIds = [...this.form.pictureIds];
+        this.sessionUploads.clear();
         this.formOpen = true;
       },
       error: err => { this.actionError = vendorErrorMessage(err, 'Unable to load the product.'); }
     });
   }
 
-  closeForm() { this.formOpen = false; this.editingId = null; this.clearErrors(); }
+  closeForm() { this.formOpen = false; this.editingId = null; this.pictureError = ''; this.clearErrors(); }
 
   save() {
     if (!this.vendorId || !this.form.name.trim()) return;
@@ -280,18 +340,93 @@ export class VendorProductsPage implements OnInit {
       ? this.api.update(this.vendorId, this.editingId, body)
       : this.api.create(this.vendorId, body);
     request.subscribe({
-      next: saved => {
-        this.busy = false;
-        this.closeForm();
-        this.notice = `“${saved.name}” saved.`;
-        this.fetch();
-      },
+      next: saved => this.savePictures(saved),
       error: err => {
         this.busy = false;
         this.fieldErrors = err?.fieldErrors ?? {};
         this.formError = Object.keys(this.fieldErrors).length ? '' : this.writeError(err, 'Unable to save the product.');
       }
     });
+  }
+
+  /** Pictures are a separate call after the product itself is saved; skipped when nothing changed. */
+  private savePictures(saved: VendorProduct) {
+    const unchanged = this.form.pictureIds.length === this.originalPictureIds.length
+      && this.form.pictureIds.every((id, i) => id === this.originalPictureIds[i]);
+    if (!this.vendorId || unchanged) { this.finishSave(saved); return; }
+
+    this.api.setPictures(this.vendorId, saved.id, this.form.pictureIds).subscribe({
+      next: () => this.finishSave(saved),
+      error: err => {
+        // The product text is already saved; keep editing that product so only the pictures need fixing.
+        this.busy = false;
+        this.editingId = saved.id;
+        this.fieldErrors = err?.fieldErrors ?? {};
+        const detail = Object.keys(this.fieldErrors).length ? '' : this.writeError(err, 'Unable to save the pictures.');
+        this.formError = `“${saved.name}” was saved, but its pictures were not. ${detail}`.trim();
+        this.fetch();
+      }
+    });
+  }
+
+  private finishSave(saved: VendorProduct) {
+    this.busy = false;
+    this.closeForm();
+    this.notice = `“${saved.name}” saved.`;
+    this.fetch();
+  }
+
+  pictureUrl(id: number | null | undefined) { return this.media.url(id); }
+
+  onPictureFiles(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files ?? []);
+    input.value = '';
+    if (!files.length || !this.vendorId) return;
+
+    this.pictureError = '';
+    const room = MAX_PICTURES - this.form.pictureIds.length;
+    if (files.length > room) this.pictureError = `Only ${room} more picture(s) can be added.`;
+    const accepted = files.slice(0, Math.max(room, 0)).filter(file => {
+      if (file.size > MEDIA_MAX_BYTES) { this.pictureError = `“${file.name}” is larger than 5 MB.`; return false; }
+      if (!MEDIA_ACCEPT.split(',').includes(file.type)) { this.pictureError = `“${file.name}” is not a JPEG, PNG, GIF or WebP image.`; return false; }
+      return true;
+    });
+    this.uploadNext(accepted);
+  }
+
+  private uploadNext(files: File[]) {
+    const [file, ...rest] = files;
+    if (!file || !this.vendorId) { this.uploading = false; return; }
+    this.uploading = true;
+    this.media.upload(file, 'product', this.vendorId).subscribe({
+      next: asset => {
+        this.form.pictureIds = [...this.form.pictureIds, asset.id];
+        this.sessionUploads.add(asset.id);
+        this.uploadNext(rest);
+      },
+      error: err => {
+        this.uploading = false;
+        this.pictureError = err?.fieldErrors?.['file']?.[0]
+          ?? (err?.status === 0 ? 'Network error. Try again.' : err?.status === 403 ? 'You cannot upload pictures right now.' : 'Upload failed.');
+      }
+    });
+  }
+
+  movePicture(index: number, delta: number) {
+    const target = index + delta;
+    if (target < 0 || target >= this.form.pictureIds.length) return;
+    const ids = [...this.form.pictureIds];
+    [ids[index], ids[target]] = [ids[target], ids[index]];
+    this.form.pictureIds = ids;
+  }
+
+  removePicture(index: number) {
+    const ids = [...this.form.pictureIds];
+    const [id] = ids.splice(index, 1);
+    this.form.pictureIds = ids;
+    // An image uploaded in this session and never saved is deleted again; the API refuses (409) if it is attached.
+    if (this.sessionUploads.delete(id)) this.media.delete(id).subscribe({ error: () => undefined });
   }
 
   remove(product: VendorProduct) {
@@ -380,6 +515,6 @@ export class VendorProductsPage implements OnInit {
   private clearErrors() { this.formError = ''; this.fieldErrors = {}; this.actionError = ''; this.notice = ''; }
 
   private emptyForm(): ProductForm {
-    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, categoryIds: [], manufacturerIds: [] };
+    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, categoryIds: [], manufacturerIds: [], pictureIds: [] };
   }
 }

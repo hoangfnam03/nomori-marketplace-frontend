@@ -1,3 +1,4 @@
+import { MediaApiService } from '../../core/media/media-api.service';
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -112,6 +113,7 @@ export class ProductListPage implements OnInit {
   private readonly api = inject(CatalogApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly media = inject(MediaApiService);
 
   products: ProductCardModel[] = [];
   categoryTree: CategoryTreeNode[] = [];
@@ -148,7 +150,7 @@ export class ProductListPage implements OnInit {
       sort: this.sort
     }).subscribe({
       next: result => {
-        this.products = result.items.map(toProductCard);
+        this.products = result.items.map(p => toProductCard(p, this.media.url(p.mainPictureId)));
         this.totalCount = result.totalCount;
         this.totalPages = result.totalPages;
         this.loading = false;
@@ -179,14 +181,14 @@ export class ProductListPage implements OnInit {
 
 const BLANK_IMAGE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23e4e8df'/%3E%3C/svg%3E`;
 
-function toProductCard(p: ProductResponse): ProductCardModel {
+function toProductCard(p: ProductResponse, pictureUrl: string | null): ProductCardModel {
   return {
     id: p.id,
     name: p.name,
     category: '',
     price: formatPrice(p.price),
     compareAtPrice: p.oldPrice > 0 ? formatPrice(p.oldPrice) : undefined,
-    imageUrl: BLANK_IMAGE,
+    imageUrl: pictureUrl ?? BLANK_IMAGE,
     rating: undefined,
     reviewCount: undefined,
     shopName: p.vendorName,
