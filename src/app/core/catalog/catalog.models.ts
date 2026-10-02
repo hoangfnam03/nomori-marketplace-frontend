@@ -36,11 +36,15 @@ export interface ProductResponse {
   createdOnUtc: string;
   vendorId: number;
   vendorName: string | null;
+  /** Media asset id of the first picture; 0 when the product has none. */
+  mainPictureId: number;
 }
 
 export interface ProductDetailResponse {
   product: ProductResponse;
   fullDescription: string | null;
+  /** Picture ids in display order. */
+  pictureIds: number[];
   categories: CategoryResponse[];
   manufacturers: ManufacturerResponse[];
 }

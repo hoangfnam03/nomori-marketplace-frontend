@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
+import { MediaApiService } from '../../core/media/media-api.service';
 import { ProductDetailResponse } from '../../core/catalog/catalog.models';
 import { ProductAttributeDetail } from '../../core/catalog/product-attribute.models';
 import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute.models';
@@ -26,7 +27,20 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 
       <div class="product-layout">
         <div class="product-image-area">
-          <div class="product-image-placeholder" aria-hidden="true"></div>
+          @if (selectedPictureUrl(); as url) {
+            <img class="product-image" [src]="url" [alt]="detail.product.name" />
+            @if (detail.pictureIds.length > 1) {
+              <div class="thumbs">
+                @for (id of detail.pictureIds; track id) {
+                  <button type="button" class="thumb" [class.active]="id === selectedPictureId" (click)="selectedPictureId = id" [attr.aria-label]="'Show picture ' + ($index + 1)">
+                    <img [src]="media.url(id)" alt="" loading="lazy" />
+                  </button>
+                }
+              </div>
+            }
+          } @else {
+            <div class="product-image-placeholder" aria-hidden="true"></div>
+          }
         </div>
 
         <div class="product-info">
@@ -167,6 +181,11 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
     .page-heading { padding: .75rem 0 2rem; animation: rise-in 600ms ease both; }
     .product-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; padding-bottom: 5rem; }
     .product-image-placeholder { aspect-ratio: 4/5; background: #e4e8df; }
+    .product-image { display: block; width: 100%; aspect-ratio: 4/5; object-fit: cover; background: #e4e8df; }
+    .thumbs { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; }
+    .thumb { width: 64px; height: 64px; padding: 0; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+    .thumb.active { border-color: var(--green); outline: 2px solid var(--green); }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .product-info { padding-top: 1rem; }
     .eyebrow { color: var(--green); font: 700 .72rem/1 var(--mono-font); letter-spacing: .13em; text-transform: uppercase; margin-bottom: .75rem; }
     h1 { margin: 0 0 1.5rem; font: 700 clamp(2rem, 4vw, 3.5rem)/1.08 var(--display-font); }
@@ -213,6 +232,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 export class ProductDetailPage implements OnInit {
   private readonly api = inject(CatalogApiService);
   private readonly route = inject(ActivatedRoute);
+  readonly media = inject(MediaApiService);
 
   detail: ProductDetailResponse | null = null;
   attrs: ProductAttributeDetail | null = null;
@@ -220,12 +240,14 @@ export class ProductDetailPage implements OnInit {
   tags: ProductTag[] = [];
   loading = true;
   error: string | null = null;
+  selectedPictureId = 0;
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.api.getProduct(id).subscribe({
       next: detail => {
         this.detail = detail;
+        this.selectedPictureId = detail.pictureIds[0] ?? 0;
         this.loading = false;
         this.api.getProductAttributes(id).subscribe({ next: a => { this.attrs = a; }, error: () => {} });
         this.api.getProductSpecs(id).subscribe({ next: s => { this.specs = s; }, error: () => {} });
@@ -237,6 +259,8 @@ export class ProductDetailPage implements OnInit {
       }
     });
   }
+
+  selectedPictureUrl() { return this.media.url(this.selectedPictureId); }
 
   formatPrice(price: number): string {
     return price % 1 === 0 ? `$${price}` : `$${price.toFixed(2)}`;
