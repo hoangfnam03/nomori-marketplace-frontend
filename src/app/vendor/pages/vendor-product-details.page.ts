@@ -1,9 +1,10 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthFacade } from '../../core/auth/auth.facade';
 import {
-  OptionCatalog, SaveVariantsRequest, VariantAttributeInput, VariantCombinationInput, VariantsResponse, VendorProduct, VendorProductApiService
+  InventoryOverview, OptionCatalog, SaveVariantsRequest, StockMovement, StockReason, VariantAttributeInput, VariantCombinationInput, VariantsResponse, VendorProduct, VendorProductApiService
 } from '../../core/catalog/vendor-product-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
@@ -12,11 +13,18 @@ const MAX_VALUES = 20;
 const MAX_COMBINATIONS = 100;
 const MAX_TAGS = 20;
 
-type Section = 'variants' | 'specs' | 'tags';
+type Section = 'variants' | 'specs' | 'tags' | 'inventory';
+
+const REASONS: { value: StockReason; label: string }[] = [
+  { value: 'restock', label: 'Restock (goods received)' },
+  { value: 'correction', label: 'Correction (count)' },
+  { value: 'damage', label: 'Damaged or lost' },
+  { value: 'return', label: 'Customer return' }
+];
 
 @Component({
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [DatePipe, FormsModule, RouterLink],
   styleUrls: ['../../shared/styles/vendor-pages.scss'],
   template: `
     <section class="page-intro" aria-labelledby="details-title">
@@ -33,6 +41,94 @@ type Section = 'variants' | 'specs' | 'tags';
         <div class="actions"><button type="button" class="btn" (click)="load()">Try again</button></div>
       </div></div>
     } @else {
+      <!-- Inventory -->
+      <div class="panel">
+        <div class="panel-header"><h2>Inventory</h2></div>
+        <div class="panel-body">
+          @if (messages.inventory) { <p class="banner banner-ok" role="status">{{ messages.inventory }}</p> }
+          @if (errors.inventory) { <p class="banner" role="alert">{{ errors.inventory }}</p> }
+          @if (inventory; as inv) {
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead><tr><th>Item</th><th>On hand</th><th>Held by carts</th><th>Available</th></tr></thead>
+                <tbody>
+                  @if (inv.combinations.length === 0) {
+                    <tr><td>Product</td><td>{{ inv.stock.onHand }}</td><td>{{ inv.stock.reserved }}</td><td>{{ inv.stock.available }}</td></tr>
+                  } @else {
+                    @for (c of inv.combinations; track c.id) {
+                      <tr><td>{{ combinationName(c.id) }}@if (c.sku) { <span class="muted"> · {{ c.sku }}</span> }</td><td>{{ c.stock.onHand }}</td><td>{{ c.stock.reserved }}</td><td>{{ c.stock.available }}</td></tr>
+                    }
+                    <tr><td><strong>Total</strong></td><td>{{ inv.stock.onHand }}</td><td>{{ inv.stock.reserved }}</td><td>{{ inv.stock.available }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (inv.isLowStock) { <p class="banner banner-info">Stock is at or below the low-stock threshold ({{ inv.lowStockThreshold }}).</p> }
+
+            <form class="form" (ngSubmit)="adjust()" novalidate>
+              <div class="form-row">
+                @if (inv.combinations.length > 0) {
+                  <label>Combination
+                    <select [(ngModel)]="adjustForm.combinationId" name="adjCombination">
+                      <option [ngValue]="null" disabled>Choose…</option>
+                      @for (c of inv.combinations; track c.id) { <option [ngValue]="c.id">{{ combinationName(c.id) }}</option> }
+                    </select>
+                  </label>
+                }
+                <label>Change
+                  <input type="number" name="adjDelta" [(ngModel)]="adjustForm.delta" step="1" />
+                  <span class="hint">Positive adds stock, negative removes it.</span>
+                </label>
+                <label>Reason
+                  <select [(ngModel)]="adjustForm.reason" name="adjReason">
+                    @for (r of reasons; track r.value) { <option [ngValue]="r.value">{{ r.label }}</option> }
+                  </select>
+                </label>
+                <label>Note
+                  <input type="text" name="adjNote" [(ngModel)]="adjustForm.note" maxlength="500" />
+                </label>
+              </div>
+              <div class="actions">
+                <button type="submit" class="btn" [disabled]="busy.inventory || !adjustForm.delta">{{ busy.inventory ? 'Saving…' : 'Apply change' }}</button>
+              </div>
+            </form>
+
+            <form class="form" (ngSubmit)="saveInventorySettings()" novalidate>
+              <div class="form-row">
+                <label class="check-label"><input type="checkbox" name="track" [(ngModel)]="settingsForm.trackInventory" /> Track stock for this product</label>
+                <label>Low-stock threshold
+                  <input type="number" name="threshold" [(ngModel)]="settingsForm.lowStockThreshold" min="0" step="1" [disabled]="!settingsForm.trackInventory" />
+                  @if (fieldError('lowStockThreshold')) { <span class="field-error">{{ fieldError('lowStockThreshold') }}</span> }
+                </label>
+              </div>
+              <div class="actions"><button type="submit" class="btn btn-secondary" [disabled]="busy.inventory">Save settings</button></div>
+            </form>
+
+            <h3 class="sub">Recent changes</h3>
+            @if (movements.length === 0) {
+              <p class="muted">No recorded changes yet. History starts with the next change.</p>
+            } @else {
+              <div class="table-scroll">
+                <table class="data-table">
+                  <thead><tr><th>When</th><th>Change</th><th>After</th><th>Reason</th><th>Note</th></tr></thead>
+                  <tbody>
+                    @for (m of movements; track m.id) {
+                      <tr>
+                        <td>{{ m.createdOnUtc | date: 'short' }}</td>
+                        <td>{{ m.delta > 0 ? '+' : '' }}{{ m.delta }}@if (m.combinationId) { <span class="muted"> ({{ combinationName(m.combinationId) }})</span> }</td>
+                        <td>{{ m.quantityAfter }}</td>
+                        <td>{{ m.reason }}</td>
+                        <td>{{ m.note || m.reference || '' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
       <!-- Variants -->
       <div class="panel">
         <div class="panel-header"><h2>Variants</h2></div>
@@ -145,6 +241,7 @@ type Section = 'variants' | 'specs' | 'tags';
     .block legend { font-size: .8rem; padding: 0 .3rem; }
     .value-row { display: grid; grid-template-columns: 2fr 1.2fr 1fr auto; gap: .5rem; align-items: center; }
     a.btn { text-decoration: none; display: inline-block; }
+    .sub { font-size: .85rem; margin: .5rem 0 0; }
   `]
 })
 export class VendorProductDetailsPage implements OnInit {
@@ -168,9 +265,16 @@ export class VendorProductDetailsPage implements OnInit {
   specIds: number[] = [];
   tagText = '';
 
-  busy: Record<Section, boolean> = { variants: false, specs: false, tags: false };
-  errors: Record<Section, string> = { variants: '', specs: '', tags: '' };
-  messages: Record<Section, string> = { variants: '', specs: '', tags: '' };
+  busy: Record<Section, boolean> = { variants: false, specs: false, tags: false, inventory: false };
+  errors: Record<Section, string> = { variants: '', specs: '', tags: '', inventory: '' };
+  messages: Record<Section, string> = { variants: '', specs: '', tags: '', inventory: '' };
+
+  readonly reasons = REASONS;
+  inventory: InventoryOverview | null = null;
+  movements: StockMovement[] = [];
+  inventoryFieldErrors: Record<string, string[]> = {};
+  adjustForm: { combinationId: number | null; delta: number | null; reason: StockReason; note: string } = { combinationId: null, delta: null, reason: 'restock', note: '' };
+  settingsForm = { trackInventory: true, lowStockThreshold: 5 };
 
   ngOnInit() { this.load(); }
 
@@ -206,7 +310,7 @@ export class VendorProductDetailsPage implements OnInit {
                   next: specs => {
                     this.specIds = [...specs.optionIds];
                     this.api.getTags(this.vendorId, this.productId).subscribe({
-                      next: tags => { this.tagText = tags.tagNames.join(', '); this.loading = false; },
+                      next: tags => { this.tagText = tags.tagNames.join(', '); this.loadInventory(fail); },
                       error: fail
                     });
                   },
@@ -222,6 +326,79 @@ export class VendorProductDetailsPage implements OnInit {
       error: fail
     });
   }
+
+  // ---- Inventory ----
+
+  private loadInventory(fail: (err: { status?: number }) => void) {
+    this.api.getInventory(this.vendorId, this.productId).subscribe({
+      next: inventory => {
+        this.applyInventory(inventory);
+        this.api.getStockMovements(this.vendorId, this.productId).subscribe({
+          next: page => { this.movements = page.items; this.loading = false; },
+          error: fail
+        });
+      },
+      error: fail
+    });
+  }
+
+  private applyInventory(inventory: InventoryOverview) {
+    this.inventory = inventory;
+    this.settingsForm = { trackInventory: inventory.trackInventory, lowStockThreshold: inventory.lowStockThreshold };
+    if (inventory.combinations.length > 0 && !inventory.combinations.some(c => c.id === this.adjustForm.combinationId)) this.adjustForm.combinationId = null;
+  }
+
+  private refreshMovements() {
+    this.api.getStockMovements(this.vendorId, this.productId).subscribe({ next: page => { this.movements = page.items; }, error: () => undefined });
+  }
+
+  /** Reads "{mappingId: valueId}" of a combination and names it after the values, for example "Red / S". */
+  combinationName(combinationId: number): string {
+    const combo = this.inventory?.combinations.find(c => c.id === combinationId);
+    if (!combo) return `#${combinationId}`;
+    try {
+      const key = JSON.parse(combo.attributesJson) as Record<string, number>;
+      const names = Object.values(key).map(valueId => this.valueNames.get(valueId) ?? '?');
+      return names.length ? names.join(' / ') : combo.sku ?? `#${combinationId}`;
+    } catch { return combo.sku ?? `#${combinationId}`; }
+  }
+
+  private valueNames = new Map<number, string>();
+
+  adjust() {
+    if (!this.inventory || !this.adjustForm.delta) return;
+    this.clear('inventory');
+    this.busy.inventory = true;
+    this.api.adjustStock(this.vendorId, this.productId, {
+      combinationId: this.inventory.combinations.length > 0 ? this.adjustForm.combinationId : null,
+      delta: Number(this.adjustForm.delta),
+      reason: this.adjustForm.reason,
+      note: this.adjustForm.note.trim() || null
+    }).subscribe({
+      next: inventory => {
+        this.busy.inventory = false;
+        this.applyInventory(inventory);
+        this.adjustForm = { ...this.adjustForm, delta: null, note: '' };
+        this.messages.inventory = 'Stock updated.';
+        this.refreshMovements();
+      },
+      error: err => { this.busy.inventory = false; this.inventoryFieldErrors = err?.fieldErrors ?? {}; this.errors.inventory = this.writeError(err, 'Unable to change the stock.'); }
+    });
+  }
+
+  saveInventorySettings() {
+    this.clear('inventory');
+    this.busy.inventory = true;
+    this.api.setInventorySettings(this.vendorId, this.productId, {
+      trackInventory: this.settingsForm.trackInventory,
+      lowStockThreshold: Number(this.settingsForm.lowStockThreshold) || 0
+    }).subscribe({
+      next: inventory => { this.busy.inventory = false; this.applyInventory(inventory); this.messages.inventory = 'Inventory settings saved.'; },
+      error: err => { this.busy.inventory = false; this.inventoryFieldErrors = err?.fieldErrors ?? {}; this.errors.inventory = this.writeError(err, 'Unable to save the settings.'); }
+    });
+  }
+
+  fieldError(field: string) { return this.inventoryFieldErrors[field]?.[0] ?? ''; }
 
   // ---- Variants ----
 
@@ -297,7 +474,12 @@ export class VendorProductDetailsPage implements OnInit {
     };
     this.busy.variants = true;
     this.api.setVariants(this.vendorId, this.productId, body).subscribe({
-      next: saved => { this.busy.variants = false; this.applyVariants(saved); this.messages.variants = 'Variants saved. The product stock was updated.'; },
+      next: saved => {
+        this.busy.variants = false;
+        this.applyVariants(saved);
+        this.messages.variants = 'Variants saved. The product stock was updated.';
+        this.api.getInventory(this.vendorId, this.productId).subscribe({ next: inv => { this.applyInventory(inv); this.refreshMovements(); }, error: () => undefined });
+      },
       error: err => { this.busy.variants = false; this.errors.variants = this.writeError(err, 'Unable to save the variants.'); }
     });
   }
@@ -305,6 +487,7 @@ export class VendorProductDetailsPage implements OnInit {
   /** Turns the saved structure back into the editable one: each combination key maps a mapping id to a value id. */
   private applyVariants(variants: VariantsResponse) {
     const mappings = [...variants.mappings].sort((a, b) => a.displayOrder - b.displayOrder);
+    this.valueNames = new Map(mappings.flatMap(m => m.values.map(v => [v.id, v.name] as [number, string])));
     this.attrs = mappings.map(m => ({
       productAttributeId: m.attribute.id,
       isRequired: m.isRequired,
@@ -347,7 +530,11 @@ export class VendorProductDetailsPage implements OnInit {
     });
   }
 
-  private clear(section: Section) { this.errors[section] = ''; this.messages[section] = ''; }
+  private clear(section: Section) {
+    this.errors[section] = '';
+    this.messages[section] = '';
+    if (section === 'inventory') this.inventoryFieldErrors = {};
+  }
 
   // A 403 on a write means the shop is switched off.
   private writeError(err: { status?: number; message?: string; fieldErrors?: Record<string, string[]> }, fallback: string) {

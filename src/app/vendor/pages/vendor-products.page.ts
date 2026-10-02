@@ -43,7 +43,7 @@ function fromLocalInput(value: string): string | null {
   return value ? new Date(value).toISOString() : null;
 }
 
-type StatusFilter = 'all' | ProductStatus;
+type StatusFilter = 'all' | 'lowStock' | ProductStatus;
 
 @Component({
   standalone: true,
@@ -65,6 +65,7 @@ type StatusFilter = 'all' | ProductStatus;
           <div class="actions">
             <select [(ngModel)]="status" (ngModelChange)="onFilterChange()" name="status" aria-label="Filter by status">
               <option value="all">All</option>
+              <option value="lowStock">Low stock</option>
               <option value="draft">Draft</option>
               <option value="live">Live</option>
               <option value="stopped">Stopped</option>
@@ -109,7 +110,7 @@ type StatusFilter = 'all' | ProductStatus;
                       }
                     </td>
                     <td>{{ money(p.price) }}@if (p.oldPrice > 0) { <br /><span class="muted">was {{ money(p.oldPrice) }}</span> }</td>
-                    <td>{{ p.stockQuantity }}</td>
+                    <td>{{ p.trackInventory ? p.stockQuantity : '∞' }}@if (p.isLowStock) { <br /><span class="badge badge-pending">Low stock</span> }</td>
                     <td><span [class]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
                     <td class="row-actions">
                       @if (pendingDelete?.id === p.id) {
@@ -176,8 +177,8 @@ type StatusFilter = 'all' | ProductStatus;
                 @if (fieldError('oldPrice')) { <span class="field-error">{{ fieldError('oldPrice') }}</span> }
               </label>
               <label>Stock
-                <input type="number" name="stockQuantity" [(ngModel)]="form.stockQuantity" min="0" [disabled]="hasVariants" />
-                @if (hasVariants) { <span class="hint">Set by the variants: the sum of their stocks.</span> }
+                <input type="number" name="stockQuantity" [(ngModel)]="form.stockQuantity" min="0" [disabled]="hasVariants || !!editingId" />
+                @if (editingId) { <span class="hint">Change stock in Details, Inventory, so every change is recorded.@if (hasVariants) { It is the sum of the variant stocks. } </span> }
                 @if (fieldError('stockQuantity')) { <span class="field-error">{{ fieldError('stockQuantity') }}</span> }
               </label>
             </div>
@@ -656,7 +657,8 @@ export class VendorProductsPage implements OnInit {
     this.api.list(this.vendorId, {
       page: this.page,
       search: this.search.trim() || undefined,
-      status: this.status === 'all' ? undefined : this.status
+      status: this.status === 'all' || this.status === 'lowStock' ? undefined : this.status,
+      lowStock: this.status === 'lowStock' ? true : undefined
     }).subscribe({
       next: res => { this.products = res.items; this.totalPages = Math.max(res.totalPages, 1); this.loading = false; },
       error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, 'Unable to load products.'); }
