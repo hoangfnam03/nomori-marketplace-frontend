@@ -1,5 +1,7 @@
 import { MediaApiService } from '../../core/media/media-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
+import { CartService } from '../../core/cart/cart.service';
+import { CartNoticeComponent } from '../../shared/components/cart-notice/cart-notice.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
@@ -12,7 +14,7 @@ import { ProductResponse } from '../../core/catalog/catalog.models';
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, EmptyStateComponent, ProductCardComponent, RouterLink, SearchBoxComponent],
+  imports: [BreadcrumbComponent, CartNoticeComponent, EmptyStateComponent, ProductCardComponent, RouterLink, SearchBoxComponent],
   template: `
     <div class="page-heading">
       <app-breadcrumb [items]="[{ label: 'Featured collection' }]" />
@@ -49,9 +51,7 @@ import { ProductResponse } from '../../core/catalog/catalog.models';
       </section>
     }
 
-    @if (lastAddedProduct) {
-      <div class="toast" role="status">{{ lastAddedProduct.name }} is ready for the cart facade.</div>
-    }
+    <app-cart-notice [message]="cartMessage" [error]="cartFailed" (dismissed)="cartMessage = ''" />
   `,
   styles: [`
     :host { display: block; }
@@ -81,6 +81,9 @@ export class StorefrontHomePage {
   private readonly router = inject(Router);
   private readonly media = inject(MediaApiService);
   private readonly currency = inject(CurrencyService);
+  private readonly cart = inject(CartService);
+  cartMessage = '';
+  cartFailed = false;
 
   /** The raw items; the cards are derived so a change of display currency updates the prices at once. */
   private readonly items = signal<ProductResponse[]>([]);
@@ -88,7 +91,6 @@ export class StorefrontHomePage {
     this.items().map(p => toProductCard(p, this.media.url(p.mainPictureId), value => this.currency.format(value))));
   loading = true;
   error: string | null = null;
-  lastAddedProduct?: ProductCardModel;
 
   constructor() {
     this.api.getProducts({ pageSize: 8, sort: 'DisplayOrder' }).subscribe({
@@ -104,13 +106,22 @@ export class StorefrontHomePage {
     });
   }
 
+  addFromCard(card: ProductCardModel) {
+    this.cartMessage = '';
+    this.cart.add(card.id, 1, [], this.router.url).subscribe(outcome => {
+      this.cartFailed = outcome.kind === 'error';
+      if (outcome.kind === 'added') this.cartMessage = `${card.name} added to your cart.`;
+      // A product with variants needs its options chosen on its own page.
+      else if (outcome.kind === 'choose-options') this.router.navigate(['/storefront/products', card.id]);
+      else if (outcome.kind === 'error') this.cartMessage = outcome.message;
+    });
+  }
+
   onSearch(query: string) {
     this.router.navigate(['/storefront/products'], { queryParams: { search: query || undefined } });
   }
 
-  onAddToCart(product: ProductCardModel) {
-    this.lastAddedProduct = product;
-  }
+  onAddToCart(product: ProductCardModel) { this.addFromCard(product); }
 }
 
 const BLANK_IMAGE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23e4e8df'/%3E%3C/svg%3E`;

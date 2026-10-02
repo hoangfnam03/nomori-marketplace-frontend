@@ -5,13 +5,15 @@ import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcru
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { MediaApiService } from '../../core/media/media-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
+import { CartService } from '../../core/cart/cart.service';
+import { CartNoticeComponent } from '../../shared/components/cart-notice/cart-notice.component';
 import { PriceQuote, ProductDetailResponse, TierPrice } from '../../core/catalog/catalog.models';
 import { PublicAttributeCombination, PublicAttributeDetail } from '../../core/catalog/product-attribute.models';
 import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute.models';
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, FormsModule, RouterLink],
+  imports: [BreadcrumbComponent, CartNoticeComponent, FormsModule, RouterLink],
   template: `
     @if (loading) {
       <p class="state">Loading product...</p>
@@ -125,7 +127,8 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
             @if (quote && !needsChoice()) { <span class="line-total">Total {{ formatPrice(quote.lineTotal) }}</span> }
           </div>
 
-          <button type="button" class="add-to-cart" [disabled]="needsChoice() || currentStock() === 0">Add to cart</button>
+          <button type="button" class="add-to-cart" [disabled]="needsChoice() || currentStock() === 0 || adding" (click)="addToCart()">{{ adding ? 'Adding…' : 'Add to cart' }}</button>
+          @if (needsChoice()) { <p class="quote-error" role="status">Choose {{ missingChoices() }} first.</p> }
 
           @if (detail.fullDescription) {
             <div class="full-desc">
@@ -158,6 +161,8 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
           }
         </div>
       </div>
+
+      <app-cart-notice [message]="cartMessage" [error]="cartFailed" (dismissed)="cartMessage = ''" />
 
       @if (detail.relatedProducts.length > 0) {
         <section class="related" aria-labelledby="related-title">
@@ -300,6 +305,10 @@ export class ProductDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   readonly media = inject(MediaApiService);
   private readonly currency = inject(CurrencyService);
+  private readonly cart = inject(CartService);
+  adding = false;
+  cartMessage = '';
+  cartFailed = false;
 
   detail: ProductDetailResponse | null = null;
   attrs: PublicAttributeDetail | null = null;
@@ -354,6 +363,20 @@ export class ProductDetailPage implements OnInit {
     if (!Number.isInteger(value) || value < 1 || value > 10000) { this.quoteError = 'Enter a quantity between 1 and 10,000.'; return; }
     this.quantity = value;
     this.refreshQuote();
+  }
+
+  addToCart() {
+    if (!this.detail || this.adding) return;
+    this.adding = true;
+    this.cartMessage = '';
+    this.cart.add(this.detail.product.id, Number(this.quantity) || 1, Object.values(this.selected), `/storefront/products/${this.detail.product.id}`).subscribe(outcome => {
+      this.adding = false;
+      this.cartFailed = outcome.kind === 'error' || outcome.kind === 'choose-options';
+      if (outcome.kind === 'added') this.cartMessage = `${this.detail?.product.name} added to your cart.`;
+      else if (outcome.kind === 'choose-options') this.cartMessage = 'Choose your options first.';
+      else if (outcome.kind === 'error') this.cartMessage = outcome.message;
+      // A guest was sent to sign in; nothing to show.
+    });
   }
 
   /** Asks the server for the price of this quantity and choice. Only the newest answer is used. */

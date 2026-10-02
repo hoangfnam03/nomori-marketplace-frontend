@@ -18,6 +18,8 @@ const messages: Record<string, string> = {
   'currency.primary_locked': 'The primary currency cannot be switched or change its decimals once products exist, because their prices would change meaning.',
   'currency.primary_required': 'The primary currency must stay published and cannot be deleted. Make another currency primary first.',
   'currency.code_exists': 'A currency with this code already exists.',
+  'cart.own_product': 'You cannot buy products from your own shop.',
+  'cart.line_limit': 'Your cart is full (50 different items). Remove something to add more.',
   'vendor.platform_shop': 'The platform shop cannot be deleted or deactivated.',
   'vendor_member.last_member': 'A shop must keep at least one member.'
 };

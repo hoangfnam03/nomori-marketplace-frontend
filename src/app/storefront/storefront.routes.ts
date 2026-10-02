@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { authGuard } from '../core/auth/auth.guard';
 
 export const storefrontRoutes: Routes = [
   {
@@ -12,6 +13,11 @@ export const storefrontRoutes: Routes = [
   {
     path: 'products/:id',
     loadComponent: () => import('./pages/product-detail.page').then(page => page.ProductDetailPage)
+  },
+  {
+    path: 'cart',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/cart.page').then(page => page.CartPage)
   },
   {
     path: 'vendors',

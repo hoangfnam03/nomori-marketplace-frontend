@@ -8,6 +8,7 @@
     <nav class="primary-nav" aria-label="Primary navigation">
       <a routerLink="/storefront" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Storefront</a>
       <a routerLink="/storefront/products" routerLinkActive="active">Products</a>
+      <a routerLink="/storefront/cart" routerLinkActive="active">Cart@if (cart.count() > 0) { <span class="cart-count" aria-label="items in cart">({{ cart.count() }})</span> }</a>
       <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Admin</a>
       <a routerLink="/storefront/vendors" routerLinkActive="active">Vendors</a>
       <a routerLink="/admin/catalog" routerLinkActive="active">Catalog</a>
