@@ -6,6 +6,7 @@ import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { ManufacturerResponse, SelectableCategory } from '../../core/catalog/catalog.models';
 import { ProductStatus, SaveVendorProductRequest, VendorProduct, VendorProductApiService } from '../../core/catalog/vendor-product-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
+import { CurrencyService } from '../../core/money/currency.service';
 import { MEDIA_ACCEPT, MEDIA_MAX_BYTES, MediaApiService } from '../../core/media/media-api.service';
 
 const MAX_PICTURES = 10;
@@ -167,12 +168,12 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
               @if (fieldError('fullDescription')) { <span class="field-error">{{ fieldError('fullDescription') }}</span> }
             </label>
             <div class="form-row">
-              <label>Price *
-                <input type="number" name="price" [(ngModel)]="form.price" min="0" step="0.01" />
+              <label>Price ({{ currency.primary().code }}) *
+                <input type="number" name="price" [(ngModel)]="form.price" min="0" [step]="currency.step()" />
                 @if (fieldError('price')) { <span class="field-error">{{ fieldError('price') }}</span> }
               </label>
-              <label>Compare at price
-                <input type="number" name="oldPrice" [(ngModel)]="form.oldPrice" min="0" step="0.01" />
+              <label>Compare at price ({{ currency.primary().code }})
+                <input type="number" name="oldPrice" [(ngModel)]="form.oldPrice" min="0" [step]="currency.step()" />
                 <span class="hint">Must be higher than the price. Leave 0 for none.</span>
                 @if (fieldError('oldPrice')) { <span class="field-error">{{ fieldError('oldPrice') }}</span> }
               </label>
@@ -314,6 +315,7 @@ export class VendorProductsPage implements OnInit {
   private readonly catalog = inject(CatalogApiService);
   private readonly auth = inject(AuthFacade);
   private readonly media = inject(MediaApiService);
+  readonly currency = inject(CurrencyService);
 
   readonly maxPictures = MAX_PICTURES;
   readonly maxRelated = MAX_RELATED;
@@ -649,7 +651,7 @@ export class VendorProductsPage implements OnInit {
 
   fieldError(field: string) { return this.fieldErrors[field]?.[0] ?? ''; }
 
-  money(value: number) { return value % 1 === 0 ? `$${value}` : `$${value.toFixed(2)}`; }
+  money(value: number) { return this.currency.formatPrimary(value); }
 
   private fetch() {
     if (!this.vendorId) return;

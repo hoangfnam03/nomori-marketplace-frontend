@@ -1,5 +1,6 @@
 import { MediaApiService } from '../../core/media/media-api.service';
-import { Component, inject, OnInit } from '@angular/core';
+import { CurrencyService } from '../../core/money/currency.service';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
@@ -121,14 +122,14 @@ interface Chip {
         @if (error) { <p class="state state-error" role="alert">{{ error }}</p> }
 
         @if (!loading && !error) {
-          @if (products.length === 0) {
+          @if (items().length === 0) {
             <app-empty-state title="No products found" message="Try different words or remove some filters." mark="00" />
             @if (chips().length > 0) {
               <div class="empty-actions"><button type="button" class="chip clear" (click)="clearAll()">Clear all filters</button></div>
             }
           } @else {
             <section class="product-grid" aria-label="Products">
-              @for (product of products; track product.id) {
+              @for (product of cards(); track product.id) {
                 <app-product-card [product]="product" />
               }
             </section>
@@ -196,8 +197,12 @@ export class ProductListPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly media = inject(MediaApiService);
+  private readonly currency = inject(CurrencyService);
 
-  products: ProductCardModel[] = [];
+  /** The raw items; the cards are derived so a change of display currency updates the prices at once. */
+  readonly items = signal<ProductResponse[]>([]);
+  readonly cards = computed<ProductCardModel[]>(() =>
+    this.items().map(p => toProductCard(p, this.media.url(p.mainPictureId), value => this.currency.format(value))));
   categoryTree: CategoryTreeNode[] = [];
   facets: ProductFacets | null = null;
   loading = true;
@@ -267,7 +272,7 @@ export class ProductListPage implements OnInit {
     this.error = null;
     this.api.getProducts({ ...this.filters(), page: this.page, pageSize: this.pageSize, sort: this.sort }).subscribe({
       next: result => {
-        this.products = result.items.map(p => toProductCard(p, this.media.url(p.mainPictureId)));
+        this.items.set(result.items);
         this.totalCount = result.totalCount;
         this.totalPages = result.totalPages;
         this.loading = false;
@@ -354,7 +359,7 @@ export class ProductListPage implements OnInit {
     return list;
   }
 
-  money(value: number) { return formatPrice(value); }
+  money(value: number) { return this.currency.format(value); }
 
   private categoryName(id: number): string {
     for (const node of this.categoryTree) {
@@ -376,13 +381,13 @@ export class ProductListPage implements OnInit {
 
 const BLANK_IMAGE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23e4e8df'/%3E%3C/svg%3E`;
 
-function toProductCard(p: ProductResponse, pictureUrl: string | null): ProductCardModel {
+function toProductCard(p: ProductResponse, pictureUrl: string | null, format: (value: number) => string): ProductCardModel {
   return {
     id: p.id,
     name: p.name,
     category: '',
-    price: formatPrice(p.price),
-    compareAtPrice: p.oldPrice > 0 ? formatPrice(p.oldPrice) : undefined,
+    price: format(p.price),
+    compareAtPrice: p.oldPrice > 0 ? format(p.oldPrice) : undefined,
     imageUrl: pictureUrl ?? BLANK_IMAGE,
     rating: undefined,
     reviewCount: undefined,
@@ -392,6 +397,3 @@ function toProductCard(p: ProductResponse, pictureUrl: string | null): ProductCa
   };
 }
 
-function formatPrice(price: number): string {
-  return price % 1 === 0 ? `$${price}` : `$${price.toFixed(2)}`;
-}

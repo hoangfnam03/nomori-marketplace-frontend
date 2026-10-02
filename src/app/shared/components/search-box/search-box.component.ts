@@ -6,6 +6,7 @@ import { catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap 
 import { CatalogApiService } from '../../../core/catalog/catalog-api.service';
 import { ProductSuggestion } from '../../../core/catalog/catalog.models';
 import { MediaApiService } from '../../../core/media/media-api.service';
+import { CurrencyService } from '../../../core/money/currency.service';
 
 const MIN_CHARACTERS = 2;
 
@@ -57,6 +58,7 @@ export class SearchBoxComponent {
   private readonly api = inject(CatalogApiService);
   private readonly router = inject(Router);
   private readonly media = inject(MediaApiService);
+  private readonly currency = inject(CurrencyService);
   private readonly typed = new Subject<string>();
 
   /** The text to show, for example the current search of the list page. */
@@ -88,7 +90,7 @@ export class SearchBoxComponent {
 
   picture(s: ProductSuggestion) { return this.media.url(s.mainPictureId); }
 
-  price(value: number) { return value % 1 === 0 ? `$${value}` : `$${value.toFixed(2)}`; }
+  price(value: number) { return this.currency.format(value); }
 
   onKey(event: KeyboardEvent) {
     if (!this.open || this.suggestions.length === 0) return;

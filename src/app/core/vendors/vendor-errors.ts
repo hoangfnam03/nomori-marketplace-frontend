@@ -15,6 +15,9 @@ const messages: Record<string, string> = {
   'inventory.insufficient_stock': 'There is not enough stock for this change. Stock cannot go below zero or below the quantity customers are holding in their carts.',
   'inventory.reservation_expired': 'The stock hold has expired.',
   'inventory.active_reservations': 'Customers are holding stock of this product right now, so its variants cannot be replaced. Try again in a few minutes.',
+  'currency.primary_locked': 'The primary currency cannot be switched or change its decimals once products exist, because their prices would change meaning.',
+  'currency.primary_required': 'The primary currency must stay published and cannot be deleted. Make another currency primary first.',
+  'currency.code_exists': 'A currency with this code already exists.',
   'vendor.platform_shop': 'The platform shop cannot be deleted or deactivated.',
   'vendor_member.last_member': 'A shop must keep at least one member.'
 };

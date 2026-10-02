@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { MediaApiService } from '../../core/media/media-api.service';
+import { CurrencyService } from '../../core/money/currency.service';
 import { ProductDetailResponse } from '../../core/catalog/catalog.models';
 import { PublicAttributeCombination, PublicAttributeDetail } from '../../core/catalog/product-attribute.models';
 import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute.models';
@@ -265,6 +266,7 @@ export class ProductDetailPage implements OnInit {
   private readonly api = inject(CatalogApiService);
   private readonly route = inject(ActivatedRoute);
   readonly media = inject(MediaApiService);
+  private readonly currency = inject(CurrencyService);
 
   detail: ProductDetailResponse | null = null;
   attrs: PublicAttributeDetail | null = null;
@@ -345,7 +347,7 @@ export class ProductDetailPage implements OnInit {
   selectedPictureUrl() { return this.media.url(this.selectedPictureId); }
 
   formatPrice(price: number): string {
-    return price % 1 === 0 ? `$${price}` : `$${price.toFixed(2)}`;
+    return this.currency.format(price);
   }
 
   categoryNames(detail: ProductDetailResponse): string {
