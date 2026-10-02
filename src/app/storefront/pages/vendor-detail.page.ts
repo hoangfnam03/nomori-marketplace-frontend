@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { MediaApiService } from '../../core/media/media-api.service';
+import { CurrencyService } from '../../core/money/currency.service';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { ProductResponse } from '../../core/catalog/catalog.models';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
@@ -144,6 +145,7 @@ export class VendorDetailPage implements OnInit {
   private readonly api = inject(VendorApiService);
   private readonly catalog = inject(CatalogApiService);
   private readonly media = inject(MediaApiService);
+  private readonly currency = inject(CurrencyService);
 
   vendor: VendorResponse | null = null;
   loading = false;
@@ -165,7 +167,7 @@ export class VendorDetailPage implements OnInit {
     });
   }
 
-  price(value: number) { return value % 1 === 0 ? `$${value}` : `$${value.toFixed(2)}`; }
+  price(value: number) { return this.currency.format(value); }
 
   private loadProducts(vendorId: number) {
     this.productsLoading = true;

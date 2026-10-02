@@ -1,5 +1,6 @@
 import { MediaApiService } from '../../core/media/media-api.service';
-import { Component, inject } from '@angular/core';
+import { CurrencyService } from '../../core/money/currency.service';
+import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -26,7 +27,7 @@ import { ProductResponse } from '../../core/catalog/catalog.models';
     </div>
 
     <section class="catalog-toolbar" aria-label="Catalog controls">
-      <span>{{ products.length }} featured items</span>
+      <span>{{ cards().length }} featured items</span>
       <div class="toolbar-actions">
         <a routerLink="/storefront/products" class="filter-button">Browse all <span aria-hidden="true">→</span></a>
       </div>
@@ -36,12 +37,12 @@ import { ProductResponse } from '../../core/catalog/catalog.models';
     @if (error) { <p class="state state-error" role="alert">{{ error }}</p> }
 
     <section class="product-grid" aria-label="Featured products">
-      @for (product of products; track product.id) {
+      @for (product of cards(); track product.id) {
         <app-product-card [product]="product" (addToCart)="onAddToCart($event)" />
       }
     </section>
 
-    @if (!loading && products.length === 0 && !error) {
+    @if (!loading && cards().length === 0 && !error) {
       <section class="next-pattern" aria-labelledby="next-pattern-title">
         <div><div class="eyebrow">Get started</div><h2 id="next-pattern-title">No featured products yet.</h2></div>
         <app-empty-state title="Add products in the admin panel" message="Create categories, manufacturers and products in the admin catalog, then mark them as featured to display them here." mark="00" />
@@ -79,8 +80,12 @@ export class StorefrontHomePage {
   private readonly api = inject(CatalogApiService);
   private readonly router = inject(Router);
   private readonly media = inject(MediaApiService);
+  private readonly currency = inject(CurrencyService);
 
-  products: ProductCardModel[] = [];
+  /** The raw items; the cards are derived so a change of display currency updates the prices at once. */
+  private readonly items = signal<ProductResponse[]>([]);
+  readonly cards = computed<ProductCardModel[]>(() =>
+    this.items().map(p => toProductCard(p, this.media.url(p.mainPictureId), value => this.currency.format(value))));
   loading = true;
   error: string | null = null;
   lastAddedProduct?: ProductCardModel;
@@ -88,13 +93,8 @@ export class StorefrontHomePage {
   constructor() {
     this.api.getProducts({ pageSize: 8, sort: 'DisplayOrder' }).subscribe({
       next: result => {
-        this.products = result.items
-          .filter(p => p.showOnHomepage)
-          .slice(0, 8)
-          .map(p => toProductCard(p, this.media.url(p.mainPictureId)));
-        if (this.products.length === 0) {
-          this.products = result.items.slice(0, 4).map(p => toProductCard(p, this.media.url(p.mainPictureId)));
-        }
+        const featured = result.items.filter(p => p.showOnHomepage).slice(0, 8);
+        this.items.set(featured.length > 0 ? featured : result.items.slice(0, 4));
         this.loading = false;
       },
       error: () => {
@@ -115,17 +115,18 @@ export class StorefrontHomePage {
 
 const BLANK_IMAGE = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23e4e8df'/%3E%3C/svg%3E`;
 
-function toProductCard(p: ProductResponse, pictureUrl: string | null): ProductCardModel {
+function toProductCard(p: ProductResponse, pictureUrl: string | null, format: (value: number) => string): ProductCardModel {
   return {
     id: p.id,
     name: p.name,
     category: '',
-    price: p.price % 1 === 0 ? `$${p.price}` : `$${p.price.toFixed(2)}`,
-    compareAtPrice: p.oldPrice > 0 ? (p.oldPrice % 1 === 0 ? `$${p.oldPrice}` : `$${p.oldPrice.toFixed(2)}`) : undefined,
+    price: format(p.price),
+    compareAtPrice: p.oldPrice > 0 ? format(p.oldPrice) : undefined,
     imageUrl: pictureUrl ?? BLANK_IMAGE,
     rating: undefined,
     reviewCount: undefined,
     shopName: p.vendorName,
-    shopId: p.vendorId
+    shopId: p.vendorId,
+    outOfStock: !p.inStock
   };
 }

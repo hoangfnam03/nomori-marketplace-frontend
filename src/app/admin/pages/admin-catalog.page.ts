@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CurrencyService } from '../../core/money/currency.service';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { VendorResponse } from '../../core/vendors/vendor.models';
 import { MediaImageFieldComponent } from '../../shared/components/media-image-field/media-image-field.component';
@@ -180,8 +181,8 @@ interface ManufacturerForm {
             <label>Short description <textarea [(ngModel)]="prodForm.shortDescription" name="shortDescription" rows="2"></textarea></label>
             <label>Full description <textarea [(ngModel)]="prodForm.fullDescription" name="fullDescription" rows="4"></textarea></label>
             <div class="form-row">
-              <label>Price <input type="number" [(ngModel)]="prodForm.price" name="price" min="0" step="0.01" /></label>
-              <label>Compare at price <input type="number" [(ngModel)]="prodForm.oldPrice" name="oldPrice" min="0" step="0.01" /></label>
+              <label>Price ({{ currency.primary().code }}) <input type="number" [(ngModel)]="prodForm.price" name="price" min="0" [step]="currency.step()" /></label>
+              <label>Compare at price ({{ currency.primary().code }}) <input type="number" [(ngModel)]="prodForm.oldPrice" name="oldPrice" min="0" [step]="currency.step()" /></label>
               <label>Stock <input type="number" [(ngModel)]="prodForm.stockQuantity" name="stockQuantity" min="0" /></label>
             </div>
             <fieldset class="pick-list">
@@ -374,6 +375,7 @@ interface ManufacturerForm {
 })
 export class AdminCatalogPage {
   private readonly api = inject(CatalogApiService);
+  readonly currency = inject(CurrencyService);
   private readonly vendorApi = inject(VendorApiService);
 
   tab: Tab = 'categories';
@@ -736,7 +738,7 @@ export class AdminCatalogPage {
   }
 
   formatPrice(price: number): string {
-    return price % 1 === 0 ? `$${price}` : `$${price.toFixed(2)}`;
+    return this.currency.formatPrimary(price);
   }
 
   private emptyCatForm(): CategoryForm {

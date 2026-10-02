@@ -24,6 +24,11 @@ export const adminRoutes: Routes = [
     loadComponent: () => import('./pages/admin-vendor-applications.page').then(page => page.AdminVendorApplicationsPage)
   },
   {
+    path: 'currencies',
+    canActivate: [permissionGuard(permissionCodes.settingsManage)],
+    loadComponent: () => import('./pages/admin-currencies.page').then(page => page.AdminCurrenciesPage)
+  },
+  {
     path: 'attributes',
     canActivate: [permissionGuard(permissionCodes.catalogManage)],
     loadComponent: () => import('./pages/admin-attribute-specs.page').then(page => page.AdminAttributeSpecsPage)
