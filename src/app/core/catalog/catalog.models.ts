@@ -38,6 +38,25 @@ export interface ProductResponse {
   vendorName: string | null;
   /** Media asset id of the first picture; 0 when the product has none. */
   mainPictureId: number;
+  /** Not tracked, or something on hand. The exact available quantity is on the product page. */
+  inStock: boolean;
+}
+
+/** Counts for the filter panel, taken without the selected manufacturers, tags and specification values. */
+export interface ProductFacets {
+  totalCount: number;
+  minPrice: number | null;
+  maxPrice: number | null;
+  manufacturers: { id: number; name: string; count: number }[];
+  tags: { name: string; count: number }[];
+  specifications: { id: number; name: string; options: { id: number; name: string; count: number }[] }[];
+}
+
+export interface ProductSuggestion {
+  id: number;
+  name: string;
+  price: number;
+  mainPictureId: number;
 }
 
 export interface ProductDetailResponse {

@@ -11,4 +11,6 @@ export interface ProductCardModel {
   /** Name of the shop selling the product. */
   shopName?: string | null;
   shopId?: number;
+  /** True when the product cannot be bought right now. */
+  outOfStock?: boolean;
 }

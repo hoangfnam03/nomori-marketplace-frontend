@@ -5,7 +5,7 @@ import {
   AdminCategoryResponse, AdminCategoryTreeNode, SelectableCategory, AdminManufacturerResponse,
   AdminProductDetailResponse, AdminProductResponse,
   CategoryResponse, CategoryTreeNode, ManufacturerResponse,
-  PagedResult, ProductDetailResponse, ProductResponse
+  PagedResult, ProductDetailResponse, ProductFacets, ProductResponse, ProductSuggestion
 } from './catalog.models';
 import {
   ProductAttributeSpec, ProductAttributeDetail, PublicAttributeDetail,
@@ -27,6 +27,11 @@ export interface ProductListParams {
   sort?: string;
   /** Only products sold by this shop. */
   vendorId?: number | null;
+  manufacturerIds?: number[];
+  tags?: string[];
+  specOptionIds?: number[];
+  /** Only products that can still be bought. */
+  inStock?: boolean;
 }
 
 export interface SaveCategoryRequest {
@@ -85,17 +90,37 @@ export class CatalogApiService {
   }
 
   getProducts(p: ProductListParams = {}) {
-    let params = new HttpParams()
+    let params = this.filterParams(p)
       .set('page', p.page ?? 1)
       .set('pageSize', p.pageSize ?? 20);
+    if (p.sort) params = params.set('sort', p.sort);
+    return this.http.get<PagedResult<ProductResponse>>(`${this.apiBaseUrl}/v1/catalog/products`, { params });
+  }
+
+  /** Counts for the filter panel; paging and sort do not apply. */
+  getFacets(p: ProductListParams = {}) {
+    return this.http.get<ProductFacets>(`${this.apiBaseUrl}/v1/catalog/products/facets`, { params: this.filterParams(p) });
+  }
+
+  /** Up to 8 products for the text typed so far; nothing for fewer than 2 characters. */
+  suggest(text: string) {
+    return this.http.get<ProductSuggestion[]>(`${this.apiBaseUrl}/v1/catalog/products/suggest`, { params: new HttpParams().set('q', text) });
+  }
+
+  /** Lists are sent as repeated keys, for example manufacturerIds=1&manufacturerIds=2. */
+  private filterParams(p: ProductListParams): HttpParams {
+    let params = new HttpParams();
     if (p.categoryId != null) params = params.set('categoryId', p.categoryId);
     if (p.manufacturerId != null) params = params.set('manufacturerId', p.manufacturerId);
     if (p.minPrice != null) params = params.set('minPrice', p.minPrice);
     if (p.maxPrice != null) params = params.set('maxPrice', p.maxPrice);
     if (p.search) params = params.set('search', p.search);
-    if (p.sort) params = params.set('sort', p.sort);
     if (p.vendorId != null) params = params.set('vendorId', p.vendorId);
-    return this.http.get<PagedResult<ProductResponse>>(`${this.apiBaseUrl}/v1/catalog/products`, { params });
+    if (p.inStock) params = params.set('inStock', true);
+    for (const id of p.manufacturerIds ?? []) params = params.append('manufacturerIds', id);
+    for (const tag of p.tags ?? []) params = params.append('tags', tag);
+    for (const id of p.specOptionIds ?? []) params = params.append('specOptionIds', id);
+    return params;
   }
 
   getProduct(id: number) {

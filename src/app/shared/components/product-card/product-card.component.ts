@@ -9,7 +9,8 @@ import { ProductCardModel } from '../../models/product-card.model';
   template: `
     <article class="product-card">
       <a class="product-image" [routerLink]="['/storefront/products', product().id]" [attr.aria-label]="'View ' + product().name">
-        @if (product().badge) { <span class="badge">{{ product().badge }}</span> }
+        @if (product().outOfStock) { <span class="badge badge-out">Out of stock</span> }
+        @else if (product().badge) { <span class="badge">{{ product().badge }}</span> }
         <img [src]="product().imageUrl" [alt]="product().name" loading="lazy" />
       </a>
       <div class="product-info">
@@ -20,7 +21,7 @@ import { ProductCardModel } from '../../models/product-card.model';
           <div class="rating" [attr.aria-label]="product().rating + ' out of 5 stars'">{{ '★'.repeat(product().rating ?? 0) }}<span>{{ product().reviewCount ?? 0 }} reviews</span></div>
         }
         <div class="price-row"><strong>{{ product().price }}</strong>@if (product().compareAtPrice) { <del>{{ product().compareAtPrice }}</del> }</div>
-        <button type="button" (click)="addToCart.emit(product())">Add to cart</button>
+        <button type="button" [disabled]="product().outOfStock" (click)="addToCart.emit(product())">Add to cart</button>
       </div>
     </article>
   `,
@@ -44,7 +45,9 @@ import { ProductCardModel } from '../../models/product-card.model';
     .price-row strong { font-size: 1.1rem; }
     del { color: var(--muted); font-size: .8rem; }
     button { width: 100%; margin-top: 1rem; border: 1px solid var(--ink); padding: .7rem; background: transparent; color: var(--ink); font: 700 .78rem var(--display-font); cursor: pointer; }
-    button:hover { background: var(--ink); color: var(--paper); }
+    button:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .badge-out { background: #8d3128; }
   `]
 })
 export class ProductCardComponent {
