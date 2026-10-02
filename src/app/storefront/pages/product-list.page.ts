@@ -1,5 +1,7 @@
 import { MediaApiService } from '../../core/media/media-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
+import { CartService } from '../../core/cart/cart.service';
+import { CartNoticeComponent } from '../../shared/components/cart-notice/cart-notice.component';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -18,7 +20,7 @@ interface Chip {
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, EmptyStateComponent, ProductCardComponent, FormsModule, SearchBoxComponent],
+  imports: [BreadcrumbComponent, CartNoticeComponent, EmptyStateComponent, ProductCardComponent, FormsModule, SearchBoxComponent],
   template: `
     <div class="page-heading">
       <app-breadcrumb [items]="[{ label: 'Products', url: '/storefront/products' }]" />
@@ -30,6 +32,8 @@ interface Chip {
         <app-search-box [value]="search" (searched)="onSearch($event)" />
       </div>
     </div>
+
+    <app-cart-notice [message]="cartMessage" [error]="cartFailed" (dismissed)="cartMessage = ''" />
 
     <div class="catalog-layout">
       <aside class="sidebar" aria-label="Filters">
@@ -130,7 +134,7 @@ interface Chip {
           } @else {
             <section class="product-grid" aria-label="Products">
               @for (product of cards(); track product.id) {
-                <app-product-card [product]="product" />
+                <app-product-card [product]="product" (addToCart)="addFromCard($event)" />
               }
             </section>
 
@@ -198,6 +202,9 @@ export class ProductListPage implements OnInit {
   private readonly router = inject(Router);
   private readonly media = inject(MediaApiService);
   private readonly currency = inject(CurrencyService);
+  private readonly cart = inject(CartService);
+  cartMessage = '';
+  cartFailed = false;
 
   /** The raw items; the cards are derived so a change of display currency updates the prices at once. */
   readonly items = signal<ProductResponse[]>([]);
@@ -357,6 +364,17 @@ export class ProductListPage implements OnInit {
     }
     for (const tag of this.tags) list.push({ label: `Tag: ${tag}`, remove: () => this.toggleTag(tag) });
     return list;
+  }
+
+  addFromCard(card: ProductCardModel) {
+    this.cartMessage = '';
+    this.cart.add(card.id, 1, [], this.router.url).subscribe(outcome => {
+      this.cartFailed = outcome.kind === 'error';
+      if (outcome.kind === 'added') this.cartMessage = `${card.name} added to your cart.`;
+      // A product with variants needs its options chosen on its own page.
+      else if (outcome.kind === 'choose-options') this.router.navigate(['/storefront/products', card.id]);
+      else if (outcome.kind === 'error') this.cartMessage = outcome.message;
+    });
   }
 
   money(value: number) { return this.currency.format(value); }
