@@ -139,7 +139,8 @@
       "in_use": "Có địa chỉ đã lưu đang dùng tỉnh/bang này nên không xóa được. Hãy bỏ xuất bản thay vì xóa."
     },
     "vendor": {
-      "platform_shop": "Không thể xóa hoặc tắt shop của sàn."
+      "platform_shop": "Không thể xóa hoặc tắt shop của sàn.",
+      "inactive": "Shop đang bị tắt nên thành viên chưa sửa được. Hãy liên hệ quản trị viên."
     }
   },
   "vendorStatus": {
@@ -858,7 +859,8 @@
       "errors": {
         "loadShop": "Không tải được shop của bạn.",
         "loadAccount": "Không tải được tài khoản của bạn."
-      }
+      },
+      "editShop": "Cài đặt shop"
     },
     "members": {
       "eyebrow": "Kênh người bán / Thành viên",
@@ -1035,6 +1037,16 @@
         "specs": "Không lưu được thông số.",
         "tags": "Không lưu được tag."
       }
+    },
+    "settings": {
+      "title": "Cài đặt shop",
+      "lede": "Cập nhật thông tin và logo của shop.",
+      "logo": "Logo shop",
+      "logoHint": "Ảnh vuông JPG, PNG, GIF hoặc WebP. Logo mới được lưu khi bạn bấm Lưu.",
+      "privateHint": "Email, số điện thoại, mã số thuế và địa chỉ kinh doanh chỉ thành viên shop và quản trị viên thấy, không hiện trên cửa hàng.",
+      "saved": "Đã lưu thông tin shop.",
+      "required": "Ô này là bắt buộc.",
+      "locked": "Shop đang bị quản trị viên tắt nên chưa sửa được thông tin. Hãy liên hệ quản trị viên."
     }
   },
   "adminVendorApplications": {

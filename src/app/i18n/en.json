@@ -139,7 +139,8 @@
       "in_use": "Saved addresses use this state, so it cannot be deleted. Unpublish it instead."
     },
     "vendor": {
-      "platform_shop": "The platform shop cannot be deleted or deactivated."
+      "platform_shop": "The platform shop cannot be deleted or deactivated.",
+      "inactive": "This shop is switched off, so members cannot change it. Contact an administrator."
     }
   },
   "vendorStatus": {
@@ -858,7 +859,8 @@
       "errors": {
         "loadShop": "Unable to load your shop.",
         "loadAccount": "Unable to load your account."
-      }
+      },
+      "editShop": "Shop settings"
     },
     "members": {
       "eyebrow": "Vendor portal / Members",
@@ -1035,6 +1037,16 @@
         "specs": "Unable to save the specifications.",
         "tags": "Unable to save the tags."
       }
+    },
+    "settings": {
+      "title": "Shop settings",
+      "lede": "Update your shop details and logo.",
+      "logo": "Shop logo",
+      "logoHint": "A square JPG, PNG, GIF or WebP image. A new logo is saved when you click Save.",
+      "privateHint": "Email, phone number, tax code and business address are visible to shop members and administrators only, never on the storefront.",
+      "saved": "Shop details saved.",
+      "required": "This field is required.",
+      "locked": "An administrator has switched this shop off, so its details cannot be changed. Contact an administrator."
     }
   },
   "adminVendorApplications": {

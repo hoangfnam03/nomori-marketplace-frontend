@@ -12,6 +12,10 @@ export interface VendorResponse {
   updatedOnUtc: string | null;
   /** Administrators only. */
   adminComment: string | null;
+  /** Contact and business details: administrators and members of this vendor only, never on the storefront. */
+  phoneNumber: string | null;
+  taxCode: string | null;
+  businessAddress: string | null;
 }
 
 export interface PagedResponse<T> {

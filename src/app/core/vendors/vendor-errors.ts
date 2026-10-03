@@ -8,7 +8,7 @@ const codes = new Set([
   'product.not_hidden', 'product.already_hidden', 'product.invalid_transition', 'inventory.insufficient_stock',
   'inventory.reservation_expired', 'inventory.active_reservations', 'currency.primary_locked', 'currency.primary_required',
   'currency.code_exists', 'cart.own_product', 'cart.line_limit', 'country.code_exists', 'country.in_use', 'state.code_exists',
-  'state.in_use', 'vendor.platform_shop'
+  'state.in_use', 'vendor.platform_shop', 'vendor.inactive'
 ]);
 
 export interface ApiError {

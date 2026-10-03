@@ -7,15 +7,23 @@ import {
   VendorMemberCreatedResponse, VendorMemberResponse, VendorNoteResponse, VendorPagedResponse, VendorResponse
 } from './vendor.models';
 
+/**
+ * Shop profile fields replace the stored values. Shop members may send only those;
+ * adminComment, active and displayOrder are for administrators (omit them to keep the current values).
+ */
 export interface UpdateVendorRequest {
   name: string;
   email: string;
+  /** Required for shop members. */
+  phoneNumber?: string | null;
   description?: string | null;
+  taxCode?: string | null;
+  businessAddress?: string | null;
+  /** Omit to keep the current logo; 0 removes it. */
+  pictureId?: number;
   adminComment?: string | null;
   active?: boolean;
   displayOrder?: number;
-  /** Omit to keep the current logo; 0 removes it. */
-  pictureId?: number;
 }
 
 /** One set of routes for every caller; the API decides what each caller may see. */

@@ -3,6 +3,7 @@ import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthFacade } from '../../core/auth/auth.facade';
+import { MediaApiService } from '../../core/media/media-api.service';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 import { VendorResponse } from '../../core/vendors/vendor.models';
@@ -12,6 +13,7 @@ import { DATE_FORMAT, formatDateTime } from '../../shared/utils/datetime';
   standalone: true,
   imports: [RouterLink, DatePipe, TranslocoDirective],
   styleUrls: ['../../shared/styles/vendor-pages.scss'],
+  styles: [`.shop-logo { width: 96px; height: 96px; object-fit: cover; border: 1px solid var(--line); border-radius: 8px; }`],
   template: `
     <ng-container *transloco="let t">
     <section class="page-intro" aria-labelledby="portal-title">
@@ -34,6 +36,9 @@ import { DATE_FORMAT, formatDateTime } from '../../shared/utils/datetime';
           <span [class]="vendor.active ? 'badge badge-active' : 'badge'">{{ vendor.active ? t('vendorStatus.vendor.active') : t('vendor.portal.inactiveHidden') }}</span>
         </div>
         <div class="panel-body">
+          @if (media.url(vendor.pictureId); as logo) {
+            <img class="shop-logo" [src]="logo" [alt]="t('vendor.settings.logo')" width="96" height="96" />
+          }
           <dl class="detail-grid">
             <dt>{{ t('admin.common.name') }}</dt><dd>{{ vendor.name }}</dd>
             <dt>{{ t('vendor.portal.contactEmail') }}</dt><dd>{{ vendor.email }}</dd>
@@ -41,6 +46,7 @@ import { DATE_FORMAT, formatDateTime } from '../../shared/utils/datetime';
             <dt>{{ t('admin.common.created') }}</dt><dd>{{ vendor.createdOnUtc }}</dd>
           </dl>
           <div class="actions">
+            <a class="btn" routerLink="/vendor/settings">{{ t('vendor.portal.editShop') }}</a>
             <a class="btn" routerLink="/vendor/products">{{ t('vendor.portal.manageProducts') }}</a>
             <a class="btn" routerLink="/vendor/members">{{ t('vendor.portal.manageMembers') }}</a>
             <a class="btn btn-secondary" [routerLink]="['/storefront/vendors', vendor.id]">{{ t('vendor.portal.viewPublic') }}</a>
@@ -59,6 +65,7 @@ import { DATE_FORMAT, formatDateTime } from '../../shared/utils/datetime';
 export class VendorPortalPage implements OnInit {
   private readonly api = inject(VendorApiService);
   private readonly auth = inject(AuthFacade);
+  readonly media = inject(MediaApiService);
   private readonly transloco = inject(TranslocoService);
 
   vendor: VendorResponse | null = null;
