@@ -13,6 +13,9 @@ interface VendorForm {
   name: string;
   email: string;
   description: string;
+  phoneNumber: string;
+  taxCode: string;
+  businessAddress: string;
   adminComment: string;
   active: boolean;
   displayOrder: number;
@@ -104,6 +107,11 @@ interface VendorForm {
             <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="form.name" name="name" required maxlength="400" /></label>
             <label>{{ t('admin.common.email') }} <input type="email" [(ngModel)]="form.email" name="email" required maxlength="320" /></label>
           </div>
+          <div class="form-row">
+            <label>{{ t('customer.fields.phone') }} <input type="tel" [(ngModel)]="form.phoneNumber" name="phoneNumber" maxlength="50" /></label>
+            <label>{{ t('adminVendorApplications.taxCode') }} <input type="text" [(ngModel)]="form.taxCode" name="taxCode" maxlength="50" /></label>
+          </div>
+          <label>{{ t('adminVendorApplications.businessAddress') }} <input type="text" [(ngModel)]="form.businessAddress" name="businessAddress" maxlength="1000" /></label>
           <label>{{ t('admin.common.description') }} <textarea [(ngModel)]="form.description" name="description" rows="2"></textarea></label>
           <app-media-image-field [label]="t('admin.vendors.logo')" purpose="vendorLogo" [vendorId]="editingId" [(pictureId)]="form.pictureId" />
           <label>{{ t('admin.vendors.adminComment') }} <textarea [(ngModel)]="form.adminComment" name="adminComment" rows="2"></textarea></label>
@@ -206,6 +214,7 @@ export class AdminVendorsPage implements OnInit {
     this.form = {
       pictureId: v.pictureId,
       name: v.name, email: v.email, description: v.description ?? '',
+      phoneNumber: v.phoneNumber ?? '', taxCode: v.taxCode ?? '', businessAddress: v.businessAddress ?? '',
       adminComment: v.adminComment ?? '', active: v.active ?? true, displayOrder: v.displayOrder
     };
     this.actionError = '';
@@ -227,6 +236,9 @@ export class AdminVendorsPage implements OnInit {
       name: this.form.name,
       email: this.form.email,
       description: this.form.description || null,
+      phoneNumber: this.form.phoneNumber || null,
+      taxCode: this.form.taxCode || null,
+      businessAddress: this.form.businessAddress || null,
       pictureId: this.form.pictureId,
       adminComment: this.form.adminComment || null,
       active: this.form.active,
@@ -293,6 +305,6 @@ export class AdminVendorsPage implements OnInit {
   }
 
   private emptyForm(): VendorForm {
-    return { pictureId: 0, name: '', email: '', description: '', adminComment: '', active: true, displayOrder: 0 };
+    return { pictureId: 0, name: '', email: '', description: '', phoneNumber: '', taxCode: '', businessAddress: '', adminComment: '', active: true, displayOrder: 0 };
   }
 }

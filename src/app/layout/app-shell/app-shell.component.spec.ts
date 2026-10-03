@@ -46,8 +46,9 @@ describe('AppShellComponent navigation', () => {
     // Permissions arrive from an effect after the first render.
     await fixture.whenStable();
     fixture.detectChanges();
-    const nav = fixture.nativeElement.querySelector('.primary-nav') as HTMLElement;
-    return Array.from(nav.querySelectorAll('a'), a => a.getAttribute('href'));
+    const element = fixture.nativeElement as HTMLElement;
+    const hrefs = (selector: string) => Array.from(element.querySelectorAll(`${selector} a`), a => a.getAttribute('href'));
+    return Object.assign(hrefs('.primary-nav'), { account: hrefs('.account-status') });
   }
 
   it('shows the vendor portal to shop members and hides admin links without permissions', async () => {
@@ -66,11 +67,18 @@ describe('AppShellComponent navigation', () => {
     expect(links).not.toContain('/admin/catalog');
     expect(links).not.toContain('/admin/currencies');
     expect(links).not.toContain('/vendor');
+    expect(links.account).not.toContain('/customer/become-vendor');
+  });
+
+  it('offers to become a vendor to customers without a shop', async () => {
+    const links = await render({ ...guest, isAuthenticated: true, customerId: 5, email: 'buyer@test' }, 'forbidden');
+
+    expect(links.account).toContain('/customer/become-vendor');
   });
 
   it('shows storefront links only to guests', async () => {
     const links = await render(guest, []);
 
-    expect(links).toEqual(['/storefront', '/storefront/products', '/storefront/cart', '/storefront/vendors']);
+    expect([...links]).toEqual(['/storefront', '/storefront/products', '/storefront/cart', '/storefront/vendors']);
   });
 });
