@@ -4,10 +4,12 @@ import { PLATFORM_ID } from '@angular/core';
 import { catchError, finalize, Observable, of, shareReplay, tap, throwError } from 'rxjs';
 import { AuthApiService } from './auth-api.service';
 import { AuthFormError, AuthSession } from './auth.models';
+import { CsrfTokenService } from './csrf-token.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthFacade {
   private readonly authApi = inject(AuthApiService);
+  private readonly csrf = inject(CsrfTokenService);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly anonymousSession: AuthSession = { isAuthenticated: false, customerId: null, email: null, emailVerified: null, emailOtpEnabled: null, vendorId: null };
   private readonly sessionState = signal<AuthSession | null>(null);
@@ -26,7 +28,7 @@ export class AuthFacade {
 
   login(request: { email: string; password: string; rememberMe: boolean }) {
     return this.run(request, () => this.authApi.login(request).pipe(
-      tap(() => this.refreshSession())
+      tap(() => { this.csrf.clear(); this.refreshSession(); })
     ));
   }
 
@@ -59,7 +61,7 @@ export class AuthFacade {
   }
 
   verifyLoginOtp(request: { challengeId: string; code: string; rememberMe: boolean }) {
-    return this.run(request, () => this.authApi.verifyLoginOtp(request).pipe(tap(() => this.refreshSession())));
+    return this.run(request, () => this.authApi.verifyLoginOtp(request).pipe(tap(() => { this.csrf.clear(); this.refreshSession(); })));
   }
 
   setupOtp() {
@@ -102,6 +104,7 @@ export class AuthFacade {
   }
 
   clearSession() {
+    this.csrf.clear();
     this.sessionState.set(this.anonymousSession);
     this.sessionRequest$ = of(this.anonymousSession);
   }

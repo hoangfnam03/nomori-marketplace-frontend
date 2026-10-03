@@ -1,6 +1,6 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { switchMap } from 'rxjs';
+import { catchError, switchMap, throwError } from 'rxjs';
 import { CsrfTokenService } from '../auth/csrf-token.service';
 
 const unsafeMethods = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
@@ -13,14 +13,25 @@ export const csrfInterceptor: HttpInterceptorFn = (request, next) => {
     return next(requestWithCredentials);
   }
 
-  const token = csrf.currentToken;
-  if (token) {
-    return next(requestWithCredentials.clone({ setHeaders: { 'X-CSRF-TOKEN': token } }));
-  }
-
-  return csrf.refresh().pipe(
+  const sendWithFreshToken = () => csrf.refresh().pipe(
     switchMap(refreshedToken => next(requestWithCredentials.clone({
       setHeaders: { 'X-CSRF-TOKEN': refreshedToken }
     })))
+  );
+
+  const token = csrf.currentToken;
+  if (!token) {
+    return sendWithFreshToken();
+  }
+
+  return next(requestWithCredentials.clone({ setHeaders: { 'X-CSRF-TOKEN': token } })).pipe(
+    catchError(error => {
+      // A rejected antiforgery token is a bare 400 (no field errors) and the action never ran,
+      // e.g. the token was issued before sign-in or the session expired. Retry once with a new token.
+      if (error?.status === 400 && !error.fieldErrors) {
+        return sendWithFreshToken();
+      }
+      return throwError(() => error);
+    })
   );
 };

@@ -6,6 +6,7 @@ import { AuthFacade } from '../../core/auth/auth.facade';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 import { VendorResponse } from '../../core/vendors/vendor.models';
+import { DATE_FORMAT, formatDateTime } from '../../shared/utils/datetime';
 
 @Component({
   standalone: true,
@@ -37,7 +38,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
             <dt>{{ t('admin.common.name') }}</dt><dd>{{ vendor.name }}</dd>
             <dt>{{ t('vendor.portal.contactEmail') }}</dt><dd>{{ vendor.email }}</dd>
             <dt>{{ t('admin.common.description') }}</dt><dd>{{ vendor.description || '—' }}</dd>
-            <dt>{{ t('admin.common.created') }}</dt><dd>{{ vendor.createdOnUtc | date:'dd/MM/yyyy HH:mm' }}</dd>
+            <dt>{{ t('admin.common.created') }}</dt><dd>{{ vendor.createdOnUtc }}</dd>
           </dl>
           <div class="actions">
             <a class="btn" routerLink="/vendor/products">{{ t('vendor.portal.manageProducts') }}</a>
@@ -75,7 +76,13 @@ export class VendorPortalPage implements OnInit {
       next: session => {
         if (!session.vendorId) { this.vendor = null; this.loading = false; return; }
         this.api.getVendor(session.vendorId).subscribe({
-          next: vendor => { this.vendor = vendor; this.loading = false; },
+          next: vendor => { 
+            this.vendor = { 
+              ...vendor, 
+              createdOnUtc: formatDateTime(vendor.createdOnUtc, DATE_FORMAT) 
+            }; 
+            this.loading = false; 
+          },
           error: err => { this.loading = false; this.error = vendorErrorMessage(err, this.transloco.translate('vendor.portal.errors.loadShop')); }
         });
       },
