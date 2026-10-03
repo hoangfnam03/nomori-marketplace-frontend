@@ -18,6 +18,8 @@ export class CustomerProfileApiService {
     gender: string | null;
     dateOfBirth: string | null;
     phone: string | null;
+    /** Omit to keep the current avatar; 0 removes it. */
+    avatarPictureId?: number;
   }) {
     return this.http.put<CustomerProfile>(`${this.apiBaseUrl}/v1/customer/profile`, request);
   }

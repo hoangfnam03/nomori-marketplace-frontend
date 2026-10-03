@@ -62,7 +62,11 @@
       "profile": "Profile",
       "signIn": "Sign in",
       "signOut": "Sign out",
-      "guest": "Guest session"
+      "guest": "Guest session",
+      "account": "Account",
+      "orders": "My orders",
+      "comingSoon": "Soon",
+      "menu": "Account menu"
     },
     "footer": {
       "brand": "Nomori Marketplace",
@@ -354,7 +358,9 @@
         "forbidden": "You do not have permission to read your profile.",
         "load": "Unable to load your profile.",
         "save": "Unable to update your profile."
-      }
+      },
+      "avatar": "Profile picture",
+      "avatarHint": "A square image looks best. Without one, the default avatar is used. A new picture is saved when you click Save."
     },
     "settings": {
       "eyebrow": "Customer / Settings",

@@ -39,13 +39,28 @@
 
       <div class="account-status" aria-live="polite">
         @if (auth.isAuthenticated()) {
-          <span class="status-dot" aria-hidden="true"></span>
-          <a class="account-email" routerLink="/auth/account">{{ auth.session()?.email }}</a>
-          <a class="account-action" routerLink="/customer/profile">{{ t('nav.account.profile') }}</a>
           @if (!auth.session()?.vendorId && !can(codes.adminAccess)) {
             <a class="account-action" routerLink="/customer/become-vendor">{{ t('nav.becomeVendor') }}</a>
           }
-          <button type="button" class="account-action" (click)="logout()">{{ t('nav.account.signOut') }}</button>
+          <div class="account-menu" #accountMenu (keydown.escape)="closeMenu(true)">
+            <button #menuTrigger type="button" class="account-trigger" aria-haspopup="menu" [attr.aria-expanded]="menuOpen()"
+              aria-controls="account-menu-panel" (click)="toggleMenu()">
+              <app-avatar [src]="media.url(auth.session()?.avatarPictureId)" [size]="28" />
+              <span class="account-email" [attr.title]="auth.session()?.email">{{ displayName() }}</span>
+              <span class="caret" aria-hidden="true">▾</span>
+            </button>
+            @if (menuOpen()) {
+              <div id="account-menu-panel" class="account-panel" role="menu" [attr.aria-label]="t('nav.account.menu')">
+                <a role="menuitem" routerLink="/auth/account" (click)="closeMenu()">{{ t('nav.account.account') }}</a>
+                <a role="menuitem" routerLink="/customer/profile" (click)="closeMenu()">{{ t('nav.account.profile') }}</a>
+                <span role="menuitem" aria-disabled="true" class="disabled">
+                  {{ t('nav.account.orders') }} <span class="soon">{{ t('nav.account.comingSoon') }}</span>
+                </span>
+                <hr aria-hidden="true" />
+                <button role="menuitem" type="button" (click)="logout()">{{ t('nav.account.signOut') }}</button>
+              </div>
+            }
+          </div>
         } @else {
           <span class="status-dot status-dot--muted" aria-hidden="true"></span>
           <span>{{ t('nav.account.guest') }}</span>

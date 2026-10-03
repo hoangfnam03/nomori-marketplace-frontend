@@ -3,7 +3,7 @@ import { HttpBackend, HttpClient, HttpErrorResponse } from '@angular/common/http
 import { catchError, map, Observable, switchMap, throwError } from 'rxjs';
 import { API_BASE_URL } from '../config/api-config';
 
-export type MediaPurpose = 'category' | 'manufacturer' | 'vendorLogo' | 'product';
+export type MediaPurpose = 'category' | 'manufacturer' | 'vendorLogo' | 'product' | 'customerAvatar';
 
 export interface MediaResponse {
   id: number;
