@@ -12,7 +12,7 @@ import { provideI18n } from '../../core/i18n/i18n.providers';
 import { AppShellComponent } from './app-shell.component';
 
 describe('AppShellComponent navigation', () => {
-  const guest: AuthSession = { isAuthenticated: false, customerId: null, email: null, emailVerified: null, emailOtpEnabled: null, vendorId: null };
+  const guest: AuthSession = { isAuthenticated: false, customerId: null, email: null, emailVerified: null, emailOtpEnabled: null, vendorId: null, firstName: null, lastName: null, avatarPictureId: null };
 
   async function render(session: AuthSession, permissions: string[] | 'forbidden') {
     const state = signal(session);
@@ -48,7 +48,11 @@ describe('AppShellComponent navigation', () => {
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
     const hrefs = (selector: string) => Array.from(element.querySelectorAll(`${selector} a`), a => a.getAttribute('href'));
-    return Object.assign(hrefs('.primary-nav'), { account: hrefs('.account-status') });
+    const trigger = element.querySelector<HTMLButtonElement>('.account-trigger');
+    // The account links live in the menu behind the display name.
+    trigger?.click();
+    fixture.detectChanges();
+    return Object.assign(hrefs('.primary-nav'), { account: hrefs('.account-status'), menu: hrefs('.account-panel'), fixture, element, trigger });
   }
 
   it('shows the vendor portal to shop members and hides admin links without permissions', async () => {
@@ -74,6 +78,59 @@ describe('AppShellComponent navigation', () => {
     const links = await render({ ...guest, isAuthenticated: true, customerId: 5, email: 'buyer@test' }, 'forbidden');
 
     expect(links.account).toContain('/customer/become-vendor');
+    // It stays on the header, not inside the account menu.
+    expect(links.menu).not.toContain('/customer/become-vendor');
+  });
+
+  it('keeps profile and sign out in a menu that opens from the display name', async () => {
+    const { fixture, element, trigger } = await render({ ...guest, isAuthenticated: true, customerId: 5, email: 'buyer@test' }, 'forbidden');
+    const panel = () => element.querySelector('.account-panel');
+
+    // render() opened it once; close it with a second click.
+    expect(trigger?.getAttribute('aria-expanded')).toBe('true');
+    expect(panel()?.textContent).toContain('Đăng xuất');
+    trigger!.click();
+    fixture.detectChanges();
+    expect(panel()).toBeNull();
+    expect(trigger?.getAttribute('aria-expanded')).toBe('false');
+
+    trigger!.click();
+    fixture.detectChanges();
+    document.body.click();
+    fixture.detectChanges();
+    expect(panel()).toBeNull();
+
+    trigger!.click();
+    fixture.detectChanges();
+    element.querySelector('.account-menu')!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(panel()).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('marks orders as coming soon instead of linking to a missing page', async () => {
+    const links = await render({ ...guest, isAuthenticated: true, customerId: 5, email: 'buyer@test' }, 'forbidden');
+
+    expect(links.menu).toEqual(['/auth/account', '/customer/profile']);
+    expect(links.element.querySelector('.account-panel [aria-disabled="true"]')?.textContent).toContain('Đơn mua');
+  });
+
+  it('shows the name instead of the email when the profile has one', async () => {
+    const { element } = await render({ ...guest, isAuthenticated: true, customerId: 5, email: 'buyer@test', firstName: 'An', lastName: 'Nguyễn' }, 'forbidden');
+    const name = element.querySelector('.account-trigger .account-email');
+
+    expect(name?.textContent?.trim()).toBe('Nguyễn An');
+    expect(name?.getAttribute('title')).toBe('buyer@test');
+  });
+
+  it('shows the default avatar until the user has one, then their picture', async () => {
+    const withoutAvatar = await render({ ...guest, isAuthenticated: true, customerId: 5, email: 'buyer@test' }, 'forbidden');
+    expect(withoutAvatar.element.querySelector('.account-trigger app-avatar svg')).not.toBeNull();
+    expect(withoutAvatar.element.querySelector('.account-trigger app-avatar img')).toBeNull();
+    TestBed.resetTestingModule();
+
+    const withAvatar = await render({ ...guest, isAuthenticated: true, customerId: 5, email: 'buyer@test', avatarPictureId: 42 }, 'forbidden');
+    expect(withAvatar.element.querySelector('.account-trigger app-avatar img')?.getAttribute('src')).toBe('/api/v1/media/42');
   });
 
   it('shows storefront links only to guests', async () => {

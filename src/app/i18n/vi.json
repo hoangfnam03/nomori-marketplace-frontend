@@ -62,7 +62,11 @@
       "profile": "Hồ sơ",
       "signIn": "Đăng nhập",
       "signOut": "Đăng xuất",
-      "guest": "Khách"
+      "guest": "Khách",
+      "account": "Tài khoản",
+      "orders": "Đơn mua",
+      "comingSoon": "Sắp có",
+      "menu": "Menu tài khoản"
     },
     "footer": {
       "brand": "Nomori Marketplace",
@@ -354,7 +358,9 @@
         "forbidden": "Bạn không có quyền xem hồ sơ của mình.",
         "load": "Không tải được hồ sơ.",
         "save": "Không cập nhật được hồ sơ."
-      }
+      },
+      "avatar": "Ảnh đại diện",
+      "avatarHint": "Ảnh vuông sẽ hiển thị đẹp nhất. Chưa có ảnh thì dùng ảnh đại diện mặc định. Ảnh mới được lưu khi bạn bấm Lưu."
     },
     "settings": {
       "eyebrow": "Khách hàng / Cài đặt",

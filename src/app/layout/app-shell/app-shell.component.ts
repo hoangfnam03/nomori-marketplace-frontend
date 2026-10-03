@@ -1,19 +1,24 @@
-import { Component, DestroyRef, effect, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, effect, ElementRef, HostListener, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { PLATFORM_ID } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthFacade } from '../../core/auth/auth.facade';
+import { displayName } from '../../core/auth/display-name';
 import { permissionCodes } from '../../core/auth/permission-codes';
 import { CartService } from '../../core/cart/cart.service';
+import { MediaApiService } from '../../core/media/media-api.service';
 import { LanguageSwitcherComponent } from '../../core/i18n/language-switcher.component';
 import { CurrencyService } from '../../core/money/currency.service';
+import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
 import { CurrencySelectorComponent } from '../../shared/components/currency-selector/currency-selector.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, TranslocoDirective, CurrencySelectorComponent, LanguageSwitcherComponent],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, TranslocoDirective, AvatarComponent, CurrencySelectorComponent, LanguageSwitcherComponent],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss'
 })
@@ -22,11 +27,22 @@ export class AppShellComponent {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly currency = inject(CurrencyService);
   readonly cart = inject(CartService);
+  readonly media = inject(MediaApiService);
   readonly codes = permissionCodes;
+
+  private readonly transloco = inject(TranslocoService);
+  private readonly lang = toSignal(this.transloco.langChanges$, { initialValue: this.transloco.getActiveLang() });
+  /** The user's name when the profile has one, otherwise their email. */
+  readonly displayName = computed(() => displayName(this.auth.session(), this.lang()));
 
   /** Permissions of the signed-in account; menu links follow the same rules as the route guards. */
   private readonly permissions = signal<readonly string[]>([]);
   private loadedPermissionsFor: string | null = null;
+
+  /** Account menu (profile, orders, sign out) behind the display name. */
+  readonly menuOpen = signal(false);
+  private readonly accountMenu = viewChild<ElementRef<HTMLElement>>('accountMenu');
+  private readonly menuTrigger = viewChild<ElementRef<HTMLButtonElement>>('menuTrigger');
 
   constructor() {
     // The cart count follows the session: a guest has no cart, a customer gets their number.
@@ -50,6 +66,9 @@ export class AppShellComponent {
       });
     }, { allowSignalWrites: true });
 
+    inject(Router).events.pipe(filter(event => event instanceof NavigationStart), takeUntilDestroyed())
+      .subscribe(() => this.menuOpen.set(false));
+
     if (isPlatformBrowser(this.platformId)) {
       this.auth.loadSession().subscribe();
       this.currency.load();
@@ -61,7 +80,25 @@ export class AppShellComponent {
     return this.permissions().includes(permission);
   }
 
+  toggleMenu() {
+    this.menuOpen.update(open => !open);
+  }
+
+  /** Closes the menu; with returnFocus (Escape) the trigger gets focus back so keyboard users stay in place. */
+  closeMenu(returnFocus = false) {
+    if (!this.menuOpen()) return;
+    this.menuOpen.set(false);
+    if (returnFocus) this.menuTrigger()?.nativeElement.focus();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const menu = this.accountMenu()?.nativeElement;
+    if (menu && !menu.contains(event.target as Node)) this.closeMenu();
+  }
+
   logout() {
+    this.menuOpen.set(false);
     this.auth.logout().subscribe();
   }
 

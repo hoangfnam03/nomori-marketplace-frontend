@@ -8,4 +8,6 @@ export interface CustomerProfile {
   gender: string | null;
   dateOfBirth: string | null;
   phone: string | null;
+  /** Avatar media id; 0 means the default avatar. */
+  avatarPictureId: number;
 }

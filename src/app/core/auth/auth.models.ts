@@ -6,6 +6,11 @@ export interface AuthSession {
   emailOtpEnabled: boolean | null;
   /** Vendor (shop) the account belongs to, if any. */
   vendorId: number | null;
+  /** From the customer profile; null when not filled in. */
+  firstName: string | null;
+  lastName: string | null;
+  /** Avatar media id; 0 or null means the default avatar. */
+  avatarPictureId: number | null;
 }
 
 export interface CsrfResponse {

@@ -2,11 +2,13 @@ import { Component, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { AuthFacade } from '../../core/auth/auth.facade';
 import { CustomerProfileApiService } from '../../core/customer/customer-profile-api.service';
+import { MediaImageFieldComponent } from '../../shared/components/media-image-field/media-image-field.component';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink, TranslocoDirective],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoDirective, MediaImageFieldComponent],
   styleUrls: ['../../auth/auth-page.scss'],
   template: `
     <div class="account-page" *transloco="let t">
@@ -25,6 +27,11 @@ import { CustomerProfileApiService } from '../../core/customer/customer-profile-
         </section>
         <form class="auth-panel" [formGroup]="form" (ngSubmit)="save()" novalidate>
           <h2>{{ t('customer.profile.detailsHeading') }}</h2>
+          <div class="field">
+            <app-media-image-field [label]="t('customer.profile.avatar')" purpose="customerAvatar" [(pictureId)]="avatarPictureId" />
+            <span class="avatar-hint">{{ t('customer.profile.avatarHint') }}</span>
+            @if (fieldError('avatarPictureId')) { <span class="field-error">{{ fieldError('avatarPictureId') }}</span> }
+          </div>
           <div class="field"><label for="firstName">{{ t('customer.fields.firstName') }}</label><input id="firstName" type="text" formControlName="firstName" autocomplete="given-name" maxlength="100" /> @if (fieldError('firstName')) { <span class="field-error">{{ fieldError('firstName') }}</span> }</div>
           <div class="field"><label for="lastName">{{ t('customer.fields.lastName') }}</label><input id="lastName" type="text" formControlName="lastName" autocomplete="family-name" maxlength="100" /> @if (fieldError('lastName')) { <span class="field-error">{{ fieldError('lastName') }}</span> }</div>
           <div class="field"><label for="gender">{{ t('customer.fields.gender') }}</label><select id="gender" formControlName="gender"><option value="">{{ t('customer.gender.none') }}</option><option value="male">{{ t('customer.gender.male') }}</option><option value="female">{{ t('customer.gender.female') }}</option><option value="other">{{ t('customer.gender.other') }}</option><option value="unspecified">{{ t('customer.gender.unspecified') }}</option></select></div>
@@ -48,12 +55,14 @@ import { CustomerProfileApiService } from '../../core/customer/customer-profile-
     dt { color: var(--muted); font: .7rem var(--mono-font); text-transform: uppercase; }
     dd { margin: 0; font-weight: 700; text-align: right; overflow-wrap: anywhere; }
     .profile-note { margin-top: 1.5rem; color: var(--muted); font-size: .85rem; line-height: 1.6; }
+    .avatar-hint { color: var(--muted); font-size: .76rem; }
     select { width: 100%; padding: .8rem; border: 1px solid var(--line-strong); background: var(--paper); font: inherit; }
     @media (max-width: 760px) { .profile-grid { grid-template-columns: 1fr; } }
   `]
 })
 export class ProfilePage {
   private readonly api = inject(CustomerProfileApiService);
+  private readonly auth = inject(AuthFacade);
   private readonly formBuilder = inject(NonNullableFormBuilder);
   readonly form = this.formBuilder.group({
     firstName: ['', Validators.maxLength(100)],
@@ -63,6 +72,8 @@ export class ProfilePage {
     phone: ['', Validators.maxLength(32)]
   });
   profile?: import('../../core/customer/customer-profile.models').CustomerProfile;
+  /** Kept outside the reactive form because the image field binds it two ways; saved together with the form. */
+  avatarPictureId = 0;
   loading = true;
   saving = false;
   success = false;
@@ -71,7 +82,7 @@ export class ProfilePage {
 
   constructor() {
     this.api.getProfile().subscribe({
-      next: profile => { this.profile = profile; this.form.patchValue({ firstName: profile.firstName ?? '', lastName: profile.lastName ?? '', gender: profile.gender ?? '', dateOfBirth: profile.dateOfBirth?.slice(0, 10) ?? '', phone: profile.phone ?? '' }); this.loading = false; },
+      next: profile => { this.profile = profile; this.avatarPictureId = profile.avatarPictureId ?? 0; this.form.patchValue({ firstName: profile.firstName ?? '', lastName: profile.lastName ?? '', gender: profile.gender ?? '', dateOfBirth: profile.dateOfBirth?.slice(0, 10) ?? '', phone: profile.phone ?? '' }); this.loading = false; },
       error: error => { this.error = error.status === 403 ? 'customer.profile.errors.forbidden' : 'customer.profile.errors.load'; this.loading = false; }
     });
   }
@@ -80,8 +91,9 @@ export class ProfilePage {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.saving = true; this.success = false; this.error = null; this.fieldErrors = {};
     const value = this.form.getRawValue();
-    this.api.updateProfile({ ...value, gender: value.gender || null, dateOfBirth: value.dateOfBirth || null, firstName: value.firstName || null, lastName: value.lastName || null, phone: value.phone || null }).subscribe({
-      next: profile => { this.profile = profile; this.success = true; this.saving = false; },
+    this.api.updateProfile({ ...value, gender: value.gender || null, dateOfBirth: value.dateOfBirth || null, firstName: value.firstName || null, lastName: value.lastName || null, phone: value.phone || null, avatarPictureId: this.avatarPictureId }).subscribe({
+      // The header greets the user by name, so it needs the new one.
+      next: profile => { this.profile = profile; this.success = true; this.saving = false; this.auth.refreshSession(); },
       error: error => { this.error = error.status === 400 ? 'errors.badRequest' : 'customer.profile.errors.save'; this.fieldErrors = error.fieldErrors ?? {}; this.saving = false; }
     });
   }
