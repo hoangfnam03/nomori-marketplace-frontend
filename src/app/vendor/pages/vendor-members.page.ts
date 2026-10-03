@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthFacade } from '../../core/auth/auth.facade';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
@@ -9,51 +10,52 @@ import { VendorMemberResponse } from '../../core/vendors/vendor.models';
 
 @Component({
   standalone: true,
-  imports: [FormsModule, DatePipe, RouterLink],
+  imports: [FormsModule, DatePipe, RouterLink, TranslocoDirective],
   styleUrls: ['../../shared/styles/vendor-pages.scss'],
   template: `
+    <ng-container *transloco="let t">
     <section class="page-intro" aria-labelledby="members-title">
-      <div class="eyebrow">Vendor portal / Members</div>
-      <h1 id="members-title">Shop members.</h1>
-      <p>Everyone on this list has the same access. <a routerLink="/vendor">Back to shop</a></p>
+      <div class="eyebrow">{{ t('vendor.members.eyebrow') }}</div>
+      <h1 id="members-title">{{ t('vendor.members.title') }}</h1>
+      <p>{{ t('vendor.members.lede') }} <a routerLink="/vendor">{{ t('vendor.members.backToShop') }}</a></p>
     </section>
 
     @if (!vendorId && !loading) {
-      <div class="panel"><p class="state">Your account does not belong to a shop.</p></div>
+      <div class="panel"><p class="state">{{ t('vendor.portal.noShop') }}</p></div>
     } @else {
       <div class="panel">
-        <div class="panel-header"><h2>Members</h2></div>
+        <div class="panel-header"><h2>{{ t('admin.vendors.members') }}</h2></div>
         @if (loading) {
-          <p class="state">Loading members…</p>
+          <p class="state">{{ t('admin.vendors.loadingMembers') }}</p>
         } @else if (loadError) {
           <div class="panel-body">
             <p class="banner" role="alert">{{ loadError }}</p>
-            <div class="actions"><button type="button" class="btn" (click)="load()">Try again</button></div>
+            <div class="actions"><button type="button" class="btn" (click)="load()">{{ t('common.actions.retry') }}</button></div>
           </div>
         } @else {
           <div class="table-scroll">
             <table class="data-table">
-              <thead><tr><th>Account</th><th>Status</th><th>Last sign-in</th><th></th></tr></thead>
+              <thead><tr><th>{{ t('admin.vendors.account') }}</th><th>{{ t('admin.common.status') }}</th><th>{{ t('admin.vendors.lastSignIn') }}</th><th></th></tr></thead>
               <tbody>
                 @for (m of members; track m.customerId) {
                   <tr>
                     <td>
-                      {{ m.email }} @if (m.isCurrentUser) { <span class="badge">You</span> }
+                      {{ m.email }} @if (m.isCurrentUser) { <span class="badge">{{ t('vendor.members.you') }}</span> }
                       @if (fullName(m)) { <br /><span class="muted">{{ fullName(m) }}</span> }
                     </td>
-                    <td><span [class]="'badge badge-' + m.status">{{ m.status === 'active' ? 'Active' : 'Pending setup' }}</span></td>
-                    <td>{{ m.lastLoginDateUtc ? (m.lastLoginDateUtc | date:'medium') : '—' }}</td>
+                    <td><span [class]="'badge badge-' + m.status">{{ m.status === 'active' ? t('vendorStatus.member.active') : t('vendorStatus.member.pendingSetup') }}</span></td>
+                    <td>{{ m.lastLoginDateUtc ? (m.lastLoginDateUtc | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
                     <td class="row-actions">
                       @if (pendingRemove?.customerId === m.customerId) {
-                        <span class="muted">{{ m.isCurrentUser ? 'Leave this shop?' : 'Remove this member?' }}</span>
-                        <button type="button" class="btn btn-danger btn-small" (click)="remove(m)" [disabled]="busy">{{ m.isCurrentUser ? 'Leave shop' : 'Remove' }}</button>
-                        <button type="button" class="btn btn-secondary btn-small" (click)="pendingRemove = null">Cancel</button>
+                        <span class="muted">{{ m.isCurrentUser ? t('vendor.members.confirmLeave') : t('vendor.members.confirmRemove') }}</span>
+                        <button type="button" class="btn btn-danger btn-small" (click)="remove(m)" [disabled]="busy">{{ m.isCurrentUser ? t('vendor.members.leaveShop') : t('admin.vendors.remove') }}</button>
+                        <button type="button" class="btn btn-secondary btn-small" (click)="pendingRemove = null">{{ t('common.actions.cancel') }}</button>
                       } @else {
                         @if (m.status === 'pendingSetup') {
-                          <button type="button" class="btn btn-secondary btn-small" (click)="resend(m)" [disabled]="busy">Resend email</button>
+                          <button type="button" class="btn btn-secondary btn-small" (click)="resend(m)" [disabled]="busy">{{ t('vendor.members.resend') }}</button>
                         }
                         <button type="button" class="btn btn-danger btn-small" (click)="pendingRemove = m" [disabled]="members.length <= 1"
-                          [title]="members.length <= 1 ? 'A shop must keep at least one member' : ''">{{ m.isCurrentUser ? 'Leave' : 'Remove' }}</button>
+                          [title]="members.length <= 1 ? t('errors.vendor_member.last_member') : ''">{{ m.isCurrentUser ? t('vendor.members.leave') : t('admin.vendors.remove') }}</button>
                       }
                     </td>
                   </tr>
@@ -61,36 +63,38 @@ import { VendorMemberResponse } from '../../core/vendors/vendor.models';
               </tbody>
             </table>
           </div>
-          @if (members.length <= 1) { <p class="state">You are the only member, so you cannot leave the shop.</p> }
+          @if (members.length <= 1) { <p class="state">{{ t('vendor.members.onlyMember') }}</p> }
           @if (notice) { <div class="panel-body"><p class="banner banner-ok" role="status">{{ notice }}</p></div> }
           @if (actionError) { <div class="panel-body"><p class="banner" role="alert">{{ actionError }}</p></div> }
         }
       </div>
 
       <div class="panel">
-        <div class="panel-header"><h2>Add account</h2></div>
+        <div class="panel-header"><h2>{{ t('vendor.members.addHeading') }}</h2></div>
         <form class="form panel-body" (ngSubmit)="add()" novalidate>
-          <p class="muted">The new member gets an email with a link to set their own password. You never see or choose it.</p>
+          <p class="muted">{{ t('vendor.members.addHint') }}</p>
           @if (addError) { <p class="banner" role="alert">{{ addError }}</p> }
-          <label>Email *
+          <label>{{ t('admin.common.email') }} *
             <input type="email" name="email" [(ngModel)]="form.email" maxlength="320" required autocomplete="off" />
           </label>
           <div class="form-row">
-            <label>First name <input type="text" name="firstName" [(ngModel)]="form.firstName" maxlength="100" /></label>
-            <label>Last name <input type="text" name="lastName" [(ngModel)]="form.lastName" maxlength="100" /></label>
+            <label>{{ t('customer.fields.firstName') }} <input type="text" name="firstName" [(ngModel)]="form.firstName" maxlength="100" /></label>
+            <label>{{ t('customer.fields.lastName') }} <input type="text" name="lastName" [(ngModel)]="form.lastName" maxlength="100" /></label>
           </div>
           <div class="actions">
-            <button type="submit" class="btn" [disabled]="busy || !form.email.trim()">{{ busy ? 'Adding…' : 'Add account' }}</button>
+            <button type="submit" class="btn" [disabled]="busy || !form.email.trim()">{{ busy ? t('storefront.productDetail.adding') : t('vendor.members.add') }}</button>
           </div>
         </form>
       </div>
     }
+    </ng-container>
   `
 })
 export class VendorMembersPage implements OnInit {
   private readonly api = inject(VendorApiService);
   private readonly auth = inject(AuthFacade);
   private readonly router = inject(Router);
+  private readonly transloco = inject(TranslocoService);
 
   vendorId: number | null = null;
   members: VendorMemberResponse[] = [];
@@ -115,7 +119,7 @@ export class VendorMembersPage implements OnInit {
         if (!this.vendorId) { this.loading = false; return; }
         this.fetchMembers();
       },
-      error: () => { this.loading = false; this.loadError = 'Unable to load your account.'; }
+      error: () => { this.loading = false; this.loadError = this.transloco.translate('vendor.portal.errors.loadAccount'); }
     });
   }
 
@@ -133,11 +137,11 @@ export class VendorMembersPage implements OnInit {
       next: created => {
         this.busy = false;
         this.form = { email: '', firstName: '', lastName: '' };
-        this.notice = `A set-password email was sent to ${created.email}.`
-          + (created.developmentSetupToken ? ` Development setup token: ${created.developmentSetupToken}` : '');
+        this.notice = this.transloco.translate('vendor.members.setupSent', { email: created.email })
+          + (created.developmentSetupToken ? ' ' + this.transloco.translate('vendor.members.devToken', { token: created.developmentSetupToken }) : '');
         this.fetchMembers();
       },
-      error: err => { this.busy = false; this.addError = vendorErrorMessage(err, 'Unable to add the account.'); }
+      error: err => { this.busy = false; this.addError = vendorErrorMessage(err, this.transloco.translate('vendor.members.errors.add')); }
     });
   }
 
@@ -149,13 +153,13 @@ export class VendorMembersPage implements OnInit {
     this.api.resendSetupEmail(this.vendorId, m.customerId).subscribe({
       next: res => {
         this.busy = false;
-        this.notice = `A new set-password email was sent to ${m.email}.`
-          + (res.developmentSetupToken ? ` Development setup token: ${res.developmentSetupToken}` : '');
+        this.notice = this.transloco.translate('vendor.members.setupResent', { email: m.email })
+          + (res.developmentSetupToken ? ' ' + this.transloco.translate('vendor.members.devToken', { token: res.developmentSetupToken }) : '');
         this.fetchMembers();
       },
       error: err => {
         this.busy = false;
-        this.actionError = vendorErrorMessage(err, 'Unable to resend the email.');
+        this.actionError = vendorErrorMessage(err, this.transloco.translate('vendor.members.errors.resend'));
         if (err?.status === 409) this.fetchMembers();
       }
     });
@@ -181,7 +185,7 @@ export class VendorMembersPage implements OnInit {
       error: err => {
         this.busy = false;
         this.pendingRemove = null;
-        this.actionError = vendorErrorMessage(err, 'Unable to remove the member.');
+        this.actionError = vendorErrorMessage(err, this.transloco.translate('admin.vendors.errors.removeMember'));
         this.fetchMembers();
       }
     });
@@ -195,7 +199,7 @@ export class VendorMembersPage implements OnInit {
     if (!this.vendorId) return;
     this.api.getMembers(this.vendorId).subscribe({
       next: members => { this.members = members; this.loading = false; },
-      error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, 'Unable to load members.'); }
+      error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, this.transloco.translate('admin.vendors.errors.loadMembers')); }
     });
   }
 }

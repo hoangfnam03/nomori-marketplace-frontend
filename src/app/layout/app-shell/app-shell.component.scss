@@ -81,6 +81,13 @@
   font-size: 0.82rem;
 }
 
+.topbar-end {
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .account-action {
   border: 0;
   padding: 0;

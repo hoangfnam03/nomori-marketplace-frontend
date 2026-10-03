@@ -1,6 +1,7 @@
 import { Component, DestroyRef, effect, inject, input, output } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { Router } from '@angular/router';
 import { catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap } from 'rxjs';
 import { CatalogApiService } from '../../../core/catalog/catalog-api.service';
@@ -14,18 +15,18 @@ const MIN_CHARACTERS = 2;
 @Component({
   selector: 'app-search-box',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslocoDirective],
   template: `
-    <form class="search-box" role="search" (submit)="submitSearch($event)">
-      <label class="sr-only" for="marketplace-search">Search products</label>
+    <form class="search-box" role="search" *transloco="let t" (submit)="submitSearch($event)">
+      <label class="sr-only" for="marketplace-search">{{ t('storefront.search.label') }}</label>
       <input
-        id="marketplace-search" name="query" [(ngModel)]="query" placeholder="Search the marketplace" autocomplete="off"
+        id="marketplace-search" name="query" [(ngModel)]="query" [placeholder]="t('storefront.search.placeholder')" autocomplete="off"
         role="combobox" aria-autocomplete="list" aria-controls="search-suggestions" [attr.aria-expanded]="open && suggestions.length > 0"
         [attr.aria-activedescendant]="active >= 0 ? 'suggestion-' + active : null"
         (ngModelChange)="onInput($event)" (keydown)="onKey($event)" (blur)="closeSoon()" (focus)="open = suggestions.length > 0" />
-      <button type="submit" aria-label="Search">Search</button>
+      <button type="submit">{{ t('storefront.search.submit') }}</button>
       @if (open && suggestions.length > 0) {
-        <ul class="suggestions" id="search-suggestions" role="listbox" aria-label="Suggestions">
+        <ul class="suggestions" id="search-suggestions" role="listbox" [attr.aria-label]="t('storefront.search.suggestions')">
           @for (s of suggestions; track s.id; let i = $index) {
             <li role="option" [id]="'suggestion-' + i" [class.active]="i === active" [attr.aria-selected]="i === active" (mousedown)="choose(s)">
               @if (picture(s); as url) { <img [src]="url" alt="" loading="lazy" /> } @else { <span class="thumb" aria-hidden="true"></span> }

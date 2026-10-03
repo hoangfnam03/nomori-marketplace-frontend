@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthFacade } from '../../core/auth/auth.facade';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
@@ -8,53 +9,56 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
 
 @Component({
   standalone: true,
-  imports: [RouterLink, DatePipe],
+  imports: [RouterLink, DatePipe, TranslocoDirective],
   styleUrls: ['../../shared/styles/vendor-pages.scss'],
   template: `
+    <ng-container *transloco="let t">
     <section class="page-intro" aria-labelledby="portal-title">
-      <div class="eyebrow">Vendor portal</div>
-      <h1 id="portal-title">{{ vendor?.name ?? 'Your shop' }}</h1>
-      <p>Manage your shop and the people who work on it.</p>
+      <div class="eyebrow">{{ t('vendor.portal.eyebrow') }}</div>
+      <h1 id="portal-title">{{ vendor?.name ?? t('vendor.portal.yourShop') }}</h1>
+      <p>{{ t('vendor.portal.lede') }}</p>
     </section>
 
     <div class="panel">
       @if (loading) {
-        <p class="state">Loading shop…</p>
+        <p class="state">{{ t('vendor.portal.loading') }}</p>
       } @else if (error) {
         <div class="panel-body">
           <p class="banner" role="alert">{{ error }}</p>
-          <div class="actions"><button type="button" class="btn" (click)="load()">Try again</button></div>
+          <div class="actions"><button type="button" class="btn" (click)="load()">{{ t('common.actions.retry') }}</button></div>
         </div>
       } @else if (vendor) {
         <div class="panel-header">
-          <h2>Shop details</h2>
-          <span [class]="vendor.active ? 'badge badge-active' : 'badge'">{{ vendor.active ? 'Active' : 'Inactive — hidden from the storefront' }}</span>
+          <h2>{{ t('vendor.portal.details') }}</h2>
+          <span [class]="vendor.active ? 'badge badge-active' : 'badge'">{{ vendor.active ? t('vendorStatus.vendor.active') : t('vendor.portal.inactiveHidden') }}</span>
         </div>
         <div class="panel-body">
           <dl class="detail-grid">
-            <dt>Name</dt><dd>{{ vendor.name }}</dd>
-            <dt>Contact email</dt><dd>{{ vendor.email }}</dd>
-            <dt>Description</dt><dd>{{ vendor.description || '—' }}</dd>
-            <dt>Created</dt><dd>{{ vendor.createdOnUtc | date:'medium' }}</dd>
+            <dt>{{ t('admin.common.name') }}</dt><dd>{{ vendor.name }}</dd>
+            <dt>{{ t('vendor.portal.contactEmail') }}</dt><dd>{{ vendor.email }}</dd>
+            <dt>{{ t('admin.common.description') }}</dt><dd>{{ vendor.description || '—' }}</dd>
+            <dt>{{ t('admin.common.created') }}</dt><dd>{{ vendor.createdOnUtc | date:'dd/MM/yyyy HH:mm' }}</dd>
           </dl>
           <div class="actions">
-            <a class="btn" routerLink="/vendor/products">Manage products</a>
-            <a class="btn" routerLink="/vendor/members">Manage members</a>
-            <a class="btn btn-secondary" [routerLink]="['/storefront/vendors', vendor.id]">View public page</a>
+            <a class="btn" routerLink="/vendor/products">{{ t('vendor.portal.manageProducts') }}</a>
+            <a class="btn" routerLink="/vendor/members">{{ t('vendor.portal.manageMembers') }}</a>
+            <a class="btn btn-secondary" [routerLink]="['/storefront/vendors', vendor.id]">{{ t('vendor.portal.viewPublic') }}</a>
           </div>
         </div>
       } @else {
         <div class="panel-body">
-          <p class="banner banner-info">Your account does not belong to a shop.</p>
-          <div class="actions"><a class="btn" routerLink="/customer/become-vendor">Apply to open a shop</a></div>
+          <p class="banner banner-info">{{ t('vendor.portal.noShop') }}</p>
+          <div class="actions"><a class="btn" routerLink="/customer/become-vendor">{{ t('vendor.portal.apply') }}</a></div>
         </div>
       }
     </div>
+    </ng-container>
   `
 })
 export class VendorPortalPage implements OnInit {
   private readonly api = inject(VendorApiService);
   private readonly auth = inject(AuthFacade);
+  private readonly transloco = inject(TranslocoService);
 
   vendor: VendorResponse | null = null;
   loading = true;
@@ -72,10 +76,10 @@ export class VendorPortalPage implements OnInit {
         if (!session.vendorId) { this.vendor = null; this.loading = false; return; }
         this.api.getVendor(session.vendorId).subscribe({
           next: vendor => { this.vendor = vendor; this.loading = false; },
-          error: err => { this.loading = false; this.error = vendorErrorMessage(err, 'Unable to load your shop.'); }
+          error: err => { this.loading = false; this.error = vendorErrorMessage(err, this.transloco.translate('vendor.portal.errors.loadShop')); }
         });
       },
-      error: () => { this.loading = false; this.error = 'Unable to load your account.'; }
+      error: () => { this.loading = false; this.error = this.transloco.translate('vendor.portal.errors.loadAccount'); }
     });
   }
 }

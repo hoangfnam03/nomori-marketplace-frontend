@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { CartApiService } from '../../core/cart/cart-api.service';
@@ -10,60 +11,62 @@ import { CurrencyService } from '../../core/money/currency.service';
 import { MediaApiService } from '../../core/media/media-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
-const ISSUE_TEXT: Record<CartIssue, string> = {
-  unavailable: 'No longer available',
-  variant_unavailable: 'This option is no longer offered',
-  out_of_stock: 'Out of stock',
-  insufficient_stock: 'Not enough in stock',
-  price_changed: 'Price changed'
+/** Translation key per cart issue. */
+const ISSUE_KEY: Record<CartIssue, string> = {
+  unavailable: 'storefront.cart.issues.unavailable',
+  variant_unavailable: 'storefront.cart.issues.variantUnavailable',
+  out_of_stock: 'storefront.cart.issues.outOfStock',
+  insufficient_stock: 'storefront.cart.issues.insufficientStock',
+  price_changed: 'storefront.cart.issues.priceChanged'
 };
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, EmptyStateComponent, FormsModule, RouterLink],
+  imports: [BreadcrumbComponent, EmptyStateComponent, FormsModule, RouterLink, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <div class="page-heading">
-      <app-breadcrumb [items]="[{ label: 'Products', url: '/storefront/products' }, { label: 'Cart' }]" />
-      <div class="eyebrow">Storefront / Cart</div>
-      <h1>Your cart.</h1>
+      <app-breadcrumb [items]="[{ label: t('storefront.products.breadcrumb'), url: '/storefront/products' }, { label: t('nav.cart') }]" />
+      <div class="eyebrow">{{ t('storefront.cart.eyebrow') }}</div>
+      <h1>{{ t('storefront.cart.title') }}</h1>
     </div>
 
     @if (loading) {
-      <p class="state">Loading your cart…</p>
+      <p class="state">{{ t('storefront.cart.loading') }}</p>
     } @else if (loadError) {
       <p class="state state-error" role="alert">{{ loadError }}</p>
-      <button type="button" class="secondary" (click)="load()">Try again</button>
+      <button type="button" class="secondary" (click)="load()">{{ t('common.actions.retry') }}</button>
     } @else if (view && view.groups.length === 0) {
-      <app-empty-state title="Your cart is empty" message="Find something you like and add it to your cart." mark="00" />
-      <p class="empty-link"><a routerLink="/storefront/products">Browse products →</a></p>
+      <app-empty-state [title]="t('storefront.cart.emptyTitle')" [message]="t('storefront.cart.emptyMessage')" mark="00" />
+      <p class="empty-link"><a routerLink="/storefront/products">{{ t('storefront.cart.browse') }} →</a></p>
     } @else if (view) {
       @if (actionError) { <p class="banner" role="alert">{{ actionError }}</p> }
       @if (hasPriceChange()) {
         <div class="banner banner-info" role="status">
-          <span>Some prices changed since you added them. Check the lines marked “Price changed”.</span>
-          <button type="button" class="secondary" (click)="acceptPrices()" [disabled]="busy">Accept new prices</button>
+          <span>{{ t('storefront.cart.pricesChanged') }}</span>
+          <button type="button" class="secondary" (click)="acceptPrices()" [disabled]="busy">{{ t('storefront.cart.acceptPrices') }}</button>
         </div>
       }
 
       <div class="cart-layout">
         <div class="groups">
           @for (group of view.groups; track group.vendorId) {
-            <section class="group" [attr.aria-label]="'Items from ' + (group.vendorName ?? 'shop')">
+            <section class="group" [attr.aria-label]="t('storefront.cart.itemsFrom', { name: group.vendorName ?? t('admin.catalog.shop') })">
               <header class="group-head">
-                <h2>Sold by <a [routerLink]="['/storefront/vendors', group.vendorId]">{{ group.vendorName ?? 'Shop' }}</a></h2>
-                <span class="muted">Subtotal {{ money(group.subtotal) }}</span>
+                <h2>{{ t('storefront.productDetail.soldBy') }} <a [routerLink]="['/storefront/vendors', group.vendorId]">{{ group.vendorName ?? t('admin.catalog.shop') }}</a></h2>
+                <span class="muted">{{ t('storefront.cart.subtotalValue', { amount: money(group.subtotal) }) }}</span>
               </header>
 
               @for (line of group.lines; track line.id) {
                 <article class="line" [class.blocked]="isBlocked(line)">
-                  <a class="thumb" [routerLink]="['/storefront/products', line.productId]" [attr.aria-label]="'View ' + line.name">
+                  <a class="thumb" [routerLink]="['/storefront/products', line.productId]" [attr.aria-label]="t('storefront.card.view', { name: line.name })">
                     @if (pictureUrl(line); as url) { <img [src]="url" alt="" loading="lazy" /> } @else { <span class="thumb-empty" aria-hidden="true"></span> }
                   </a>
 
                   <div class="line-info">
                     <a class="name" [routerLink]="['/storefront/products', line.productId]">{{ line.name }}</a>
                     @if (line.variantLabel) { <div class="muted">{{ line.variantLabel }}</div> }
-                    @if (line.sku) { <div class="muted sku">SKU {{ line.sku }}</div> }
+                    @if (line.sku) { <div class="muted sku">{{ t('storefront.productDetail.sku', { sku: line.sku }) }}</div> }
                     @for (issue of line.issues; track issue) {
                       <div class="issue" [class.warn]="issue === 'price_changed'" role="status">
                         {{ issueText(issue, line) }}
@@ -73,19 +76,19 @@ const ISSUE_TEXT: Record<CartIssue, string> = {
                   </div>
 
                   <div class="line-qty">
-                    <label [attr.for]="'qty-' + line.id" class="sr-only">Quantity of {{ line.name }}</label>
+                    <label [attr.for]="'qty-' + line.id" class="sr-only">{{ t('storefront.cart.quantityOf', { name: line.name }) }}</label>
                     <input [id]="'qty-' + line.id" type="number" min="1" max="10000" step="1"
                       [ngModel]="line.quantity" (change)="changeQuantity(line, $event)" [disabled]="busy" />
-                    <button type="button" class="link" (click)="remove(line)" [disabled]="busy">Remove</button>
+                    <button type="button" class="link" (click)="remove(line)" [disabled]="busy">{{ t('media.remove') }}</button>
                   </div>
 
                   <div class="line-price">
                     @if (!isUnpriced(line)) {
                       <strong>{{ money(line.lineTotal) }}</strong>
-                      <span class="muted">{{ money(line.unitPrice) }} each</span>
+                      <span class="muted">{{ t('storefront.productDetail.tierEach', { price: money(line.unitPrice) }) }}</span>
                       @if (line.comparePrice) { <del class="muted">{{ money(line.comparePrice) }}</del> }
-                      @if (line.appliedRule === 'tier') { <span class="tag">Quantity price</span> }
-                      @if (line.appliedRule === 'special') { <span class="tag">Sale</span> }
+                      @if (line.appliedRule === 'tier') { <span class="tag">{{ t('storefront.cart.quantityPrice') }}</span> }
+                      @if (line.appliedRule === 'special') { <span class="tag">{{ t('storefront.card.sale') }}</span> }
                     } @else {
                       <span class="muted">—</span>
                     }
@@ -96,22 +99,23 @@ const ISSUE_TEXT: Record<CartIssue, string> = {
           }
         </div>
 
-        <aside class="summary" aria-label="Order summary">
-          <h2>Summary</h2>
+        <aside class="summary" [attr.aria-label]="t('storefront.cart.summaryLabel')">
+          <h2>{{ t('storefront.cart.summary') }}</h2>
           <dl>
-            <div><dt>Items</dt><dd>{{ view.itemCount }}</dd></div>
-            <div><dt>Subtotal</dt><dd>{{ money(view.subtotal) }}</dd></div>
+            <div><dt>{{ t('storefront.cart.items') }}</dt><dd>{{ view.itemCount }}</dd></div>
+            <div><dt>{{ t('storefront.cart.subtotal') }}</dt><dd>{{ money(view.subtotal) }}</dd></div>
           </dl>
-          <p class="muted note">Shipping and taxes are added at checkout. Prices are in {{ view.currencyCode }}; you always pay in {{ view.currencyCode }}.</p>
+          <p class="muted note">{{ t('storefront.cart.currencyNote', { code: view.currencyCode }) }}</p>
           @if (!view.canCheckout) {
-            <p class="issue" role="status">Fix or remove the lines marked above to continue.</p>
+            <p class="issue" role="status">{{ t('storefront.cart.fixLines') }}</p>
           }
-          <button type="button" class="primary" disabled>Checkout</button>
-          <p class="muted note">Checkout is the next step of the marketplace and is not available yet.</p>
-          <button type="button" class="link" (click)="clear()" [disabled]="busy">Clear cart</button>
+          <button type="button" class="primary" disabled>{{ t('storefront.cart.checkout') }}</button>
+          <p class="muted note">{{ t('storefront.cart.checkoutSoon') }}</p>
+          <button type="button" class="link" (click)="clear()" [disabled]="busy">{{ t('storefront.cart.clear') }}</button>
         </aside>
       </div>
     }
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -166,6 +170,7 @@ export class CartPage implements OnInit {
   private readonly cart = inject(CartService);
   private readonly currency = inject(CurrencyService);
   private readonly media = inject(MediaApiService);
+  private readonly transloco = inject(TranslocoService);
 
   view: CartView | null = null;
   loading = true;
@@ -181,7 +186,7 @@ export class CartPage implements OnInit {
     this.loadError = '';
     this.api.get().subscribe({
       next: view => { this.apply(view); this.loading = false; },
-      error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, 'Unable to load your cart.'); }
+      error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, this.transloco.translate('storefront.cart.errors.load')); }
     });
   }
 
@@ -198,16 +203,16 @@ export class CartPage implements OnInit {
   hasPriceChange() { return !!this.view?.groups.some(g => g.lines.some(l => l.issues.includes('price_changed'))); }
 
   issueText(issue: CartIssue, line: CartLine): string {
-    if (issue === 'insufficient_stock') return `Only ${line.availableQuantity ?? 0} in stock. Lower the quantity.`;
-    if (issue === 'price_changed' && line.previousUnitPrice !== null) return `Price changed from ${this.money(line.previousUnitPrice)} to ${this.money(line.unitPrice)} each.`;
-    return ISSUE_TEXT[issue];
+    if (issue === 'insufficient_stock') return this.transloco.translate('storefront.cart.issues.onlyInStock', { count: line.availableQuantity ?? 0 });
+    if (issue === 'price_changed' && line.previousUnitPrice !== null) return this.transloco.translate('storefront.cart.issues.priceChangedFrom', { from: this.money(line.previousUnitPrice), to: this.money(line.unitPrice) });
+    return this.transloco.translate(ISSUE_KEY[issue]);
   }
 
   changeQuantity(line: CartLine, event: Event) {
     const input = event.target as HTMLInputElement;
     const quantity = Number(input.value);
     if (!Number.isInteger(quantity) || quantity < 1 || quantity > 10000) {
-      this.lineErrors = { ...this.lineErrors, [line.id]: 'Enter a quantity between 1 and 10,000.' };
+      this.lineErrors = { ...this.lineErrors, [line.id]: this.transloco.translate('storefront.productDetail.quantityRange') };
       input.value = String(line.quantity);
       return;
     }
@@ -233,7 +238,7 @@ export class CartPage implements OnInit {
         if (input && previous !== undefined) input.value = String(previous);
         const field = err?.status === 400 && err?.fieldErrors ? Object.values(err.fieldErrors as Record<string, string[]>).flat().join(' ') : '';
         if (lineId !== undefined && field) this.lineErrors = { ...this.lineErrors, [lineId]: field };
-        else this.actionError = vendorErrorMessage(err, 'Something went wrong. Try again.');
+        else this.actionError = vendorErrorMessage(err, this.transloco.translate('auth.errors.unexpected'));
       }
     });
   }

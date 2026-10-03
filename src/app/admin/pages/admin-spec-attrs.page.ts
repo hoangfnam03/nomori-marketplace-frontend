@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { SpecificationAttributeGroup, SpecificationAttributeDef, SpecificationAttributeOption } from '../../core/catalog/spec-attribute.models';
 
@@ -7,58 +8,59 @@ type Panel = 'groups' | 'attrs' | 'options';
 
 @Component({
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <section class="admin-intro" aria-labelledby="spec-title">
       <div>
-        <div class="eyebrow">Admin / Catalog</div>
-        <h1 id="spec-title">Specification attributes.</h1>
-        <p>Define filterable specs shown on product pages (RAM, Screen size, Connectivity…) organised in optional groups.</p>
+        <div class="eyebrow">{{ t('admin.specs.eyebrow') }}</div>
+        <h1 id="spec-title">{{ t('admin.specs.title') }}</h1>
+        <p>{{ t('admin.specs.lede') }}</p>
       </div>
     </section>
 
     <div class="tabs" role="tablist">
-      <button role="tab" [class.active]="panel === 'groups'" (click)="setPanel('groups')">Groups</button>
-      <button role="tab" [class.active]="panel === 'attrs'" (click)="setPanel('attrs')">Attributes</button>
-      <button role="tab" [class.active]="panel === 'options'" (click)="setPanel('options')">Options</button>
+      <button role="tab" [class.active]="panel === 'groups'" (click)="setPanel('groups')">{{ t('admin.specs.tabGroups') }}</button>
+      <button role="tab" [class.active]="panel === 'attrs'" (click)="setPanel('attrs')">{{ t('admin.specs.tabAttributes') }}</button>
+      <button role="tab" [class.active]="panel === 'options'" (click)="setPanel('options')">{{ t('admin.specs.tabOptions') }}</button>
     </div>
 
     <!-- GROUPS -->
     @if (panel === 'groups') {
       <div class="panel">
         <div class="panel-header">
-          <h2>Attribute groups</h2>
-          <button type="button" class="new-btn" (click)="openGroupForm()">+ New group</button>
+          <h2>{{ t('admin.specs.groupsHeading') }}</h2>
+          <button type="button" class="new-btn" (click)="openGroupForm()">+ {{ t('admin.specs.newGroup') }}</button>
         </div>
 
         @if (groupFormOpen) {
-          <form class="inline-form" (ngSubmit)="submitGroup()" [attr.aria-label]="(editingGroupId ? 'Edit' : 'Create') + ' group'">
-            <div class="form-title">{{ editingGroupId ? 'Edit group' : 'New group' }}</div>
-            @if (groupFormError) { <p class="form-error" role="alert">{{ groupFormError }}</p> }
-            <label>Name <input type="text" [(ngModel)]="groupForm.name" name="name" required /></label>
-            <label>Display order <input type="number" [(ngModel)]="groupForm.displayOrder" name="displayOrder" style="width:80px" /></label>
+          <form class="inline-form" (ngSubmit)="submitGroup()" [attr.aria-label]="editingGroupId ? t('admin.specs.editGroup') : t('admin.specs.newGroup')">
+            <div class="form-title">{{ editingGroupId ? t('admin.specs.editGroup') : t('admin.specs.newGroup') }}</div>
+            @if (groupFormError) { <p class="form-error" role="alert">{{ t(groupFormError) }}</p> }
+            <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="groupForm.name" name="name" required /></label>
+            <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="groupForm.displayOrder" name="displayOrder" style="width:80px" /></label>
             <div class="form-actions">
-              <button type="submit" [disabled]="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
-              <button type="button" class="cancel-btn" (click)="closeGroupForm()">Cancel</button>
+              <button type="submit" [disabled]="saving">{{ saving ? t('common.states.saving') : t('common.actions.save') }}</button>
+              <button type="button" class="cancel-btn" (click)="closeGroupForm()">{{ t('common.actions.cancel') }}</button>
             </div>
           </form>
         }
 
         @if (loadingGroups) {
-          <p class="loading-msg">Loading…</p>
+          <p class="loading-msg">{{ t('common.states.loading') }}</p>
         } @else if (groups.length === 0) {
-          <p class="empty-msg">No groups yet.</p>
+          <p class="empty-msg">{{ t('admin.specs.noGroups') }}</p>
         } @else {
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Order</th><th class="actions-col"></th></tr></thead>
+            <thead><tr><th>{{ t('admin.common.name') }}</th><th>{{ t('admin.common.order') }}</th><th class="actions-col"></th></tr></thead>
             <tbody>
               @for (g of groups; track g.id) {
                 <tr>
                   <td>{{ g.name }}</td>
                   <td>{{ g.displayOrder }}</td>
                   <td class="row-actions">
-                    <button type="button" class="edit-btn" (click)="editGroup(g)">Edit</button>
-                    <button type="button" class="del-btn" (click)="deleteGroup(g.id)">Delete</button>
+                    <button type="button" class="edit-btn" (click)="editGroup(g)">{{ t('common.actions.edit') }}</button>
+                    <button type="button" class="del-btn" (click)="deleteGroup(g.id)">{{ t('common.actions.delete') }}</button>
                   </td>
                 </tr>
               }
@@ -72,38 +74,38 @@ type Panel = 'groups' | 'attrs' | 'options';
     @if (panel === 'attrs') {
       <div class="panel">
         <div class="panel-header">
-          <h2>Specification attributes</h2>
-          <button type="button" class="new-btn" (click)="openAttrForm()">+ New attribute</button>
+          <h2>{{ t('admin.specs.attributesHeading') }}</h2>
+          <button type="button" class="new-btn" (click)="openAttrForm()">+ {{ t('admin.specs.newAttribute') }}</button>
         </div>
 
         @if (attrFormOpen) {
-          <form class="inline-form" (ngSubmit)="submitAttr()" [attr.aria-label]="(editingAttrId ? 'Edit' : 'Create') + ' attribute'">
-            <div class="form-title">{{ editingAttrId ? 'Edit attribute' : 'New attribute' }}</div>
-            @if (attrFormError) { <p class="form-error" role="alert">{{ attrFormError }}</p> }
-            <label>Name <input type="text" [(ngModel)]="attrForm.name" name="name" required /></label>
-            <label>Group
+          <form class="inline-form" (ngSubmit)="submitAttr()" [attr.aria-label]="editingAttrId ? t('admin.specs.editAttribute') : t('admin.specs.newAttribute')">
+            <div class="form-title">{{ editingAttrId ? t('admin.specs.editAttribute') : t('admin.specs.newAttribute') }}</div>
+            @if (attrFormError) { <p class="form-error" role="alert">{{ t(attrFormError) }}</p> }
+            <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="attrForm.name" name="name" required /></label>
+            <label>{{ t('admin.specs.group') }}
               <select [(ngModel)]="attrForm.groupId" name="groupId">
-                <option [ngValue]="null">— none —</option>
+                <option [ngValue]="null">— {{ t('admin.common.none') }} —</option>
                 @for (g of groups; track g.id) {
                   <option [ngValue]="g.id">{{ g.name }}</option>
                 }
               </select>
             </label>
-            <label>Display order <input type="number" [(ngModel)]="attrForm.displayOrder" name="displayOrder" style="width:80px" /></label>
+            <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="attrForm.displayOrder" name="displayOrder" style="width:80px" /></label>
             <div class="form-actions">
-              <button type="submit" [disabled]="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
-              <button type="button" class="cancel-btn" (click)="closeAttrForm()">Cancel</button>
+              <button type="submit" [disabled]="saving">{{ saving ? t('common.states.saving') : t('common.actions.save') }}</button>
+              <button type="button" class="cancel-btn" (click)="closeAttrForm()">{{ t('common.actions.cancel') }}</button>
             </div>
           </form>
         }
 
         @if (loadingAttrs) {
-          <p class="loading-msg">Loading…</p>
+          <p class="loading-msg">{{ t('common.states.loading') }}</p>
         } @else if (attrs.length === 0) {
-          <p class="empty-msg">No attributes yet.</p>
+          <p class="empty-msg">{{ t('admin.specs.noAttributes') }}</p>
         } @else {
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Group</th><th>Order</th><th class="actions-col"></th></tr></thead>
+            <thead><tr><th>{{ t('admin.common.name') }}</th><th>{{ t('admin.specs.group') }}</th><th>{{ t('admin.common.order') }}</th><th class="actions-col"></th></tr></thead>
             <tbody>
               @for (a of attrs; track a.id) {
                 <tr>
@@ -111,9 +113,9 @@ type Panel = 'groups' | 'attrs' | 'options';
                   <td>{{ groupName(a.specificationAttributeGroupId) }}</td>
                   <td>{{ a.displayOrder }}</td>
                   <td class="row-actions">
-                    <button type="button" class="edit-btn" (click)="editAttr(a)">Edit</button>
-                    <button type="button" class="opt-btn" (click)="viewOptions(a)">Options</button>
-                    <button type="button" class="del-btn" (click)="deleteAttr(a.id)">Delete</button>
+                    <button type="button" class="edit-btn" (click)="editAttr(a)">{{ t('common.actions.edit') }}</button>
+                    <button type="button" class="opt-btn" (click)="viewOptions(a)">{{ t('admin.specs.tabOptions') }}</button>
+                    <button type="button" class="del-btn" (click)="deleteAttr(a.id)">{{ t('common.actions.delete') }}</button>
                   </td>
                 </tr>
               }
@@ -127,43 +129,43 @@ type Panel = 'groups' | 'attrs' | 'options';
     @if (panel === 'options') {
       <div class="panel">
         <div class="panel-header">
-          <h2>Options{{ selectedAttr ? ' — ' + selectedAttr.name : '' }}</h2>
+          <h2>{{ t('admin.specs.tabOptions') }}{{ selectedAttr ? ' — ' + selectedAttr.name : '' }}</h2>
           <div class="header-right">
             <select class="attr-select" [(ngModel)]="selectedAttrId" (ngModelChange)="loadOptions($event)" [ngModelOptions]="{standalone: true}">
-              <option [ngValue]="null">Select an attribute…</option>
+              <option [ngValue]="null">{{ t('admin.specs.selectAttribute') }}</option>
               @for (a of attrs; track a.id) {
                 <option [ngValue]="a.id">{{ a.name }}</option>
               }
             </select>
             @if (selectedAttrId) {
-              <button type="button" class="new-btn" (click)="openOptionForm()">+ New option</button>
+              <button type="button" class="new-btn" (click)="openOptionForm()">+ {{ t('admin.specs.newOption') }}</button>
             }
           </div>
         </div>
 
         @if (optionFormOpen) {
-          <form class="inline-form" (ngSubmit)="submitOption()" [attr.aria-label]="(editingOptionId ? 'Edit' : 'Create') + ' option'">
-            <div class="form-title">{{ editingOptionId ? 'Edit option' : 'New option' }}</div>
-            @if (optionFormError) { <p class="form-error" role="alert">{{ optionFormError }}</p> }
-            <label>Name <input type="text" [(ngModel)]="optionForm.name" name="name" required /></label>
-            <label>Color (hex) <input type="text" [(ngModel)]="optionForm.colorSquaresRgb" name="color" placeholder="#rrggbb" style="width:120px" /></label>
-            <label>Display order <input type="number" [(ngModel)]="optionForm.displayOrder" name="displayOrder" style="width:80px" /></label>
+          <form class="inline-form" (ngSubmit)="submitOption()" [attr.aria-label]="editingOptionId ? t('admin.specs.editOption') : t('admin.specs.newOption')">
+            <div class="form-title">{{ editingOptionId ? t('admin.specs.editOption') : t('admin.specs.newOption') }}</div>
+            @if (optionFormError) { <p class="form-error" role="alert">{{ t(optionFormError) }}</p> }
+            <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="optionForm.name" name="name" required /></label>
+            <label>{{ t('admin.specs.colorHex') }} <input type="text" [(ngModel)]="optionForm.colorSquaresRgb" name="color" placeholder="#rrggbb" style="width:120px" /></label>
+            <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="optionForm.displayOrder" name="displayOrder" style="width:80px" /></label>
             <div class="form-actions">
-              <button type="submit" [disabled]="saving">{{ saving ? 'Saving…' : 'Save' }}</button>
-              <button type="button" class="cancel-btn" (click)="closeOptionForm()">Cancel</button>
+              <button type="submit" [disabled]="saving">{{ saving ? t('common.states.saving') : t('common.actions.save') }}</button>
+              <button type="button" class="cancel-btn" (click)="closeOptionForm()">{{ t('common.actions.cancel') }}</button>
             </div>
           </form>
         }
 
         @if (!selectedAttrId) {
-          <p class="empty-msg">Select an attribute above to manage its options.</p>
+          <p class="empty-msg">{{ t('admin.specs.selectAttributeHint') }}</p>
         } @else if (loadingOptions) {
-          <p class="loading-msg">Loading…</p>
+          <p class="loading-msg">{{ t('common.states.loading') }}</p>
         } @else if (options.length === 0) {
-          <p class="empty-msg">No options yet.</p>
+          <p class="empty-msg">{{ t('admin.specs.noOptions') }}</p>
         } @else {
           <table class="data-table">
-            <thead><tr><th>Name</th><th>Color</th><th>Order</th><th class="actions-col"></th></tr></thead>
+            <thead><tr><th>{{ t('admin.common.name') }}</th><th>{{ t('admin.specs.color') }}</th><th>{{ t('admin.common.order') }}</th><th class="actions-col"></th></tr></thead>
             <tbody>
               @for (o of options; track o.id) {
                 <tr>
@@ -176,8 +178,8 @@ type Panel = 'groups' | 'attrs' | 'options';
                   <td><code>{{ o.colorSquaresRgb || '—' }}</code></td>
                   <td>{{ o.displayOrder }}</td>
                   <td class="row-actions">
-                    <button type="button" class="edit-btn" (click)="editOption(o)">Edit</button>
-                    <button type="button" class="del-btn" (click)="deleteOption(o.id)">Delete</button>
+                    <button type="button" class="edit-btn" (click)="editOption(o)">{{ t('common.actions.edit') }}</button>
+                    <button type="button" class="del-btn" (click)="deleteOption(o.id)">{{ t('common.actions.delete') }}</button>
                   </td>
                 </tr>
               }
@@ -186,6 +188,7 @@ type Panel = 'groups' | 'attrs' | 'options';
         }
       </div>
     }
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -230,6 +233,7 @@ type Panel = 'groups' | 'attrs' | 'options';
 })
 export class AdminSpecAttrsPage implements OnInit {
   private readonly api = inject(CatalogApiService);
+  private readonly transloco = inject(TranslocoService);
 
   panel: Panel = 'groups';
 
@@ -291,7 +295,7 @@ export class AdminSpecAttrsPage implements OnInit {
   }
 
   submitGroup() {
-    if (!this.groupForm.name.trim()) { this.groupFormError = 'Name is required.'; return; }
+    if (!this.groupForm.name.trim()) { this.groupFormError = 'admin.common.nameRequired'; return; }
     this.saving = true;
     const body = { name: this.groupForm.name.trim(), displayOrder: this.groupForm.displayOrder };
     const req = this.editingGroupId
@@ -299,13 +303,13 @@ export class AdminSpecAttrsPage implements OnInit {
       : this.api.adminCreateSpecGroup(body);
     req.subscribe({
       next: () => { this.saving = false; this.closeGroupForm(); this.fetchGroups(); },
-      error: () => { this.saving = false; this.groupFormError = 'Save failed.'; }
+      error: () => { this.saving = false; this.groupFormError = 'admin.common.saveFailed'; }
     });
   }
 
   deleteGroup(id: number) {
-    if (!confirm('Delete this group? Attributes in it will become ungrouped.')) return;
-    this.api.adminDeleteSpecGroup(id).subscribe({ next: () => this.fetchGroups(), error: () => alert('Delete failed.') });
+    if (!confirm(this.transloco.translate('admin.specs.confirmDeleteGroup'))) return;
+    this.api.adminDeleteSpecGroup(id).subscribe({ next: () => this.fetchGroups(), error: () => alert(this.transloco.translate('admin.common.deleteFailed')) });
   }
 
   // ---- Attrs ----
@@ -326,7 +330,7 @@ export class AdminSpecAttrsPage implements OnInit {
   }
 
   submitAttr() {
-    if (!this.attrForm.name.trim()) { this.attrFormError = 'Name is required.'; return; }
+    if (!this.attrForm.name.trim()) { this.attrFormError = 'admin.common.nameRequired'; return; }
     this.saving = true;
     const body = { name: this.attrForm.name.trim(), groupId: this.attrForm.groupId, displayOrder: this.attrForm.displayOrder };
     const req = this.editingAttrId
@@ -334,13 +338,13 @@ export class AdminSpecAttrsPage implements OnInit {
       : this.api.adminCreateSpecAttr(body);
     req.subscribe({
       next: () => { this.saving = false; this.closeAttrForm(); this.fetchAttrs(); },
-      error: () => { this.saving = false; this.attrFormError = 'Save failed.'; }
+      error: () => { this.saving = false; this.attrFormError = 'admin.common.saveFailed'; }
     });
   }
 
   deleteAttr(id: number) {
-    if (!confirm('Delete this attribute? All its options and product mappings will be removed.')) return;
-    this.api.adminDeleteSpecAttr(id).subscribe({ next: () => this.fetchAttrs(), error: () => alert('Delete failed.') });
+    if (!confirm(this.transloco.translate('admin.specs.confirmDeleteAttribute'))) return;
+    this.api.adminDeleteSpecAttr(id).subscribe({ next: () => this.fetchAttrs(), error: () => alert(this.transloco.translate('admin.common.deleteFailed')) });
   }
 
   viewOptions(a: SpecificationAttributeDef) {
@@ -373,7 +377,7 @@ export class AdminSpecAttrsPage implements OnInit {
   }
 
   submitOption() {
-    if (!this.optionForm.name.trim()) { this.optionFormError = 'Name is required.'; return; }
+    if (!this.optionForm.name.trim()) { this.optionFormError = 'admin.common.nameRequired'; return; }
     if (!this.selectedAttrId) return;
     this.saving = true;
     const body = { name: this.optionForm.name.trim(), colorSquaresRgb: this.optionForm.colorSquaresRgb || null, displayOrder: this.optionForm.displayOrder };
@@ -382,13 +386,13 @@ export class AdminSpecAttrsPage implements OnInit {
       : this.api.adminCreateSpecOption(this.selectedAttrId, body);
     req.subscribe({
       next: () => { this.saving = false; this.closeOptionForm(); this.loadOptions(this.selectedAttrId); },
-      error: () => { this.saving = false; this.optionFormError = 'Save failed.'; }
+      error: () => { this.saving = false; this.optionFormError = 'admin.common.saveFailed'; }
     });
   }
 
   deleteOption(id: number) {
-    if (!confirm('Delete this option?')) return;
+    if (!confirm(this.transloco.translate('admin.specs.confirmDeleteOption'))) return;
     if (!this.selectedAttrId) return;
-    this.api.adminDeleteSpecOption(this.selectedAttrId, id).subscribe({ next: () => this.loadOptions(this.selectedAttrId), error: () => alert('Delete failed.') });
+    this.api.adminDeleteSpecOption(this.selectedAttrId, id).subscribe({ next: () => this.loadOptions(this.selectedAttrId), error: () => alert(this.transloco.translate('admin.common.deleteFailed')) });
   }
 }

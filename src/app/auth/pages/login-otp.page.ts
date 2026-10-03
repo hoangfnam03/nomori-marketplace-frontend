@@ -1,20 +1,21 @@
 import { Component, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { AuthFacade } from '../../core/auth/auth.facade';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoDirective],
   styleUrls: ['../auth-page.scss'],
   template: `
-    <div class="auth-page"><section><div class="eyebrow">Account / Verification</div><h1>Check your inbox.</h1><p class="lede">Nomori sent a six-digit verification code to your email address.</p></section>
-      <form class="auth-panel" [formGroup]="form" (ngSubmit)="submit()" novalidate><h2>Email OTP</h2>
-        <div class="field"><label for="code">Verification code</label><input id="code" type="text" inputmode="numeric" maxlength="6" formControlName="code" autocomplete="one-time-code" /></div>
-        @if (developmentCode) { <div class="form-success" role="status">Development code: {{ developmentCode }}</div> }
-        @if (error) { <div class="form-error" role="alert">{{ error }}</div> }
-        <button class="submit" type="submit" [disabled]="form.invalid || auth.isLoading()">{{ auth.isLoading() ? 'Verifying...' : 'Verify and sign in' }}</button>
-        <div class="auth-links"><a routerLink="/auth/login">Back to sign in</a></div>
+    <div class="auth-page" *transloco="let t"><section><div class="eyebrow">{{ t('auth.otp.eyebrow') }}</div><h1>{{ t('auth.otp.title') }}</h1><p class="lede">{{ t('auth.otp.lede') }}</p></section>
+      <form class="auth-panel" [formGroup]="form" (ngSubmit)="submit()" novalidate><h2>{{ t('auth.otp.heading') }}</h2>
+        <div class="field"><label for="code">{{ t('auth.fields.verificationCode') }}</label><input id="code" type="text" inputmode="numeric" maxlength="6" formControlName="code" autocomplete="one-time-code" /></div>
+        @if (developmentCode) { <div class="form-success" role="status">{{ t('auth.dev.code', { code: developmentCode }) }}</div> }
+        @if (error) { <div class="form-error" role="alert">{{ t(error) }}</div> }
+        <button class="submit" type="submit" [disabled]="form.invalid || auth.isLoading()">{{ auth.isLoading() ? t('auth.otp.submitting') : t('auth.otp.submit') }}</button>
+        <div class="auth-links"><a routerLink="/auth/login">{{ t('auth.links.backToSignIn') }}</a></div>
       </form>
     </div>
   `

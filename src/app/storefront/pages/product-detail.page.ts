@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { MediaApiService } from '../../core/media/media-api.service';
@@ -13,18 +14,19 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, CartNoticeComponent, FormsModule, RouterLink],
+  imports: [BreadcrumbComponent, CartNoticeComponent, FormsModule, RouterLink, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     @if (loading) {
-      <p class="state">Loading product...</p>
+      <p class="state">{{ t('storefront.productDetail.loading') }}</p>
     }
     @if (error) {
-      <p class="state state-error" role="alert">{{ error }}</p>
+      <p class="state state-error" role="alert">{{ t(error) }}</p>
     }
     @if (!loading && !error && detail) {
       <div class="page-heading">
         <app-breadcrumb [items]="[
-          { label: 'Products', url: '/storefront/products' },
+          { label: t('storefront.products.breadcrumb'), url: '/storefront/products' },
           { label: detail.product.name }
         ]" />
       </div>
@@ -36,7 +38,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
             @if (detail.pictureIds.length > 1) {
               <div class="thumbs">
                 @for (id of detail.pictureIds; track id) {
-                  <button type="button" class="thumb" [class.active]="id === selectedPictureId" (click)="selectedPictureId = id" [attr.aria-label]="'Show picture ' + ($index + 1)">
+                  <button type="button" class="thumb" [class.active]="id === selectedPictureId" (click)="selectedPictureId = id" [attr.aria-label]="t('storefront.productDetail.showPicture', { index: $index + 1 })">
                     <img [src]="media.url(id)" alt="" loading="lazy" />
                   </button>
                 }
@@ -53,7 +55,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
           }
           <h1>{{ detail.product.name }}</h1>
           @if (detail.product.vendorName) {
-            <p class="sold-by">Sold by <a [routerLink]="['/storefront/vendors', detail.product.vendorId]">{{ detail.product.vendorName }}</a></p>
+            <p class="sold-by">{{ t('storefront.productDetail.soldBy') }} <a [routerLink]="['/storefront/vendors', detail.product.vendorId]">{{ detail.product.vendorName }}</a></p>
           }
 
           <div class="price-row">
@@ -61,18 +63,18 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
             @if (comparePrice(); as compare) {
               <span class="compare-price">{{ formatPrice(compare) }}</span>
             }
-            @if (quote?.appliedRule === 'special' || (!quote && detail.product.onSale)) { <span class="sale-tag">Sale</span> }
+            @if (quote?.appliedRule === 'special' || (!quote && detail.product.onSale)) { <span class="sale-tag">{{ t('storefront.card.sale') }}</span> }
           </div>
-          @if (quoteError) { <p class="quote-error" role="alert">{{ quoteError }}</p> }
+          @if (quoteError) { <p class="quote-error" role="alert">{{ t(quoteError) }}</p> }
 
           @if (detail.tierPrices.length > 0) {
-            <table class="tiers" aria-label="Quantity prices">
-              <caption>Buy more, pay less</caption>
+            <table class="tiers" [attr.aria-label]="t('storefront.productDetail.tierPrices')">
+              <caption>{{ t('storefront.productDetail.tierCaption') }}</caption>
               <tbody>
-                @for (t of detail.tierPrices; track t.quantity) {
-                  <tr [class.active]="activeTier()?.quantity === t.quantity">
-                    <th scope="row">{{ t.quantity }}+ units</th>
-                    <td>{{ formatPrice(t.price) }} each</td>
+                @for (tier of detail.tierPrices; track tier.quantity) {
+                  <tr [class.active]="activeTier()?.quantity === tier.quantity">
+                    <th scope="row">{{ t('storefront.productDetail.tierUnits', { count: tier.quantity }) }}</th>
+                    <td>{{ t('storefront.productDetail.tierEach', { price: formatPrice(tier.price) }) }}</td>
                   </tr>
                 }
               </tbody>
@@ -85,13 +87,13 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 
           <div class="stock-info">
             @if (needsChoice()) {
-              <span class="muted-note">Choose {{ missingChoices() }} to see price and availability.</span>
+              <span class="muted-note">{{ t('storefront.productDetail.chooseToSee', { options: missingChoices() }) }}</span>
             } @else if (currentStock() > 0) {
-              <span class="in-stock">In stock@if (detail.trackInventory) { · {{ currentStock() }} available }</span>
+              <span class="in-stock">@if (detail.trackInventory) { {{ t('storefront.productDetail.inStock', { count: currentStock() }) }} } @else { {{ t('storefront.productDetail.inStockShort') }} }</span>
             } @else {
-              <span class="out-of-stock">Out of stock</span>
+              <span class="out-of-stock">{{ t('storefront.productDetail.outOfStock') }}</span>
             }
-            @if (combination()?.sku; as sku) { <span class="sku"> · SKU {{ sku }}</span> }
+            @if (combination()?.sku; as sku) { <span class="sku"> · {{ t('storefront.productDetail.sku', { sku: sku }) }}</span> }
           </div>
 
           @if (attrs && attrs.mappings.length > 0) {
@@ -122,17 +124,17 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
           }
 
           <div class="quantity-row">
-            <label for="quantity">Quantity</label>
+            <label for="quantity">{{ t('storefront.productDetail.quantity') }}</label>
             <input id="quantity" type="number" name="quantity" min="1" max="10000" step="1" [(ngModel)]="quantity" (ngModelChange)="onQuantityChange()" />
-            @if (quote && !needsChoice()) { <span class="line-total">Total {{ formatPrice(quote.lineTotal) }}</span> }
+            @if (quote && !needsChoice()) { <span class="line-total">{{ t('storefront.productDetail.lineTotal', { total: formatPrice(quote.lineTotal) }) }}</span> }
           </div>
 
-          <button type="button" class="add-to-cart" [disabled]="needsChoice() || currentStock() === 0 || adding" (click)="addToCart()">{{ adding ? 'Adding…' : 'Add to cart' }}</button>
-          @if (needsChoice()) { <p class="quote-error" role="status">Choose {{ missingChoices() }} first.</p> }
+          <button type="button" class="add-to-cart" [disabled]="needsChoice() || currentStock() === 0 || adding" (click)="addToCart()">{{ adding ? t('storefront.productDetail.adding') : t('storefront.card.addToCart') }}</button>
+          @if (needsChoice()) { <p class="quote-error" role="status">{{ t('storefront.productDetail.chooseFirst', { options: missingChoices() }) }}</p> }
 
           @if (detail.fullDescription) {
             <div class="full-desc">
-              <div class="section-label">Description</div>
+              <div class="section-label">{{ t('storefront.productDetail.description') }}</div>
               <!-- Sanitized by the API on save; Angular sanitizes again when binding. -->
               <div class="rich" [innerHTML]="detail.fullDescription"></div>
             </div>
@@ -140,22 +142,22 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 
           @if (detail.manufacturers.length > 0) {
             <div class="meta-section">
-              <span class="meta-label">Brand</span>
+              <span class="meta-label">{{ t('storefront.productDetail.brand') }}</span>
               <span>{{ detail.manufacturers[0].name }}</span>
             </div>
           }
 
           @if (detail.categories.length > 0) {
             <div class="meta-section">
-              <span class="meta-label">Categories</span>
+              <span class="meta-label">{{ t('storefront.products.categories') }}</span>
               <span>{{ categoryNames(detail) }}</span>
             </div>
           }
 
           @if (tags.length > 0) {
             <div class="tags-section">
-              @for (t of tags; track t.id) {
-                <span class="tag">{{ t.name }}</span>
+              @for (tag of tags; track tag.id) {
+                <span class="tag">{{ tag.name }}</span>
               }
             </div>
           }
@@ -166,7 +168,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 
       @if (detail.relatedProducts.length > 0) {
         <section class="related" aria-labelledby="related-title">
-          <h2 id="related-title" class="specs-title">Related products</h2>
+          <h2 id="related-title" class="specs-title">{{ t('storefront.productDetail.related') }}</h2>
           <div class="related-grid">
             @for (r of detail.relatedProducts; track r.id) {
               <a class="related-card" [routerLink]="['/storefront/products', r.id]">
@@ -182,7 +184,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 
       @if (specs && (specs.groups.length > 0 || specs.ungrouped.length > 0)) {
         <div class="specs-section">
-          <h2 class="specs-title">Specifications</h2>
+          <h2 class="specs-title">{{ t('storefront.productDetail.specifications') }}</h2>
 
           @if (specs.ungrouped.length > 0) {
             <table class="specs-table">
@@ -223,6 +225,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
         </div>
       }
     }
+    </ng-container>
   `,
   styles: [`
     .sold-by { margin: .2rem 0 1rem; color: var(--muted); font-size: .9rem; }
@@ -306,6 +309,7 @@ export class ProductDetailPage implements OnInit {
   readonly media = inject(MediaApiService);
   private readonly currency = inject(CurrencyService);
   private readonly cart = inject(CartService);
+  private readonly transloco = inject(TranslocoService);
   adding = false;
   cartMessage = '';
   cartFailed = false;
@@ -338,7 +342,7 @@ export class ProductDetailPage implements OnInit {
         this.api.getProductTags(id).subscribe({ next: t => { this.tags = t; }, error: () => {} });
       },
       error: err => {
-        this.error = err.status === 404 ? 'Product not found.' : 'Unable to load product.';
+        this.error = err.status === 404 ? 'storefront.productDetail.notFound' : 'storefront.productDetail.loadError';
         this.loading = false;
       }
     });
@@ -360,7 +364,7 @@ export class ProductDetailPage implements OnInit {
   onQuantityChange() {
     const value = Number(this.quantity);
     // Only a whole quantity in range is asked about; anything else keeps the last good price on screen.
-    if (!Number.isInteger(value) || value < 1 || value > 10000) { this.quoteError = 'Enter a quantity between 1 and 10,000.'; return; }
+    if (!Number.isInteger(value) || value < 1 || value > 10000) { this.quoteError = 'storefront.productDetail.quantityRange'; return; }
     this.quantity = value;
     this.refreshQuote();
   }
@@ -372,8 +376,8 @@ export class ProductDetailPage implements OnInit {
     this.cart.add(this.detail.product.id, Number(this.quantity) || 1, Object.values(this.selected), `/storefront/products/${this.detail.product.id}`).subscribe(outcome => {
       this.adding = false;
       this.cartFailed = outcome.kind === 'error' || outcome.kind === 'choose-options';
-      if (outcome.kind === 'added') this.cartMessage = `${this.detail?.product.name} added to your cart.`;
-      else if (outcome.kind === 'choose-options') this.cartMessage = 'Choose your options first.';
+      if (outcome.kind === 'added') this.cartMessage = this.transloco.translate('storefront.cart.added', { name: this.detail?.product.name });
+      else if (outcome.kind === 'choose-options') this.cartMessage = this.transloco.translate('storefront.productDetail.chooseOptions');
       else if (outcome.kind === 'error') this.cartMessage = outcome.message;
       // A guest was sent to sign in; nothing to show.
     });
@@ -392,8 +396,8 @@ export class ProductDetailPage implements OnInit {
         if (request !== this.quoteRequest) return;
         this.quote = null;
         this.quoteError = err?.status === 400 && err?.fieldErrors
-          ? Object.values(err.fieldErrors as Record<string, string[]>).flat().join(' ')
-          : 'Unable to get the price. Try again.';
+          ? 'storefront.productDetail.quoteInvalid'
+          : 'storefront.productDetail.quoteError';
       }
     });
   }

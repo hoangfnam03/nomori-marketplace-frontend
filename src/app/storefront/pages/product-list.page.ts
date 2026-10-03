@@ -5,6 +5,7 @@ import { CartNoticeComponent } from '../../shared/components/cart-notice/cart-no
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
@@ -20,14 +21,15 @@ interface Chip {
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, CartNoticeComponent, EmptyStateComponent, ProductCardComponent, FormsModule, SearchBoxComponent],
+  imports: [BreadcrumbComponent, CartNoticeComponent, EmptyStateComponent, ProductCardComponent, FormsModule, SearchBoxComponent, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <div class="page-heading">
-      <app-breadcrumb [items]="[{ label: 'Products', url: '/storefront/products' }]" />
+      <app-breadcrumb [items]="[{ label: t('storefront.products.breadcrumb'), url: '/storefront/products' }]" />
       <div class="heading-row">
         <div>
-          <div class="eyebrow">Storefront / Catalog</div>
-          <h1>@if (search) { Results for “{{ search }}” } @else { Browse the collection. }</h1>
+          <div class="eyebrow">{{ t('storefront.products.eyebrow') }}</div>
+          <h1>@if (search) { {{ t('storefront.products.resultsFor', { search: search }) }} } @else { {{ t('storefront.products.title') }} }</h1>
         </div>
         <app-search-box [value]="search" (searched)="onSearch($event)" />
       </div>
@@ -36,10 +38,10 @@ interface Chip {
     <app-cart-notice [message]="cartMessage" [error]="cartFailed" (dismissed)="cartMessage = ''" />
 
     <div class="catalog-layout">
-      <aside class="sidebar" aria-label="Filters">
+      <aside class="sidebar" [attr.aria-label]="t('storefront.products.filters')">
         <div class="sidebar-section">
-          <div class="sidebar-label">Categories</div>
-          <button class="sidebar-item" [class.active]="!activeCategoryId" (click)="selectCategory(null)">All</button>
+          <div class="sidebar-label">{{ t('storefront.products.categories') }}</div>
+          <button class="sidebar-item" [class.active]="!activeCategoryId" (click)="selectCategory(null)">{{ t('storefront.products.all') }}</button>
           @for (node of categoryTree; track node.id) {
             <button class="sidebar-item" [class.active]="activeCategoryId === node.id" (click)="selectCategory(node.id)">{{ node.name }}</button>
             @for (child of node.children; track child.id) {
@@ -49,25 +51,25 @@ interface Chip {
         </div>
 
         <div class="sidebar-section">
-          <div class="sidebar-label">Price</div>
+          <div class="sidebar-label">{{ t('storefront.products.price') }}</div>
           <form class="price-form" (ngSubmit)="applyPrice()" novalidate>
-            <input type="number" name="min" min="0" step="0.01" placeholder="Min" [(ngModel)]="minPriceInput" aria-label="Minimum price" />
-            <input type="number" name="max" min="0" step="0.01" placeholder="Max" [(ngModel)]="maxPriceInput" aria-label="Maximum price" />
-            <button type="submit" class="apply">Apply</button>
+            <input type="number" name="min" min="0" step="0.01" [placeholder]="t('storefront.products.min')" [(ngModel)]="minPriceInput" [attr.aria-label]="t('storefront.products.minPrice')" />
+            <input type="number" name="max" min="0" step="0.01" [placeholder]="t('storefront.products.max')" [(ngModel)]="maxPriceInput" [attr.aria-label]="t('storefront.products.maxPrice')" />
+            <button type="submit" class="apply">{{ t('storefront.products.apply') }}</button>
           </form>
-          @if (priceError) { <p class="field-error" role="alert">{{ priceError }}</p> }
+          @if (priceError) { <p class="field-error" role="alert">{{ t(priceError) }}</p> }
           @if (facets && facets.minPrice !== null && facets.maxPrice !== null) {
-            <p class="hint">From {{ money(facets.minPrice) }} to {{ money(facets.maxPrice) }}</p>
+            <p class="hint">{{ t('storefront.products.priceRange', { min: money(facets.minPrice), max: money(facets.maxPrice) }) }}</p>
           }
         </div>
 
         <div class="sidebar-section">
-          <label class="check"><input type="checkbox" [checked]="inStock" (change)="toggleInStock()" /> In stock only</label>
+          <label class="check"><input type="checkbox" [checked]="inStock" (change)="toggleInStock()" /> {{ t('storefront.products.inStockOnly') }}</label>
         </div>
 
         @if (facets && facets.manufacturers.length > 0) {
           <div class="sidebar-section">
-            <div class="sidebar-label">Brand</div>
+            <div class="sidebar-label">{{ t('storefront.productDetail.brand') }}</div>
             @for (m of facets.manufacturers; track m.id) {
               <label class="check"><input type="checkbox" [checked]="manufacturerIds.includes(m.id)" (change)="toggleNumber('manufacturerIds', m.id)" /> {{ m.name }} <span class="count">{{ m.count }}</span></label>
             }
@@ -85,10 +87,10 @@ interface Chip {
           }
           @if (facets.tags.length > 0) {
             <div class="sidebar-section">
-              <div class="sidebar-label">Tags</div>
+              <div class="sidebar-label">{{ t('storefront.products.tags') }}</div>
               <div class="tag-list">
-                @for (t of facets.tags; track t.name) {
-                  <button type="button" class="tag" [class.active]="tags.includes(t.name)" [attr.aria-pressed]="tags.includes(t.name)" (click)="toggleTag(t.name)">{{ t.name }} <span class="count">{{ t.count }}</span></button>
+                @for (tag of facets.tags; track tag.name) {
+                  <button type="button" class="tag" [class.active]="tags.includes(tag.name)" [attr.aria-pressed]="tags.includes(tag.name)" (click)="toggleTag(tag.name)">{{ tag.name }} <span class="count">{{ tag.count }}</span></button>
                 }
               </div>
             </div>
@@ -97,58 +99,59 @@ interface Chip {
       </aside>
 
       <div class="catalog-main">
-        <section class="catalog-toolbar" aria-label="Catalog controls">
+        <section class="catalog-toolbar" [attr.aria-label]="t('storefront.home.controls')">
           @if (!loading) {
-            <span>{{ totalCount }} item{{ totalCount === 1 ? '' : 's' }}</span>
+            <span>{{ t('storefront.products.itemCount', { count: totalCount }) }}</span>
           }
-          <label class="sort-label">Sort
-            <select aria-label="Sort products" [(ngModel)]="sort" (change)="onSortChange()">
-              @if (search) { <option value="Relevance">Best match</option> }
-              <option value="DisplayOrder">Featured</option>
-              <option value="PriceAsc">Price: low to high</option>
-              <option value="PriceDesc">Price: high to low</option>
-              <option value="Newest">Newest</option>
-              <option value="NameAsc">Name: A to Z</option>
+          <label class="sort-label">{{ t('storefront.products.sort') }}
+            <select [attr.aria-label]="t('storefront.products.sortLabel')" [(ngModel)]="sort" (change)="onSortChange()">
+              @if (search) { <option value="Relevance">{{ t('storefront.products.sortRelevance') }}</option> }
+              <option value="DisplayOrder">{{ t('storefront.products.sortFeatured') }}</option>
+              <option value="PriceAsc">{{ t('storefront.products.sortPriceAsc') }}</option>
+              <option value="PriceDesc">{{ t('storefront.products.sortPriceDesc') }}</option>
+              <option value="Newest">{{ t('storefront.products.sortNewest') }}</option>
+              <option value="NameAsc">{{ t('storefront.products.sortNameAsc') }}</option>
             </select>
           </label>
         </section>
 
         @if (chips().length > 0) {
-          <div class="chips" aria-label="Active filters">
+          <div class="chips" [attr.aria-label]="t('storefront.products.activeFilters')">
             @for (chip of chips(); track chip.label) {
-              <button type="button" class="chip" (click)="chip.remove()" [attr.aria-label]="'Remove filter ' + chip.label">{{ chip.label }} ×</button>
+              <button type="button" class="chip" (click)="chip.remove()" [attr.aria-label]="t('storefront.products.removeFilter', { label: chip.label })">{{ chip.label }} ×</button>
             }
-            <button type="button" class="chip clear" (click)="clearAll()">Clear all</button>
+            <button type="button" class="chip clear" (click)="clearAll()">{{ t('storefront.products.clearAll') }}</button>
           </div>
         }
 
-        @if (loading) { <p class="state">Loading products...</p> }
-        @if (error) { <p class="state state-error" role="alert">{{ error }}</p> }
+        @if (loading) { <p class="state">{{ t('storefront.products.loading') }}</p> }
+        @if (error) { <p class="state state-error" role="alert">{{ t(error) }}</p> }
 
         @if (!loading && !error) {
           @if (items().length === 0) {
-            <app-empty-state title="No products found" message="Try different words or remove some filters." mark="00" />
+            <app-empty-state [title]="t('storefront.products.emptyTitle')" [message]="t('storefront.products.emptyMessage')" mark="00" />
             @if (chips().length > 0) {
-              <div class="empty-actions"><button type="button" class="chip clear" (click)="clearAll()">Clear all filters</button></div>
+              <div class="empty-actions"><button type="button" class="chip clear" (click)="clearAll()">{{ t('storefront.products.clearAllFilters') }}</button></div>
             }
           } @else {
-            <section class="product-grid" aria-label="Products">
+            <section class="product-grid" [attr.aria-label]="t('storefront.products.breadcrumb')">
               @for (product of cards(); track product.id) {
                 <app-product-card [product]="product" (addToCart)="addFromCard($event)" />
               }
             </section>
 
             @if (totalPages > 1) {
-              <nav class="pagination" aria-label="Pagination">
-                <button type="button" [disabled]="page <= 1" (click)="goToPage(page - 1)">← Prev</button>
-                <span class="pagination-info">Page {{ page }} of {{ totalPages }}</span>
-                <button type="button" [disabled]="page >= totalPages" (click)="goToPage(page + 1)">Next →</button>
+              <nav class="pagination" [attr.aria-label]="t('common.pagination.label')">
+                <button type="button" [disabled]="page <= 1" (click)="goToPage(page - 1)">← {{ t('common.pagination.prev') }}</button>
+                <span class="pagination-info">{{ t('common.pagination.pageOf', { page: page, total: totalPages }) }}</span>
+                <button type="button" [disabled]="page >= totalPages" (click)="goToPage(page + 1)">{{ t('common.pagination.next') }} →</button>
               </nav>
             }
           }
         }
       </div>
     </div>
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -203,6 +206,7 @@ export class ProductListPage implements OnInit {
   private readonly media = inject(MediaApiService);
   private readonly currency = inject(CurrencyService);
   private readonly cart = inject(CartService);
+  private readonly transloco = inject(TranslocoService);
   cartMessage = '';
   cartFailed = false;
 
@@ -286,8 +290,8 @@ export class ProductListPage implements OnInit {
       },
       error: err => {
         this.error = err?.status === 400 && err?.fieldErrors
-          ? Object.values(err.fieldErrors as Record<string, string[]>).flat().join(' ')
-          : 'Unable to load products.';
+          ? 'storefront.products.invalidFilters'
+          : 'storefront.products.loadError';
         this.loading = false;
       }
     });
@@ -324,8 +328,8 @@ export class ProductListPage implements OnInit {
   applyPrice() {
     const min = this.minPriceInput === null || (this.minPriceInput as unknown) === '' ? null : Number(this.minPriceInput);
     const max = this.maxPriceInput === null || (this.maxPriceInput as unknown) === '' ? null : Number(this.maxPriceInput);
-    if ((min !== null && min < 0) || (max !== null && max < 0)) { this.priceError = 'Prices cannot be negative.'; return; }
-    if (min !== null && max !== null && min > max) { this.priceError = 'The minimum cannot be higher than the maximum.'; return; }
+    if ((min !== null && min < 0) || (max !== null && max < 0)) { this.priceError = 'storefront.products.priceNegative'; return; }
+    if (min !== null && max !== null && min > max) { this.priceError = 'storefront.products.priceOrder'; return; }
     this.priceError = '';
     this.go({ minPrice: min ?? undefined, maxPrice: max ?? undefined });
   }
@@ -351,18 +355,18 @@ export class ProductListPage implements OnInit {
   /** The filters in force, each with a way to take it off (the search text is not a chip: the search box shows it). */
   chips(): Chip[] {
     const list: Chip[] = [];
-    if (this.activeCategoryId) list.push({ label: `Category: ${this.categoryName(this.activeCategoryId)}`, remove: () => this.selectCategory(null) });
+    if (this.activeCategoryId) list.push({ label: this.transloco.translate('storefront.products.chipCategory', { name: this.categoryName(this.activeCategoryId) }), remove: () => this.selectCategory(null) });
     if (this.minPrice !== null || this.maxPrice !== null) {
-      list.push({ label: `Price: ${this.minPrice ?? 0} – ${this.maxPrice ?? '∞'}`, remove: () => this.go({ minPrice: undefined, maxPrice: undefined }) });
+      list.push({ label: this.transloco.translate('storefront.products.chipPrice', { min: this.minPrice ?? 0, max: this.maxPrice ?? '∞' }), remove: () => this.go({ minPrice: undefined, maxPrice: undefined }) });
     }
-    if (this.inStock) list.push({ label: 'In stock', remove: () => this.toggleInStock() });
+    if (this.inStock) list.push({ label: this.transloco.translate('storefront.products.chipInStock'), remove: () => this.toggleInStock() });
     for (const id of this.manufacturerIds) {
-      list.push({ label: `Brand: ${this.facets?.manufacturers.find(m => m.id === id)?.name ?? id}`, remove: () => this.toggleNumber('manufacturerIds', id) });
+      list.push({ label: this.transloco.translate('storefront.products.chipBrand', { name: this.facets?.manufacturers.find(m => m.id === id)?.name ?? id }), remove: () => this.toggleNumber('manufacturerIds', id) });
     }
     for (const id of this.specOptionIds) {
       list.push({ label: this.specOptionLabel(id), remove: () => this.toggleNumber('specOptionIds', id) });
     }
-    for (const tag of this.tags) list.push({ label: `Tag: ${tag}`, remove: () => this.toggleTag(tag) });
+    for (const tag of this.tags) list.push({ label: this.transloco.translate('storefront.products.chipTag', { name: tag }), remove: () => this.toggleTag(tag) });
     return list;
   }
 
@@ -370,7 +374,7 @@ export class ProductListPage implements OnInit {
     this.cartMessage = '';
     this.cart.add(card.id, 1, [], this.router.url).subscribe(outcome => {
       this.cartFailed = outcome.kind === 'error';
-      if (outcome.kind === 'added') this.cartMessage = `${card.name} added to your cart.`;
+      if (outcome.kind === 'added') this.cartMessage = this.transloco.translate('storefront.cart.added', { name: card.name });
       // A product with variants needs its options chosen on its own page.
       else if (outcome.kind === 'choose-options') this.router.navigate(['/storefront/products', card.id]);
       else if (outcome.kind === 'error') this.cartMessage = outcome.message;
@@ -393,7 +397,7 @@ export class ProductListPage implements OnInit {
       const option = spec.options.find(o => o.id === id);
       if (option) return `${spec.name}: ${option.name}`;
     }
-    return `Filter ${id}`;
+    return this.transloco.translate('storefront.products.chipFilter', { id });
   }
 }
 
@@ -406,7 +410,7 @@ function toProductCard(p: ProductResponse, pictureUrl: string | null, format: (v
     category: '',
     price: format(p.finalPrice),
     compareAtPrice: p.onSale ? format(p.price) : p.oldPrice > 0 ? format(p.oldPrice) : undefined,
-    badge: p.onSale ? 'Sale' : undefined,
+    badge: p.onSale ? 'storefront.card.sale' : undefined,
     imageUrl: pictureUrl ?? BLANK_IMAGE,
     rating: undefined,
     reviewCount: undefined,

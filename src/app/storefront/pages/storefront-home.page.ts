@@ -4,6 +4,7 @@ import { CartService } from '../../core/cart/cart.service';
 import { CartNoticeComponent } from '../../shared/components/cart-notice/cart-notice.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
@@ -14,31 +15,32 @@ import { ProductResponse } from '../../core/catalog/catalog.models';
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, CartNoticeComponent, EmptyStateComponent, ProductCardComponent, RouterLink, SearchBoxComponent],
+  imports: [BreadcrumbComponent, CartNoticeComponent, EmptyStateComponent, ProductCardComponent, RouterLink, SearchBoxComponent, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <div class="page-heading">
-      <app-breadcrumb [items]="[{ label: 'Featured collection' }]" />
+      <app-breadcrumb [items]="[{ label: t('storefront.home.breadcrumb') }]" />
       <div class="heading-row">
         <div>
-          <div class="eyebrow">Storefront / Component specimen</div>
-          <h1>Objects with a point of view.</h1>
-          <p class="lede">The marketplace surface is ready for catalog data. Search, filters, cards, pricing, reviews and cart actions have a shared home.</p>
+          <div class="eyebrow">{{ t('storefront.home.eyebrow') }}</div>
+          <h1>{{ t('storefront.home.title') }}</h1>
+          <p class="lede">{{ t('storefront.home.lede') }}</p>
         </div>
         <app-search-box (searched)="onSearch($event)" />
       </div>
     </div>
 
-    <section class="catalog-toolbar" aria-label="Catalog controls">
-      <span>{{ cards().length }} featured items</span>
+    <section class="catalog-toolbar" [attr.aria-label]="t('storefront.home.controls')">
+      <span>{{ t('storefront.home.featuredCount', { count: cards().length }) }}</span>
       <div class="toolbar-actions">
-        <a routerLink="/storefront/products" class="filter-button">Browse all <span aria-hidden="true">→</span></a>
+        <a routerLink="/storefront/products" class="filter-button">{{ t('storefront.home.browseAll') }} <span aria-hidden="true">→</span></a>
       </div>
     </section>
 
-    @if (loading) { <p class="state">Loading featured products...</p> }
-    @if (error) { <p class="state state-error" role="alert">{{ error }}</p> }
+    @if (loading) { <p class="state">{{ t('storefront.home.loading') }}</p> }
+    @if (error) { <p class="state state-error" role="alert">{{ t(error) }}</p> }
 
-    <section class="product-grid" aria-label="Featured products">
+    <section class="product-grid" [attr.aria-label]="t('storefront.home.featuredProducts')">
       @for (product of cards(); track product.id) {
         <app-product-card [product]="product" (addToCart)="onAddToCart($event)" />
       }
@@ -46,12 +48,13 @@ import { ProductResponse } from '../../core/catalog/catalog.models';
 
     @if (!loading && cards().length === 0 && !error) {
       <section class="next-pattern" aria-labelledby="next-pattern-title">
-        <div><div class="eyebrow">Get started</div><h2 id="next-pattern-title">No featured products yet.</h2></div>
-        <app-empty-state title="Add products in the admin panel" message="Create categories, manufacturers and products in the admin catalog, then mark them as featured to display them here." mark="00" />
+        <div><div class="eyebrow">{{ t('storefront.home.emptyEyebrow') }}</div><h2 id="next-pattern-title">{{ t('storefront.home.emptyTitle') }}</h2></div>
+        <app-empty-state [title]="t('storefront.home.emptyStateTitle')" [message]="t('storefront.home.emptyStateMessage')" mark="00" />
       </section>
     }
 
     <app-cart-notice [message]="cartMessage" [error]="cartFailed" (dismissed)="cartMessage = ''" />
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -82,6 +85,7 @@ export class StorefrontHomePage {
   private readonly media = inject(MediaApiService);
   private readonly currency = inject(CurrencyService);
   private readonly cart = inject(CartService);
+  private readonly transloco = inject(TranslocoService);
   cartMessage = '';
   cartFailed = false;
 
@@ -100,7 +104,7 @@ export class StorefrontHomePage {
         this.loading = false;
       },
       error: () => {
-        this.error = 'Unable to load featured products.';
+        this.error = 'storefront.home.loadError';
         this.loading = false;
       }
     });
@@ -110,7 +114,7 @@ export class StorefrontHomePage {
     this.cartMessage = '';
     this.cart.add(card.id, 1, [], this.router.url).subscribe(outcome => {
       this.cartFailed = outcome.kind === 'error';
-      if (outcome.kind === 'added') this.cartMessage = `${card.name} added to your cart.`;
+      if (outcome.kind === 'added') this.cartMessage = this.transloco.translate('storefront.cart.added', { name: card.name });
       // A product with variants needs its options chosen on its own page.
       else if (outcome.kind === 'choose-options') this.router.navigate(['/storefront/products', card.id]);
       else if (outcome.kind === 'error') this.cartMessage = outcome.message;
@@ -133,7 +137,7 @@ function toProductCard(p: ProductResponse, pictureUrl: string | null, format: (v
     category: '',
     price: format(p.finalPrice),
     compareAtPrice: p.onSale ? format(p.price) : p.oldPrice > 0 ? format(p.oldPrice) : undefined,
-    badge: p.onSale ? 'Sale' : undefined,
+    badge: p.onSale ? 'storefront.card.sale' : undefined,
     imageUrl: pictureUrl ?? BLANK_IMAGE,
     rating: undefined,
     reviewCount: undefined,

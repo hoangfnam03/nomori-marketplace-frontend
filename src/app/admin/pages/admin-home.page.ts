@@ -1,46 +1,49 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { AdminAuthorizationApiService, AdminAuditLog, AdminRole } from '../services/admin-authorization-api.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     <section class="admin-intro" aria-labelledby="admin-title">
       <div>
-        <div class="eyebrow">Admin / Foundation</div>
-        <h1 id="admin-title">The operational side starts here.</h1>
-        <p>Role assignment is protected by the backend permission boundary. The browser only coordinates the workflow and renders the API state.</p>
+        <div class="eyebrow">{{ t('admin.home.eyebrow') }}</div>
+        <h1 id="admin-title">{{ t('admin.home.title') }}</h1>
+        <p>{{ t('admin.home.lede') }}</p>
       </div>
-      <div class="status-card"><span class="status-label">Boundary status</span><strong>Authorization online</strong><span>Role catalog and assignment API are available.</span></div>
+      <div class="status-card"><span class="status-label">{{ t('admin.home.statusLabel') }}</span><strong>{{ t('admin.home.statusTitle') }}</strong><span>{{ t('admin.home.statusText') }}</span></div>
     </section>
     <section class="role-panel" aria-labelledby="role-title">
-      <div class="eyebrow">Authorization / Roles</div>
-      <h2 id="role-title">Assign customer roles</h2>
-      @if (loading) { <p class="state">Loading role catalog...</p> }
-      @if (error) { <p class="state state-error" role="alert">{{ error }}</p> }
+      <div class="eyebrow">{{ t('admin.home.rolesEyebrow') }}</div>
+      <h2 id="role-title">{{ t('admin.home.rolesTitle') }}</h2>
+      @if (loading) { <p class="state">{{ t('admin.home.rolesLoading') }}</p> }
+      @if (error) { <p class="state state-error" role="alert">{{ t(error) }}</p> }
       @if (!loading && !error) {
         <div class="role-form">
-          <label>Customer ID <input type="number" min="1" [(ngModel)]="customerId" /></label>
-          <button type="button" (click)="loadCustomerRoles()" [disabled]="!customerId">Load current roles</button>
+          <label>{{ t('admin.home.customerId') }} <input type="number" min="1" [(ngModel)]="customerId" /></label>
+          <button type="button" (click)="loadCustomerRoles()" [disabled]="!customerId">{{ t('admin.home.loadRoles') }}</button>
         </div>
         <div class="role-list">
           @for (role of roles; track role.systemName) {
             <label class="role-option"><input type="checkbox" [checked]="selectedRoles.has(role.systemName)" (change)="toggleRole(role)" /> <span>{{ role.name }}</span><small>{{ role.systemName }}</small></label>
           }
         </div>
-        <button type="button" class="save-button" (click)="saveRoles()" [disabled]="!customerId || saving">{{ saving ? 'Saving...' : 'Save roles' }}</button>
-        @if (success) { <p class="state state-success" role="status">Role assignment saved.</p> }
+        <button type="button" class="save-button" (click)="saveRoles()" [disabled]="!customerId || saving">{{ saving ? t('common.states.saving') : t('admin.home.saveRoles') }}</button>
+        @if (success) { <p class="state state-success" role="status">{{ t('admin.home.rolesSaved') }}</p> }
       }
     </section>
     <section class="role-panel audit-panel" aria-labelledby="audit-title">
-      <div class="eyebrow">Security / Audit</div>
-      <h2 id="audit-title">Recent security events</h2>
-      <button type="button" (click)="loadAuditLogs()" [disabled]="auditLoading">{{ auditLoading ? 'Loading...' : 'Load audit log' }}</button>
-      @if (auditError) { <p class="state state-error" role="alert">{{ auditError }}</p> }
-      @if (auditLogs) { @if (!auditLogs.length) { <p class="state">No audit events yet.</p> } @else { <div class="audit-list">@for (log of auditLogs; track log.id) { <div class="audit-row"><strong>{{ log.eventName }}</strong><span>{{ log.createdOnUtc | date:'medium' }}</span><small>Customer {{ log.customerId ?? 'system' }} · {{ log.ipAddress ?? 'unknown IP' }}</small></div> }</div> } }
+      <div class="eyebrow">{{ t('admin.home.auditEyebrow') }}</div>
+      <h2 id="audit-title">{{ t('admin.home.auditTitle') }}</h2>
+      <button type="button" (click)="loadAuditLogs()" [disabled]="auditLoading">{{ auditLoading ? t('common.states.loading') : t('admin.home.loadAudit') }}</button>
+      @if (auditError) { <p class="state state-error" role="alert">{{ t(auditError) }}</p> }
+      @if (auditLogs) { @if (!auditLogs.length) { <p class="state">{{ t('admin.home.noAudit') }}</p> } @else { <div class="audit-list">@for (log of auditLogs; track log.id) { <div class="audit-row"><strong>{{ log.eventName }}</strong><span>{{ log.createdOnUtc | date:'dd/MM/yyyy HH:mm' }}</span><small>{{ t('admin.home.auditActor', { customer: log.customerId ?? t('admin.home.system'), ip: log.ipAddress ?? t('admin.home.unknownIp') }) }}</small></div> }</div> } }
     </section>
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -90,7 +93,7 @@ export class AdminHomePage {
   constructor() {
     this.api.getRoles().subscribe({
       next: roles => { this.roles = roles; this.loading = false; },
-      error: error => { this.error = error.status === 403 ? 'You do not have permission to read roles.' : 'Unable to load roles.'; this.loading = false; }
+      error: error => { this.error = error.status === 403 ? 'admin.home.errors.rolesForbidden' : 'admin.home.errors.rolesLoad'; this.loading = false; }
     });
   }
 
@@ -104,7 +107,7 @@ export class AdminHomePage {
     this.error = null;
     this.api.getCustomerRoles(this.customerId).subscribe({
       next: response => this.selectedRoles = new Set(response.roles.map(role => role.systemName)),
-      error: error => this.error = error.status === 404 ? 'Customer was not found.' : 'Unable to load customer roles.'
+      error: error => this.error = error.status === 404 ? 'admin.home.errors.customerNotFound' : 'admin.home.errors.customerRolesLoad'
     });
   }
 
@@ -113,12 +116,12 @@ export class AdminHomePage {
     this.saving = true; this.success = false; this.error = null;
     this.api.replaceCustomerRoles(this.customerId, [...this.selectedRoles]).subscribe({
       next: response => { this.selectedRoles = new Set(response.roles.map(role => role.systemName)); this.success = true; this.saving = false; },
-      error: error => { this.error = error.status === 403 ? 'You cannot remove your own Administrator role.' : 'Unable to save customer roles.'; this.saving = false; }
+      error: error => { this.error = error.status === 403 ? 'admin.home.errors.ownAdminRole' : 'admin.home.errors.rolesSave'; this.saving = false; }
     });
   }
 
   loadAuditLogs() {
     this.auditLoading = true; this.auditError = null;
-    this.api.getAuditLogs().subscribe({ next: logs => this.auditLogs = logs, error: error => this.auditError = error.status === 403 ? 'You do not have permission to read audit logs.' : 'Unable to load audit logs.', complete: () => this.auditLoading = false });
+    this.api.getAuditLogs().subscribe({ next: logs => this.auditLogs = logs, error: error => this.auditError = error.status === 403 ? 'admin.home.errors.auditForbidden' : 'admin.home.errors.auditLoad', complete: () => this.auditLoading = false });
   }
 }

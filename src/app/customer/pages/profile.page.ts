@@ -1,38 +1,39 @@
 import { Component, inject } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { CustomerProfileApiService } from '../../core/customer/customer-profile-api.service';
 
 @Component({
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoDirective],
   styleUrls: ['../../auth/auth-page.scss'],
   template: `
-    <div class="account-page">
-      <div class="eyebrow">Customer / Profile</div>
-      <h1>Your profile.</h1>
+    <div class="account-page" *transloco="let t">
+      <div class="eyebrow">{{ t('customer.profile.eyebrow') }}</div>
+      <h1>{{ t('customer.profile.title') }}</h1>
       <div class="profile-grid">
         <section class="auth-panel profile-summary">
-          <h2>Account identity</h2>
+          <h2>{{ t('customer.profile.identityHeading') }}</h2>
           <dl class="session-data">
-            <div><dt>Email</dt><dd>{{ profile?.email ?? 'Loading...' }}</dd></div>
-            <div><dt>Verification</dt><dd>{{ profile?.emailVerified ? 'Verified' : 'Not verified' }}</dd></div>
-            <div><dt>Username</dt><dd>{{ profile?.username ?? 'Not set' }}</dd></div>
+            <div><dt>{{ t('customer.fields.email') }}</dt><dd>{{ profile?.email ?? t('common.states.loading') }}</dd></div>
+            <div><dt>{{ t('customer.profile.verification') }}</dt><dd>{{ profile?.emailVerified ? t('customer.profile.verified') : t('customer.profile.notVerified') }}</dd></div>
+            <div><dt>{{ t('customer.profile.username') }}</dt><dd>{{ profile?.username ?? t('customer.profile.notSet') }}</dd></div>
           </dl>
-          <p class="profile-note">Manage saved addresses, preferences and a verified email change from Customer settings.</p>
-          <div class="auth-links"><a routerLink="/customer/settings">Customer settings</a></div>
+          <p class="profile-note">{{ t('customer.profile.settingsNote') }}</p>
+          <div class="auth-links"><a routerLink="/customer/settings">{{ t('customer.links.settings') }}</a></div>
         </section>
         <form class="auth-panel" [formGroup]="form" (ngSubmit)="save()" novalidate>
-          <h2>Personal details</h2>
-          <div class="field"><label for="firstName">First name</label><input id="firstName" type="text" formControlName="firstName" autocomplete="given-name" maxlength="100" /> @if (fieldError('firstName')) { <span class="field-error">{{ fieldError('firstName') }}</span> }</div>
-          <div class="field"><label for="lastName">Last name</label><input id="lastName" type="text" formControlName="lastName" autocomplete="family-name" maxlength="100" /> @if (fieldError('lastName')) { <span class="field-error">{{ fieldError('lastName') }}</span> }</div>
-          <div class="field"><label for="gender">Gender</label><select id="gender" formControlName="gender"><option value="">Prefer not to say</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option><option value="unspecified">Unspecified</option></select></div>
-          <div class="field"><label for="dateOfBirth">Date of birth</label><input id="dateOfBirth" type="date" formControlName="dateOfBirth" /></div>
-          <div class="field"><label for="phone">Phone</label><input id="phone" type="tel" formControlName="phone" autocomplete="tel" maxlength="32" /> @if (fieldError('phone')) { <span class="field-error">{{ fieldError('phone') }}</span> }</div>
-          @if (error) { <div class="form-error" role="alert">{{ error }}</div> }
-          @if (success) { <div class="form-success" role="status">Profile updated.</div> }
-          <button class="submit" type="submit" [disabled]="loading || saving">{{ saving ? 'Saving...' : 'Save profile' }}</button>
-          <div class="auth-links"><a routerLink="/auth/account">Back to account</a></div>
+          <h2>{{ t('customer.profile.detailsHeading') }}</h2>
+          <div class="field"><label for="firstName">{{ t('customer.fields.firstName') }}</label><input id="firstName" type="text" formControlName="firstName" autocomplete="given-name" maxlength="100" /> @if (fieldError('firstName')) { <span class="field-error">{{ fieldError('firstName') }}</span> }</div>
+          <div class="field"><label for="lastName">{{ t('customer.fields.lastName') }}</label><input id="lastName" type="text" formControlName="lastName" autocomplete="family-name" maxlength="100" /> @if (fieldError('lastName')) { <span class="field-error">{{ fieldError('lastName') }}</span> }</div>
+          <div class="field"><label for="gender">{{ t('customer.fields.gender') }}</label><select id="gender" formControlName="gender"><option value="">{{ t('customer.gender.none') }}</option><option value="male">{{ t('customer.gender.male') }}</option><option value="female">{{ t('customer.gender.female') }}</option><option value="other">{{ t('customer.gender.other') }}</option><option value="unspecified">{{ t('customer.gender.unspecified') }}</option></select></div>
+          <div class="field"><label for="dateOfBirth">{{ t('customer.fields.dateOfBirth') }}</label><input id="dateOfBirth" type="date" formControlName="dateOfBirth" /></div>
+          <div class="field"><label for="phone">{{ t('customer.fields.phone') }}</label><input id="phone" type="tel" formControlName="phone" autocomplete="tel" maxlength="32" /> @if (fieldError('phone')) { <span class="field-error">{{ fieldError('phone') }}</span> }</div>
+          @if (error) { <div class="form-error" role="alert">{{ t(error) }}</div> }
+          @if (success) { <div class="form-success" role="status">{{ t('customer.profile.updated') }}</div> }
+          <button class="submit" type="submit" [disabled]="loading || saving">{{ saving ? t('common.states.saving') : t('customer.profile.save') }}</button>
+          <div class="auth-links"><a routerLink="/auth/account">{{ t('customer.links.backToAccount') }}</a></div>
         </form>
       </div>
     </div>
@@ -71,7 +72,7 @@ export class ProfilePage {
   constructor() {
     this.api.getProfile().subscribe({
       next: profile => { this.profile = profile; this.form.patchValue({ firstName: profile.firstName ?? '', lastName: profile.lastName ?? '', gender: profile.gender ?? '', dateOfBirth: profile.dateOfBirth?.slice(0, 10) ?? '', phone: profile.phone ?? '' }); this.loading = false; },
-      error: error => { this.error = error.status === 403 ? 'You do not have permission to read your profile.' : 'Unable to load your profile.'; this.loading = false; }
+      error: error => { this.error = error.status === 403 ? 'customer.profile.errors.forbidden' : 'customer.profile.errors.load'; this.loading = false; }
     });
   }
 
@@ -81,7 +82,7 @@ export class ProfilePage {
     const value = this.form.getRawValue();
     this.api.updateProfile({ ...value, gender: value.gender || null, dateOfBirth: value.dateOfBirth || null, firstName: value.firstName || null, lastName: value.lastName || null, phone: value.phone || null }).subscribe({
       next: profile => { this.profile = profile; this.success = true; this.saving = false; },
-      error: error => { this.error = error.status === 400 ? 'Please correct the highlighted fields.' : 'Unable to update your profile.'; this.fieldErrors = error.fieldErrors ?? {}; this.saving = false; }
+      error: error => { this.error = error.status === 400 ? 'errors.badRequest' : 'customer.profile.errors.save'; this.fieldErrors = error.fieldErrors ?? {}; this.saving = false; }
     });
   }
 

@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { Country, DirectoryApiService, SaveCountryRequest, SaveStateRequest, StateProvince } from '../../core/directory/directory-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
@@ -24,55 +25,53 @@ interface StateForm {
 
 @Component({
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, TranslocoDirective],
   styleUrls: ['../../shared/styles/vendor-pages.scss'],
   template: `
+    <ng-container *transloco="let t">
     <section class="page-intro" aria-labelledby="countries-title">
-      <div class="eyebrow">Admin / Settings</div>
-      <h1 id="countries-title">Countries and states.</h1>
-      <p>
-        Customers can only use published countries in their addresses. A country with published states needs one of them in every address.
-        A postal code can be required and checked against a pattern.
-      </p>
+      <div class="eyebrow">{{ t('admin.currencies.eyebrow') }}</div>
+      <h1 id="countries-title">{{ t('admin.countries.title') }}</h1>
+      <p>{{ t('admin.countries.lede') }}</p>
     </section>
 
     <div class="panel">
       <div class="panel-header">
-        <h2>Countries</h2>
-        <div class="actions"><button type="button" class="btn" (click)="openCountryForm()">+ New country</button></div>
+        <h2>{{ t('nav.countries') }}</h2>
+        <div class="actions"><button type="button" class="btn" (click)="openCountryForm()">+ {{ t('admin.countries.new') }}</button></div>
       </div>
 
       @if (notice) { <div class="panel-body"><p class="banner banner-ok" role="status">{{ notice }}</p></div> }
       @if (loading) {
-        <p class="state">Loading…</p>
+        <p class="state">{{ t('common.states.loading') }}</p>
       } @else if (loadError) {
         <div class="panel-body">
           <p class="banner" role="alert">{{ loadError }}</p>
-          <div class="actions"><button type="button" class="btn" (click)="load()">Try again</button></div>
+          <div class="actions"><button type="button" class="btn" (click)="load()">{{ t('common.actions.retry') }}</button></div>
         </div>
       } @else {
         <div class="table-scroll">
           <table class="data-table">
-            <thead><tr><th>Code</th><th>Name</th><th>Status</th><th>Billing</th><th>Shipping</th><th>Postal code</th><th>States</th><th></th></tr></thead>
+            <thead><tr><th>{{ t('admin.currencies.code') }}</th><th>{{ t('admin.common.name') }}</th><th>{{ t('admin.common.status') }}</th><th>{{ t('admin.countries.billing') }}</th><th>{{ t('admin.countries.shipping') }}</th><th>{{ t('customer.fields.postalCode') }}</th><th>{{ t('admin.countries.states') }}</th><th></th></tr></thead>
             <tbody>
               @for (c of countries; track c.id) {
                 <tr [class.selected]="statesOf?.id === c.id || editingCountryId === c.id">
                   <td><strong>{{ c.code }}</strong>@if (c.alpha3) { <span class="muted"> {{ c.alpha3 }}</span> }</td>
                   <td>{{ c.name }}</td>
-                  <td><span [class]="c.published ? 'badge badge-active' : 'badge'">{{ c.published ? 'Published' : 'Hidden' }}</span></td>
-                  <td>{{ c.allowsBilling ? 'Yes' : 'No' }}</td>
-                  <td>{{ c.allowsShipping ? 'Yes' : 'No' }}</td>
-                  <td>{{ c.postalCodeRequired ? (c.postalCodePattern ? 'Required, checked' : 'Required') : 'Optional' }}</td>
+                  <td><span [class]="c.published ? 'badge badge-active' : 'badge'">{{ c.published ? t('admin.catalog.published') : t('admin.currencies.hidden') }}</span></td>
+                  <td>{{ c.allowsBilling ? t('customer.settings.yes') : t('customer.settings.no') }}</td>
+                  <td>{{ c.allowsShipping ? t('customer.settings.yes') : t('customer.settings.no') }}</td>
+                  <td>{{ c.postalCodeRequired ? (c.postalCodePattern ? t('admin.countries.requiredChecked') : t('admin.countries.required')) : t('admin.countries.optional') }}</td>
                   <td>{{ c.publishedStateCount }}</td>
                   <td class="row-actions">
                     @if (pendingDeleteCountry?.id === c.id) {
-                      <span class="muted">Delete {{ c.code }} and its states?</span>
-                      <button type="button" class="btn btn-danger btn-small" (click)="removeCountry(c)" [disabled]="busy">Delete</button>
-                      <button type="button" class="btn btn-secondary btn-small" (click)="pendingDeleteCountry = null">Cancel</button>
+                      <span class="muted">{{ t('admin.countries.confirmDelete', { code: c.code }) }}</span>
+                      <button type="button" class="btn btn-danger btn-small" (click)="removeCountry(c)" [disabled]="busy">{{ t('common.actions.delete') }}</button>
+                      <button type="button" class="btn btn-secondary btn-small" (click)="pendingDeleteCountry = null">{{ t('common.actions.cancel') }}</button>
                     } @else {
-                      <button type="button" class="btn btn-secondary btn-small" (click)="openStates(c)">States</button>
-                      <button type="button" class="btn btn-secondary btn-small" (click)="editCountry(c)">Edit</button>
-                      <button type="button" class="btn btn-danger btn-small" (click)="pendingDeleteCountry = c">Delete</button>
+                      <button type="button" class="btn btn-secondary btn-small" (click)="openStates(c)">{{ t('admin.countries.states') }}</button>
+                      <button type="button" class="btn btn-secondary btn-small" (click)="editCountry(c)">{{ t('common.actions.edit') }}</button>
+                      <button type="button" class="btn btn-danger btn-small" (click)="pendingDeleteCountry = c">{{ t('common.actions.delete') }}</button>
                     }
                   </td>
                 </tr>
@@ -86,41 +85,41 @@ interface StateForm {
 
     @if (countryFormOpen) {
       <div class="panel">
-        <div class="panel-header"><h2>{{ editingCountryId ? 'Edit country' : 'New country' }}</h2></div>
+        <div class="panel-header"><h2>{{ editingCountryId ? t('admin.countries.edit') : t('admin.countries.new') }}</h2></div>
         <form class="form panel-body" (ngSubmit)="saveCountry()" novalidate>
           @if (countryFormError) { <p class="banner" role="alert">{{ countryFormError }}</p> }
           <div class="form-row">
-            <label>Code *
+            <label>{{ t('admin.currencies.code') }} *
               <input type="text" name="code" [(ngModel)]="countryForm.code" maxlength="2" [disabled]="!!editingCountryId" />
-              <span class="hint">Two letters (ISO 3166-1), for example VN. It cannot change later.</span>
+              <span class="hint">{{ t('admin.countries.codeHint') }}</span>
               @if (countryError('code')) { <span class="field-error">{{ countryError('code') }}</span> }
             </label>
-            <label>Three-letter code
+            <label>{{ t('admin.countries.alpha3') }}
               <input type="text" name="alpha3" [(ngModel)]="countryForm.alpha3" maxlength="3" />
               @if (countryError('alpha3')) { <span class="field-error">{{ countryError('alpha3') }}</span> }
             </label>
-            <label>Name *
+            <label>{{ t('admin.common.name') }} *
               <input type="text" name="name" [(ngModel)]="countryForm.name" maxlength="100" />
               @if (countryError('name')) { <span class="field-error">{{ countryError('name') }}</span> }
             </label>
-            <label>Display order
+            <label>{{ t('admin.common.displayOrder') }}
               <input type="number" name="displayOrder" [(ngModel)]="countryForm.displayOrder" step="1" />
             </label>
           </div>
           <div class="form-row">
-            <label class="check-label"><input type="checkbox" name="published" [(ngModel)]="countryForm.published" /> Published</label>
-            <label class="check-label"><input type="checkbox" name="billing" [(ngModel)]="countryForm.allowsBilling" /> Allows billing</label>
-            <label class="check-label"><input type="checkbox" name="shipping" [(ngModel)]="countryForm.allowsShipping" /> Allows shipping</label>
-            <label class="check-label"><input type="checkbox" name="zipRequired" [(ngModel)]="countryForm.postalCodeRequired" /> Postal code required</label>
+            <label class="check-label"><input type="checkbox" name="published" [(ngModel)]="countryForm.published" /> {{ t('admin.catalog.published') }}</label>
+            <label class="check-label"><input type="checkbox" name="billing" [(ngModel)]="countryForm.allowsBilling" /> {{ t('admin.countries.allowsBilling') }}</label>
+            <label class="check-label"><input type="checkbox" name="shipping" [(ngModel)]="countryForm.allowsShipping" /> {{ t('admin.countries.allowsShipping') }}</label>
+            <label class="check-label"><input type="checkbox" name="zipRequired" [(ngModel)]="countryForm.postalCodeRequired" /> {{ t('admin.countries.postalRequired') }}</label>
           </div>
-          <label>Postal code pattern
-            <input type="text" name="pattern" [(ngModel)]="countryForm.postalCodePattern" maxlength="200" placeholder="for example \\d{5}(-\\d{4})?" />
-            <span class="hint">Optional regular expression the whole code must match. Needs “Postal code required”.</span>
+          <label>{{ t('admin.countries.pattern') }}
+            <input type="text" name="pattern" [(ngModel)]="countryForm.postalCodePattern" maxlength="200" [placeholder]="t('admin.countries.patternPlaceholder')" />
+            <span class="hint">{{ t('admin.countries.patternHint') }}</span>
             @if (countryError('postalCodePattern')) { <span class="field-error">{{ countryError('postalCodePattern') }}</span> }
           </label>
           <div class="actions">
-            <button type="submit" class="btn" [disabled]="busy">{{ busy ? 'Saving…' : 'Save country' }}</button>
-            <button type="button" class="btn btn-secondary" (click)="closeCountryForm()">Cancel</button>
+            <button type="submit" class="btn" [disabled]="busy">{{ busy ? t('common.states.saving') : t('admin.countries.save') }}</button>
+            <button type="button" class="btn btn-secondary" (click)="closeCountryForm()">{{ t('common.actions.cancel') }}</button>
           </div>
         </form>
       </div>
@@ -129,35 +128,35 @@ interface StateForm {
     @if (statesOf; as country) {
       <div class="panel">
         <div class="panel-header">
-          <h2>States and provinces of {{ country.name }}</h2>
+          <h2>{{ t('admin.countries.statesOf', { name: country.name }) }}</h2>
           <div class="actions">
-            <button type="button" class="btn" (click)="openStateForm()">+ New state</button>
-            <button type="button" class="btn btn-secondary" (click)="closeStates()">Close</button>
+            <button type="button" class="btn" (click)="openStateForm()">+ {{ t('admin.countries.newState') }}</button>
+            <button type="button" class="btn btn-secondary" (click)="closeStates()">{{ t('common.actions.close') }}</button>
           </div>
         </div>
         @if (stateNotice) { <div class="panel-body"><p class="banner banner-ok" role="status">{{ stateNotice }}</p></div> }
         @if (stateActionError) { <div class="panel-body"><p class="banner" role="alert">{{ stateActionError }}</p></div> }
         @if (states.length === 0) {
-          <p class="state">No states yet. Addresses in this country use a free text state.</p>
+          <p class="state">{{ t('admin.countries.noStates') }}</p>
         } @else {
           <div class="table-scroll">
             <table class="data-table">
-              <thead><tr><th>Code</th><th>Name</th><th>Status</th><th>Order</th><th></th></tr></thead>
+              <thead><tr><th>{{ t('admin.currencies.code') }}</th><th>{{ t('admin.common.name') }}</th><th>{{ t('admin.common.status') }}</th><th>{{ t('admin.common.order') }}</th><th></th></tr></thead>
               <tbody>
                 @for (s of states; track s.id) {
                   <tr>
                     <td><strong>{{ s.code }}</strong></td>
                     <td>{{ s.name }}</td>
-                    <td><span [class]="s.published ? 'badge badge-active' : 'badge'">{{ s.published ? 'Published' : 'Hidden' }}</span></td>
+                    <td><span [class]="s.published ? 'badge badge-active' : 'badge'">{{ s.published ? t('admin.catalog.published') : t('admin.currencies.hidden') }}</span></td>
                     <td>{{ s.displayOrder }}</td>
                     <td class="row-actions">
                       @if (pendingDeleteState?.id === s.id) {
-                        <span class="muted">Delete {{ s.code }}?</span>
-                        <button type="button" class="btn btn-danger btn-small" (click)="removeState(s)" [disabled]="busy">Delete</button>
-                        <button type="button" class="btn btn-secondary btn-small" (click)="pendingDeleteState = null">Cancel</button>
+                        <span class="muted">{{ t('admin.currencies.confirmDelete', { code: s.code }) }}</span>
+                        <button type="button" class="btn btn-danger btn-small" (click)="removeState(s)" [disabled]="busy">{{ t('common.actions.delete') }}</button>
+                        <button type="button" class="btn btn-secondary btn-small" (click)="pendingDeleteState = null">{{ t('common.actions.cancel') }}</button>
                       } @else {
-                        <button type="button" class="btn btn-secondary btn-small" (click)="editState(s)">Edit</button>
-                        <button type="button" class="btn btn-danger btn-small" (click)="pendingDeleteState = s">Delete</button>
+                        <button type="button" class="btn btn-secondary btn-small" (click)="editState(s)">{{ t('common.actions.edit') }}</button>
+                        <button type="button" class="btn btn-danger btn-small" (click)="pendingDeleteState = s">{{ t('common.actions.delete') }}</button>
                       }
                     </td>
                   </tr>
@@ -171,31 +170,33 @@ interface StateForm {
           <form class="form panel-body" (ngSubmit)="saveState()" novalidate>
             @if (stateFormError) { <p class="banner" role="alert">{{ stateFormError }}</p> }
             <div class="form-row">
-              <label>Code *
+              <label>{{ t('admin.currencies.code') }} *
                 <input type="text" name="stateCode" [(ngModel)]="stateForm.code" maxlength="20" />
                 @if (stateError('code')) { <span class="field-error">{{ stateError('code') }}</span> }
               </label>
-              <label>Name *
+              <label>{{ t('admin.common.name') }} *
                 <input type="text" name="stateName" [(ngModel)]="stateForm.name" maxlength="100" />
                 @if (stateError('name')) { <span class="field-error">{{ stateError('name') }}</span> }
               </label>
-              <label>Display order
+              <label>{{ t('admin.common.displayOrder') }}
                 <input type="number" name="stateOrder" [(ngModel)]="stateForm.displayOrder" step="1" />
               </label>
             </div>
-            <label class="check-label"><input type="checkbox" name="statePublished" [(ngModel)]="stateForm.published" /> Published</label>
+            <label class="check-label"><input type="checkbox" name="statePublished" [(ngModel)]="stateForm.published" /> {{ t('admin.catalog.published') }}</label>
             <div class="actions">
-              <button type="submit" class="btn" [disabled]="busy">{{ busy ? 'Saving…' : 'Save state' }}</button>
-              <button type="button" class="btn btn-secondary" (click)="closeStateForm()">Cancel</button>
+              <button type="submit" class="btn" [disabled]="busy">{{ busy ? t('common.states.saving') : t('admin.countries.saveState') }}</button>
+              <button type="button" class="btn btn-secondary" (click)="closeStateForm()">{{ t('common.actions.cancel') }}</button>
             </div>
           </form>
         }
       </div>
     }
+    </ng-container>
   `
 })
 export class AdminCountriesPage implements OnInit {
   private readonly api = inject(DirectoryApiService);
+  private readonly transloco = inject(TranslocoService);
 
   countries: Country[] = [];
   loading = true;
@@ -229,7 +230,7 @@ export class AdminCountriesPage implements OnInit {
     this.loadError = '';
     this.api.adminCountries().subscribe({
       next: list => { this.countries = list; this.loading = false; },
-      error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, 'Unable to load countries.'); }
+      error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, this.transloco.translate('admin.countries.errors.load')); }
     });
   }
 
@@ -274,11 +275,11 @@ export class AdminCountriesPage implements OnInit {
       ? this.api.updateCountry(this.editingCountryId, body)
       : this.api.createCountry({ ...body, code: this.countryForm.code.trim().toUpperCase() });
     request.subscribe({
-      next: saved => { this.busy = false; this.closeCountryForm(); this.notice = `${saved.name} saved.`; this.load(); },
+      next: saved => { this.busy = false; this.closeCountryForm(); this.notice = this.transloco.translate('common.notice.saved', { name: saved.name }); this.load(); },
       error: err => {
         this.busy = false;
         this.countryFieldErrors = err?.fieldErrors ?? {};
-        this.countryFormError = Object.keys(this.countryFieldErrors).length ? '' : vendorErrorMessage(err, 'Unable to save the country.');
+        this.countryFormError = Object.keys(this.countryFieldErrors).length ? '' : vendorErrorMessage(err, this.transloco.translate('admin.countries.errors.save'));
       }
     });
   }
@@ -288,8 +289,8 @@ export class AdminCountriesPage implements OnInit {
     this.actionError = '';
     this.notice = '';
     this.api.deleteCountry(c.id).subscribe({
-      next: () => { this.busy = false; this.pendingDeleteCountry = null; if (this.statesOf?.id === c.id) this.closeStates(); this.notice = `${c.name} deleted.`; this.load(); },
-      error: err => { this.busy = false; this.pendingDeleteCountry = null; this.actionError = vendorErrorMessage(err, 'Unable to delete the country.'); }
+      next: () => { this.busy = false; this.pendingDeleteCountry = null; if (this.statesOf?.id === c.id) this.closeStates(); this.notice = this.transloco.translate('common.notice.deleted', { name: c.name }); this.load(); },
+      error: err => { this.busy = false; this.pendingDeleteCountry = null; this.actionError = vendorErrorMessage(err, this.transloco.translate('admin.countries.errors.delete')); }
     });
   }
 
@@ -309,7 +310,7 @@ export class AdminCountriesPage implements OnInit {
     if (!this.statesOf) return;
     this.api.adminStates(this.statesOf.id).subscribe({
       next: list => { this.states = list; },
-      error: err => { this.stateActionError = vendorErrorMessage(err, 'Unable to load the states.'); }
+      error: err => { this.stateActionError = vendorErrorMessage(err, this.transloco.translate('admin.countries.errors.loadStates')); }
     });
   }
 
@@ -339,11 +340,11 @@ export class AdminCountriesPage implements OnInit {
     const body: SaveStateRequest = { ...this.stateForm, displayOrder: Number(this.stateForm.displayOrder) || 0 };
     const request = this.editingStateId ? this.api.updateState(this.editingStateId, body) : this.api.createState(this.statesOf.id, body);
     request.subscribe({
-      next: saved => { this.busy = false; this.closeStateForm(); this.stateNotice = `${saved.name} saved.`; this.loadStates(); this.load(); },
+      next: saved => { this.busy = false; this.closeStateForm(); this.stateNotice = this.transloco.translate('common.notice.saved', { name: saved.name }); this.loadStates(); this.load(); },
       error: err => {
         this.busy = false;
         this.stateFieldErrors = err?.fieldErrors ?? {};
-        this.stateFormError = Object.keys(this.stateFieldErrors).length ? '' : vendorErrorMessage(err, 'Unable to save the state.');
+        this.stateFormError = Object.keys(this.stateFieldErrors).length ? '' : vendorErrorMessage(err, this.transloco.translate('admin.countries.errors.saveState'));
       }
     });
   }
@@ -353,8 +354,8 @@ export class AdminCountriesPage implements OnInit {
     this.stateActionError = '';
     this.stateNotice = '';
     this.api.deleteState(s.id).subscribe({
-      next: () => { this.busy = false; this.pendingDeleteState = null; this.stateNotice = `${s.name} deleted.`; this.loadStates(); this.load(); },
-      error: err => { this.busy = false; this.pendingDeleteState = null; this.stateActionError = vendorErrorMessage(err, 'Unable to delete the state.'); }
+      next: () => { this.busy = false; this.pendingDeleteState = null; this.stateNotice = this.transloco.translate('common.notice.deleted', { name: s.name }); this.loadStates(); this.load(); },
+      error: err => { this.busy = false; this.pendingDeleteState = null; this.stateActionError = vendorErrorMessage(err, this.transloco.translate('admin.countries.errors.deleteState')); }
     });
   }
 

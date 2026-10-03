@@ -1,5 +1,6 @@
 import { Component, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 export interface BreadcrumbItem {
   label: string;
@@ -9,10 +10,10 @@ export interface BreadcrumbItem {
 @Component({
   selector: 'app-breadcrumb',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslocoDirective],
   template: `
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a routerLink="/storefront">Home</a>
+    <nav class="breadcrumb" *transloco="let t" [attr.aria-label]="t('storefront.breadcrumb.label')">
+      <a routerLink="/storefront">{{ t('storefront.breadcrumb.home') }}</a>
       @for (item of items(); track item.label; let last = $last) {
         <span aria-hidden="true">/</span>
         @if (item.url && !last) {

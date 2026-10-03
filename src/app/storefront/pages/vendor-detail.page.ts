@@ -1,5 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { MediaApiService } from '../../core/media/media-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
@@ -10,18 +11,19 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, RouterLink],
+  imports: [BreadcrumbComponent, RouterLink, TranslocoDirective],
   template: `
+    <ng-container *transloco="let t">
     @if (loading) {
-      <p class="state">Loading vendor…</p>
+      <p class="state">{{ t('storefront.vendorDetail.loading') }}</p>
     }
     @if (error) {
-      <p class="state state-error" role="alert">{{ error }}</p>
+      <p class="state state-error" role="alert">{{ t(error) }}</p>
     }
     @if (!loading && !error && vendor) {
       <div class="page-heading">
         <app-breadcrumb [items]="[
-          { label: 'Vendors', url: '/storefront/vendors' },
+          { label: t('storefront.vendors.title'), url: '/storefront/vendors' },
           { label: vendor.name }
         ]" />
       </div>
@@ -29,14 +31,14 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
       <div class="vendor-layout">
         <aside class="vendor-aside">
           @if (logoUrl(vendor.pictureId); as logo) {
-            <img class="vendor-avatar" [src]="logo" [alt]="vendor.name + ' logo'" />
+            <img class="vendor-avatar" [src]="logo" [alt]="t('storefront.vendors.logoAlt', { name: vendor.name })" />
           } @else {
             <div class="vendor-avatar" aria-hidden="true">{{ initial(vendor.name) }}</div>
           }
         </aside>
 
         <div class="vendor-body">
-          <div class="eyebrow">Vendor</div>
+          <div class="eyebrow">{{ t('storefront.vendorDetail.eyebrow') }}</div>
           <h1>{{ vendor.name }}</h1>
           <a [href]="'mailto:' + vendor.email" class="vendor-email">{{ vendor.email }}</a>
 
@@ -47,13 +49,13 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
           }
 
           <div class="vendor-products">
-            <h2>Products</h2>
+            <h2>{{ t('storefront.products.breadcrumb') }}</h2>
             @if (productsLoading) {
-              <p class="muted">Loading products…</p>
+              <p class="muted">{{ t('storefront.products.loading') }}</p>
             } @else if (productsError) {
-              <p class="state-error" role="alert">{{ productsError }}</p>
+              <p class="state-error" role="alert">{{ t(productsError) }}</p>
             } @else if (products.length === 0) {
-              <p class="muted">This shop has no products yet.</p>
+              <p class="muted">{{ t('storefront.vendorDetail.noProducts') }}</p>
             } @else {
               <ul class="product-list" role="list">
                 @for (p of products; track p.id) {
@@ -65,6 +67,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
         </div>
       </div>
     }
+    </ng-container>
   `,
   styles: [`
     :host { display: block; }
@@ -156,13 +159,13 @@ export class VendorDetailPage implements OnInit {
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    if (!id) { this.error = 'Invalid vendor.'; return; }
+    if (!id) { this.error = 'storefront.vendorDetail.invalid'; return; }
     this.loading = true;
     this.api.getVendor(id).subscribe({
       next: v => { this.vendor = v; this.loading = false; this.loadProducts(v.id); },
       error: err => {
         this.loading = false;
-        this.error = err?.status === 404 ? 'Vendor not found.' : 'Failed to load vendor.';
+        this.error = err?.status === 404 ? 'storefront.vendorDetail.notFound' : 'storefront.vendorDetail.loadError';
       }
     });
   }
@@ -174,7 +177,7 @@ export class VendorDetailPage implements OnInit {
     this.productsError = '';
     this.catalog.getProducts({ vendorId, pageSize: 24 }).subscribe({
       next: r => { this.products = r.items; this.productsLoading = false; },
-      error: () => { this.productsLoading = false; this.productsError = 'Unable to load products.'; }
+      error: () => { this.productsLoading = false; this.productsError = 'storefront.products.loadError'; }
     });
   }
 

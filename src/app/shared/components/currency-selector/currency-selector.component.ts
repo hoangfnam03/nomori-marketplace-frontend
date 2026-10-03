@@ -1,16 +1,18 @@
 import { Component, inject } from '@angular/core';
+import { TranslocoDirective } from '@jsverse/transloco';
 import { CurrencyService } from '../../../core/money/currency.service';
 
 /** Lets a customer browse in another currency. Hidden while there is only one published currency. */
 @Component({
   selector: 'app-currency-selector',
   standalone: true,
+  imports: [TranslocoDirective],
   template: `
     @if (currency.currencies().length > 1) {
-      <label class="currency">
-        <span class="sr-only">Display currency</span>
-        <select [value]="currency.display().code" (change)="choose($event)" aria-label="Display currency"
-          title="Prices in other currencies are approximate. Payment is always in {{ currency.primary().code }}.">
+      <label class="currency" *transloco="let t">
+        <span class="sr-only">{{ t('currency.display') }}</span>
+        <select [value]="currency.display().code" (change)="choose($event)" [attr.aria-label]="t('currency.display')"
+          [title]="t('currency.approximate', { code: currency.primary().code })">
           @for (c of currency.currencies(); track c.code) {
             <option [value]="c.code" [selected]="c.code === currency.display().code">{{ c.code }}@if (c.symbol) { ({{ c.symbol }}) }</option>
           }

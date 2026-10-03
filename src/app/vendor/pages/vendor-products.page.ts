@@ -1,5 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { formatDate } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { RouterLink } from '@angular/router';
 import { AuthFacade } from '../../core/auth/auth.facade';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
@@ -48,50 +50,51 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
 
 @Component({
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, TranslocoDirective],
   styleUrls: ['../../shared/styles/vendor-pages.scss'],
   template: `
+    <ng-container *transloco="let t">
     <section class="page-intro" aria-labelledby="products-title">
-      <div class="eyebrow">Vendor portal / Products</div>
-      <h1 id="products-title">Your products.</h1>
-      <p>Create and manage the products of your shop. <a routerLink="/vendor">Back to shop</a></p>
+      <div class="eyebrow">{{ t('vendor.products.eyebrow') }}</div>
+      <h1 id="products-title">{{ t('vendor.products.title') }}</h1>
+      <p>{{ t('vendor.products.lede') }} <a routerLink="/vendor">{{ t('vendor.members.backToShop') }}</a></p>
     </section>
 
     @if (!vendorId && !loading) {
-      <div class="panel"><p class="state">Your account does not belong to a shop.</p></div>
+      <div class="panel"><p class="state">{{ t('vendor.portal.noShop') }}</p></div>
     } @else {
       <div class="panel">
         <div class="panel-header">
-          <h2>Products</h2>
+          <h2>{{ t('storefront.products.breadcrumb') }}</h2>
           <div class="actions">
-            <select [(ngModel)]="status" (ngModelChange)="onFilterChange()" name="status" aria-label="Filter by status">
-              <option value="all">All</option>
-              <option value="lowStock">Low stock</option>
-              <option value="draft">Draft</option>
-              <option value="live">Live</option>
-              <option value="stopped">Stopped</option>
-              <option value="hiddenByAdmin">Hidden by admin</option>
+            <select [(ngModel)]="status" (ngModelChange)="onFilterChange()" name="status" [attr.aria-label]="t('adminVendorApplications.filterStatus')">
+              <option value="all">{{ t('storefront.products.all') }}</option>
+              <option value="lowStock">{{ t('vendor.products.lowStock') }}</option>
+              <option value="draft">{{ t('admin.catalog.status.draft') }}</option>
+              <option value="live">{{ t('admin.catalog.status.live') }}</option>
+              <option value="stopped">{{ t('admin.catalog.status.stopped') }}</option>
+              <option value="hiddenByAdmin">{{ t('admin.catalog.status.hiddenByAdmin') }}</option>
             </select>
-            <input type="search" name="search" placeholder="Search products…" [(ngModel)]="search" (input)="onSearch()" aria-label="Search products" />
-            <button type="button" class="btn" (click)="openForm()">+ New product</button>
+            <input type="search" name="search" [placeholder]="t('admin.catalog.searchProducts')" [(ngModel)]="search" (input)="onSearch()" [attr.aria-label]="t('admin.catalog.searchProducts')" />
+            <button type="button" class="btn" (click)="openForm()">+ {{ t('admin.catalog.newProduct') }}</button>
           </div>
         </div>
 
         @if (notice) { <div class="panel-body"><p class="banner banner-ok" role="status">{{ notice }}</p></div> }
 
         @if (loading) {
-          <p class="state">Loading…</p>
+          <p class="state">{{ t('common.states.loading') }}</p>
         } @else if (loadError) {
           <div class="panel-body">
             <p class="banner" role="alert">{{ loadError }}</p>
-            <div class="actions"><button type="button" class="btn" (click)="load()">Try again</button></div>
+            <div class="actions"><button type="button" class="btn" (click)="load()">{{ t('common.actions.retry') }}</button></div>
           </div>
         } @else if (products.length === 0) {
-          <p class="state">No products yet.</p>
+          <p class="state">{{ t('admin.catalog.noProducts') }}</p>
         } @else {
           <div class="table-scroll">
             <table class="data-table">
-              <thead><tr><th></th><th>Name</th><th>Price</th><th>Stock</th><th>Status</th><th></th></tr></thead>
+              <thead><tr><th></th><th>{{ t('admin.common.name') }}</th><th>{{ t('admin.catalog.price') }}</th><th>{{ t('admin.catalog.stock') }}</th><th>{{ t('admin.common.status') }}</th><th></th></tr></thead>
               <tbody>
                 @for (p of products; track p.id) {
                   <tr>
@@ -101,37 +104,37 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
                     </td>
                     <td>
                       <strong>{{ p.name }}</strong>
-                      @if (p.sku) { <span class="muted sku">SKU {{ p.sku }}</span> }
+                      @if (p.sku) { <span class="muted sku">{{ t('storefront.productDetail.sku', { sku: p.sku }) }}</span> }
                       @if (scheduleNote(p); as note) { <div class="muted">{{ note }}</div> }
                       @if (p.status === 'hiddenByAdmin') {
                         <div class="hidden-note">
-                          Hidden by an administrator: {{ p.hiddenReason }}
-                          @if (p.reviewRequestedOnUtc) { <br /><span class="muted">Review requested.</span> }
+                          {{ t('vendor.products.hiddenByAdmin', { reason: p.hiddenReason }) }}
+                          @if (p.reviewRequestedOnUtc) { <br /><span class="muted">{{ t('vendor.products.reviewRequested') }}</span> }
                         </div>
                       }
                     </td>
-                    <td>{{ money(p.price) }}@if (p.oldPrice > 0) { <br /><span class="muted">was {{ money(p.oldPrice) }}</span> }@if (p.specialPrice) { <br /><span class="muted">special {{ money(p.specialPrice) }}</span> }</td>
-                    <td>{{ p.trackInventory ? p.stockQuantity : '∞' }}@if (p.isLowStock) { <br /><span class="badge badge-pending">Low stock</span> }</td>
+                    <td>{{ money(p.price) }}@if (p.oldPrice > 0) { <br /><span class="muted">{{ t('vendor.products.was', { price: money(p.oldPrice) }) }}</span> }@if (p.specialPrice) { <br /><span class="muted">{{ t('vendor.products.special', { price: money(p.specialPrice) }) }}</span> }</td>
+                    <td>{{ p.trackInventory ? p.stockQuantity : '∞' }}@if (p.isLowStock) { <br /><span class="badge badge-pending">{{ t('vendor.products.lowStock') }}</span> }</td>
                     <td><span [class]="statusClass(p.status)">{{ statusLabel(p.status) }}</span></td>
                     <td class="row-actions">
                       @if (pendingDelete?.id === p.id) {
-                        <span class="muted">Delete this product?</span>
-                        <button type="button" class="btn btn-danger btn-small" (click)="remove(p)" [disabled]="busy">Delete</button>
-                        <button type="button" class="btn btn-secondary btn-small" (click)="pendingDelete = null">Cancel</button>
+                        <span class="muted">{{ t('admin.catalog.confirmDeleteProduct') }}</span>
+                        <button type="button" class="btn btn-danger btn-small" (click)="remove(p)" [disabled]="busy">{{ t('common.actions.delete') }}</button>
+                        <button type="button" class="btn btn-secondary btn-small" (click)="pendingDelete = null">{{ t('common.actions.cancel') }}</button>
                       } @else {
                         @if (p.status === 'draft' || p.status === 'stopped') {
-                          <button type="button" class="btn btn-small" (click)="changeStatus(p, 'live')" [disabled]="busy">Publish</button>
+                          <button type="button" class="btn btn-small" (click)="changeStatus(p, 'live')" [disabled]="busy">{{ t('vendor.products.publish') }}</button>
                         }
                         @if (p.status === 'live') {
-                          <button type="button" class="btn btn-secondary btn-small" (click)="changeStatus(p, 'stopped')" [disabled]="busy">Stop selling</button>
+                          <button type="button" class="btn btn-secondary btn-small" (click)="changeStatus(p, 'stopped')" [disabled]="busy">{{ t('vendor.products.stop') }}</button>
                         }
                         @if (p.status === 'hiddenByAdmin' && !p.reviewRequestedOnUtc) {
-                          <button type="button" class="btn btn-secondary btn-small" (click)="askReview(p)" [disabled]="busy">Request review</button>
+                          <button type="button" class="btn btn-secondary btn-small" (click)="askReview(p)" [disabled]="busy">{{ t('vendor.products.requestReview') }}</button>
                         }
-                        <a class="btn btn-secondary btn-small" [routerLink]="['/vendor/products', p.id, 'details']">Details</a>
-                        <button type="button" class="btn btn-secondary btn-small" (click)="copy(p)" [disabled]="busy">Copy</button>
-                        <button type="button" class="btn btn-secondary btn-small" (click)="edit(p)">Edit</button>
-                        <button type="button" class="btn btn-danger btn-small" (click)="pendingDelete = p">Delete</button>
+                        <a class="btn btn-secondary btn-small" [routerLink]="['/vendor/products', p.id, 'details']">{{ t('adminVendorApplications.details') }}</a>
+                        <button type="button" class="btn btn-secondary btn-small" (click)="copy(p)" [disabled]="busy">{{ t('common.actions.copy') }}</button>
+                        <button type="button" class="btn btn-secondary btn-small" (click)="edit(p)">{{ t('common.actions.edit') }}</button>
+                        <button type="button" class="btn btn-danger btn-small" (click)="pendingDelete = p">{{ t('common.actions.delete') }}</button>
                       }
                     </td>
                   </tr>
@@ -141,9 +144,9 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
           </div>
           @if (totalPages > 1) {
             <div class="pagination">
-              <button type="button" [disabled]="page === 1" (click)="goPage(page - 1)">‹ Prev</button>
-              <span>Page {{ page }} of {{ totalPages }}</span>
-              <button type="button" [disabled]="page === totalPages" (click)="goPage(page + 1)">Next ›</button>
+              <button type="button" [disabled]="page === 1" (click)="goPage(page - 1)">‹ {{ t('common.pagination.prev') }}</button>
+              <span>{{ t('common.pagination.pageOf', { page: page, total: totalPages }) }}</span>
+              <button type="button" [disabled]="page === totalPages" (click)="goPage(page + 1)">{{ t('common.pagination.next') }} ›</button>
             </div>
           }
         }
@@ -152,34 +155,34 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
 
       @if (formOpen) {
         <div class="panel">
-          <div class="panel-header"><h2>{{ editingId ? 'Edit product' : 'New product' }}</h2></div>
+          <div class="panel-header"><h2>{{ editingId ? t('admin.catalog.editProduct') : t('admin.catalog.newProduct') }}</h2></div>
           <form class="form panel-body" (ngSubmit)="save()" novalidate>
             @if (formError) { <p class="banner" role="alert">{{ formError }}</p> }
-            <label>Name *
+            <label>{{ t('admin.common.name') }} *
               <input type="text" name="name" [(ngModel)]="form.name" maxlength="400" required />
               @if (fieldError('name')) { <span class="field-error">{{ fieldError('name') }}</span> }
             </label>
-            <label>Short description
+            <label>{{ t('admin.catalog.shortDescription') }}
               <textarea name="shortDescription" rows="2" [(ngModel)]="form.shortDescription"></textarea>
             </label>
-            <label>Description
+            <label>{{ t('admin.common.description') }}
               <textarea name="fullDescription" rows="4" [(ngModel)]="form.fullDescription"></textarea>
-              <span class="hint">Basic HTML is kept: p, br, strong, em, u, s, h2–h4, ul, ol, li, blockquote and links (http, https, mailto). Anything else is removed when you save.</span>
+              <span class="hint">{{ t('vendor.products.htmlHint') }}</span>
               @if (fieldError('fullDescription')) { <span class="field-error">{{ fieldError('fullDescription') }}</span> }
             </label>
             <div class="form-row">
-              <label>Price ({{ currency.primary().code }}) *
+              <label>{{ t('admin.catalog.price') }} ({{ currency.primary().code }}) *
                 <input type="number" name="price" [(ngModel)]="form.price" min="0" [step]="currency.step()" />
                 @if (fieldError('price')) { <span class="field-error">{{ fieldError('price') }}</span> }
               </label>
-              <label>Compare at price ({{ currency.primary().code }})
+              <label>{{ t('admin.catalog.compareAtPrice') }} ({{ currency.primary().code }})
                 <input type="number" name="oldPrice" [(ngModel)]="form.oldPrice" min="0" [step]="currency.step()" />
-                <span class="hint">Must be higher than the price. Leave 0 for none.</span>
+                <span class="hint">{{ t('vendor.products.oldPriceHint') }}</span>
                 @if (fieldError('oldPrice')) { <span class="field-error">{{ fieldError('oldPrice') }}</span> }
               </label>
-              <label>Stock
+              <label>{{ t('admin.catalog.stock') }}
                 <input type="number" name="stockQuantity" [(ngModel)]="form.stockQuantity" min="0" [disabled]="hasVariants || !!editingId" />
-                @if (editingId) { <span class="hint">Change stock in Details, Inventory, so every change is recorded.@if (hasVariants) { It is the sum of the variant stocks. } </span> }
+                @if (editingId) { <span class="hint">{{ t('vendor.products.stockHint') }}@if (hasVariants) { {{ t('vendor.products.stockSumHint') }} } </span> }
                 @if (fieldError('stockQuantity')) { <span class="field-error">{{ fieldError('stockQuantity') }}</span> }
               </label>
             </div>
@@ -187,42 +190,42 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
             <div class="form-row">
               <label>SKU
                 <input type="text" name="sku" [(ngModel)]="form.sku" maxlength="100" />
-                <span class="hint">Unique inside your shop.</span>
+                <span class="hint">{{ t('vendor.products.skuHint') }}</span>
                 @if (fieldError('sku')) { <span class="field-error">{{ fieldError('sku') }}</span> }
               </label>
               <label>GTIN
                 <input type="text" name="gtin" [(ngModel)]="form.gtin" maxlength="14" inputmode="numeric" />
-                <span class="hint">8, 12, 13 or 14 digits.</span>
+                <span class="hint">{{ t('vendor.products.gtinHint') }}</span>
                 @if (fieldError('gtin')) { <span class="field-error">{{ fieldError('gtin') }}</span> }
               </label>
-              <label>Manufacturer part number
+              <label>{{ t('vendor.products.mpn') }}
                 <input type="text" name="manufacturerPartNumber" [(ngModel)]="form.manufacturerPartNumber" maxlength="100" />
                 @if (fieldError('manufacturerPartNumber')) { <span class="field-error">{{ fieldError('manufacturerPartNumber') }}</span> }
               </label>
             </div>
             <div class="form-row">
-              <label>On sale from
+              <label>{{ t('vendor.products.saleFrom') }}
                 <input type="datetime-local" name="availableStart" [(ngModel)]="form.availableStart" />
-                <span class="hint">Optional. Empty means as soon as it is published.</span>
+                <span class="hint">{{ t('vendor.products.saleFromHint') }}</span>
               </label>
-              <label>On sale until
+              <label>{{ t('vendor.products.saleUntil') }}
                 <input type="datetime-local" name="availableEnd" [(ngModel)]="form.availableEnd" />
-                <span class="hint">Optional. Empty means no end.</span>
+                <span class="hint">{{ t('vendor.products.saleUntilHint') }}</span>
                 @if (fieldError('availableEndUtc')) { <span class="field-error">{{ fieldError('availableEndUtc') }}</span> }
               </label>
             </div>
 
             <fieldset class="pick-list">
-              <legend>Categories * <span class="hint">(up to 10)</span></legend>
-              @if (categories.length === 0) { <span class="muted">No categories available.</span> }
+              <legend>{{ t('admin.catalog.categories') }} * <span class="hint">({{ t('admin.catalog.upTo10') }})</span></legend>
+              @if (categories.length === 0) { <span class="muted">{{ t('vendor.products.noCategories') }}</span> }
               @for (c of categories; track c.id) {
                 <label class="check-label"><input type="checkbox" [checked]="form.categoryIds.includes(c.id)" (change)="toggle(form.categoryIds, c.id)" [name]="'cat' + c.id" /> {{ c.path }}</label>
               }
               @if (fieldError('categoryIds')) { <span class="field-error">{{ fieldError('categoryIds') }}</span> }
             </fieldset>
             <fieldset class="pick-list">
-              <legend>Manufacturers <span class="hint">(up to 10)</span></legend>
-              @if (manufacturers.length === 0) { <span class="muted">No manufacturers available.</span> }
+              <legend>{{ t('admin.catalog.manufacturers') }} <span class="hint">({{ t('admin.catalog.upTo10') }})</span></legend>
+              @if (manufacturers.length === 0) { <span class="muted">{{ t('vendor.products.noManufacturers') }}</span> }
               @for (m of manufacturers; track m.id) {
                 <label class="check-label"><input type="checkbox" [checked]="form.manufacturerIds.includes(m.id)" (change)="toggle(form.manufacturerIds, m.id)" [name]="'mfr' + m.id" /> {{ m.name }}</label>
               }
@@ -230,36 +233,36 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
             </fieldset>
 
             <fieldset class="pictures">
-              <legend>Pictures <span class="hint">(up to {{ maxPictures }}; the first one is the main picture; one is needed to publish)</span></legend>
-              @if (form.pictureIds.length === 0) { <span class="muted">No pictures yet.</span> }
+              <legend>{{ t('vendor.products.pictures') }} <span class="hint">({{ t('vendor.products.picturesHint', { max: maxPictures }) }})</span></legend>
+              @if (form.pictureIds.length === 0) { <span class="muted">{{ t('vendor.products.noPictures') }}</span> }
               <div class="picture-grid">
                 @for (id of form.pictureIds; track id; let i = $index; let last = $last) {
                   <figure class="picture">
-                    <img [src]="pictureUrl(id)" [alt]="'Picture ' + (i + 1)" />
-                    @if (i === 0) { <figcaption class="main-tag">Main</figcaption> }
+                    <img [src]="pictureUrl(id)" [alt]="t('vendor.products.picture', { index: i + 1 })" />
+                    @if (i === 0) { <figcaption class="main-tag">{{ t('vendor.products.main') }}</figcaption> }
                     <div class="picture-actions">
-                      <button type="button" class="btn btn-secondary btn-small" (click)="movePicture(i, -1)" [disabled]="i === 0 || uploading" [attr.aria-label]="'Move picture ' + (i + 1) + ' earlier'">←</button>
-                      <button type="button" class="btn btn-secondary btn-small" (click)="movePicture(i, 1)" [disabled]="last || uploading" [attr.aria-label]="'Move picture ' + (i + 1) + ' later'">→</button>
-                      <button type="button" class="btn btn-danger btn-small" (click)="removePicture(i)" [disabled]="uploading" [attr.aria-label]="'Remove picture ' + (i + 1)">Remove</button>
+                      <button type="button" class="btn btn-secondary btn-small" (click)="movePicture(i, -1)" [disabled]="i === 0 || uploading" [attr.aria-label]="t('vendor.products.moveEarlier', { name: t('vendor.products.picture', { index: i + 1 }) })">←</button>
+                      <button type="button" class="btn btn-secondary btn-small" (click)="movePicture(i, 1)" [disabled]="last || uploading" [attr.aria-label]="t('vendor.products.moveLater', { name: t('vendor.products.picture', { index: i + 1 }) })">→</button>
+                      <button type="button" class="btn btn-danger btn-small" (click)="removePicture(i)" [disabled]="uploading" [attr.aria-label]="t('vendor.products.removePicture', { index: i + 1 })">{{ t('media.remove') }}</button>
                     </div>
                   </figure>
                 }
               </div>
               <label class="pick" [class.disabled]="uploading || form.pictureIds.length >= maxPictures">
                 <input type="file" [accept]="accept" multiple (change)="onPictureFiles($event)" [disabled]="uploading || form.pictureIds.length >= maxPictures" />
-                {{ uploading ? 'Uploading…' : 'Add pictures' }}
+                {{ uploading ? t('media.uploading') : t('vendor.products.addPictures') }}
               </label>
-              <span class="hint">JPEG, PNG, GIF or WebP, up to 5 MB each. Pictures are saved with the product.</span>
+              <span class="hint">{{ t('vendor.products.picturesFileHint') }}</span>
               @if (pictureError) { <span class="field-error" role="alert">{{ pictureError }}</span> }
               @if (fieldError('pictureIds')) { <span class="field-error">{{ fieldError('pictureIds') }}</span> }
             </fieldset>
 
             <fieldset class="pick-list">
-              <legend>Related products <span class="hint">(up to {{ maxRelated }}; shown on the product page in this order)</span></legend>
+              <legend>{{ t('storefront.productDetail.related') }} <span class="hint">({{ t('vendor.products.relatedHint', { max: maxRelated }) }})</span></legend>
               @if (!editingId) {
-                <span class="muted">Save the product first, then edit it to add related products.</span>
+                <span class="muted">{{ t('vendor.products.relatedSaveFirst') }}</span>
               } @else if (relatedCandidates.length === 0) {
-                <span class="muted">Your shop has no other products.</span>
+                <span class="muted">{{ t('vendor.products.relatedNone') }}</span>
               } @else {
                 @for (c of relatedCandidates; track c.id) {
                   <label class="check-label">
@@ -268,8 +271,8 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
                     {{ c.name }}
                     @if (form.relatedProductIds.includes(c.id)) {
                       <span class="order-buttons">
-                        <button type="button" class="btn btn-secondary btn-small" (click)="moveRelated(c.id, -1)" [disabled]="form.relatedProductIds[0] === c.id" [attr.aria-label]="'Move ' + c.name + ' earlier'">←</button>
-                        <button type="button" class="btn btn-secondary btn-small" (click)="moveRelated(c.id, 1)" [disabled]="form.relatedProductIds[form.relatedProductIds.length - 1] === c.id" [attr.aria-label]="'Move ' + c.name + ' later'">→</button>
+                        <button type="button" class="btn btn-secondary btn-small" (click)="moveRelated(c.id, -1)" [disabled]="form.relatedProductIds[0] === c.id" [attr.aria-label]="t('vendor.products.moveEarlier', { name: c.name })">←</button>
+                        <button type="button" class="btn btn-secondary btn-small" (click)="moveRelated(c.id, 1)" [disabled]="form.relatedProductIds[form.relatedProductIds.length - 1] === c.id" [attr.aria-label]="t('vendor.products.moveLater', { name: c.name })">→</button>
                       </span>
                     }
                   </label>
@@ -278,16 +281,17 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
               @if (fieldError('relatedProductIds')) { <span class="field-error">{{ fieldError('relatedProductIds') }}</span> }
             </fieldset>
 
-            <p class="muted">New products start as drafts. Publish them from the list when they are ready.</p>
+            <p class="muted">{{ t('vendor.products.draftNote') }}</p>
 
             <div class="actions">
-              <button type="submit" class="btn" [disabled]="busy || !form.name.trim()">{{ busy ? 'Saving…' : 'Save product' }}</button>
-              <button type="button" class="btn btn-secondary" (click)="closeForm()">Cancel</button>
+              <button type="submit" class="btn" [disabled]="busy || !form.name.trim()">{{ busy ? t('common.states.saving') : t('vendor.products.save') }}</button>
+              <button type="button" class="btn btn-secondary" (click)="closeForm()">{{ t('common.actions.cancel') }}</button>
             </div>
           </form>
         </div>
       }
     }
+    </ng-container>
   `,
   styles: [`
     .hidden-note { margin-top: .3rem; padding: .35rem .6rem; border-left: 3px solid #b74e3c; background: #f8e9e4; color: #7d3026; font-size: .8rem; }
@@ -315,6 +319,7 @@ export class VendorProductsPage implements OnInit {
   private readonly catalog = inject(CatalogApiService);
   private readonly auth = inject(AuthFacade);
   private readonly media = inject(MediaApiService);
+  private readonly transloco = inject(TranslocoService);
   readonly currency = inject(CurrencyService);
 
   readonly maxPictures = MAX_PICTURES;
@@ -366,7 +371,7 @@ export class VendorProductsPage implements OnInit {
         this.loadOptions();
         this.fetch();
       },
-      error: () => { this.loading = false; this.loadError = 'Unable to load your account.'; }
+      error: () => { this.loading = false; this.loadError = this.transloco.translate('vendor.portal.errors.loadAccount'); }
     });
   }
 
@@ -421,7 +426,7 @@ export class VendorProductsPage implements OnInit {
         this.api.getVariants(this.vendorId!, full.id).subscribe({ next: v => { this.hasVariants = v.combinations.length > 0; }, error: () => undefined });
         this.formOpen = true;
       },
-      error: err => { this.actionError = vendorErrorMessage(err, 'Unable to load the product.'); }
+      error: err => { this.actionError = vendorErrorMessage(err, this.transloco.translate('admin.catalog.errors.loadProduct')); }
     });
   }
 
@@ -452,7 +457,7 @@ export class VendorProductsPage implements OnInit {
       error: err => {
         this.busy = false;
         this.fieldErrors = err?.fieldErrors ?? {};
-        this.formError = Object.keys(this.fieldErrors).length ? '' : this.writeError(err, 'Unable to save the product.');
+        this.formError = Object.keys(this.fieldErrors).length ? '' : this.writeError(err, this.transloco.translate('vendor.products.errors.save'));
       }
     });
   }
@@ -470,8 +475,8 @@ export class VendorProductsPage implements OnInit {
         this.busy = false;
         this.editingId = saved.id;
         this.fieldErrors = err?.fieldErrors ?? {};
-        const detail = Object.keys(this.fieldErrors).length ? '' : this.writeError(err, 'Unable to save the pictures.');
-        this.formError = `“${saved.name}” was saved, but its pictures were not. ${detail}`.trim();
+        const detail = Object.keys(this.fieldErrors).length ? '' : this.writeError(err, this.transloco.translate('vendor.products.errors.savePictures'));
+        this.formError = `${this.transloco.translate('vendor.products.savedWithoutPictures', { name: saved.name })} ${detail}`.trim();
         this.fetch();
       }
     });
@@ -488,8 +493,8 @@ export class VendorProductsPage implements OnInit {
       error: err => {
         this.busy = false;
         this.fieldErrors = err?.fieldErrors ?? {};
-        const detail = Object.keys(this.fieldErrors).length ? '' : this.writeError(err, 'Unable to save the related products.');
-        this.formError = `“${saved.name}” was saved, but its related products were not. ${detail}`.trim();
+        const detail = Object.keys(this.fieldErrors).length ? '' : this.writeError(err, this.transloco.translate('vendor.products.errors.saveRelated'));
+        this.formError = `${this.transloco.translate('vendor.products.savedWithoutRelated', { name: saved.name })} ${detail}`.trim();
         this.fetch();
       }
     });
@@ -512,10 +517,10 @@ export class VendorProductsPage implements OnInit {
 
     this.pictureError = '';
     const room = MAX_PICTURES - this.form.pictureIds.length;
-    if (files.length > room) this.pictureError = `Only ${room} more picture(s) can be added.`;
+    if (files.length > room) this.pictureError = this.transloco.translate('vendor.products.onlyMorePictures', { count: room });
     const accepted = files.slice(0, Math.max(room, 0)).filter(file => {
-      if (file.size > MEDIA_MAX_BYTES) { this.pictureError = `“${file.name}” is larger than 5 MB.`; return false; }
-      if (!MEDIA_ACCEPT.split(',').includes(file.type)) { this.pictureError = `“${file.name}” is not a JPEG, PNG, GIF or WebP image.`; return false; }
+      if (file.size > MEDIA_MAX_BYTES) { this.pictureError = this.transloco.translate('vendor.products.fileTooLarge', { name: file.name }); return false; }
+      if (!MEDIA_ACCEPT.split(',').includes(file.type)) { this.pictureError = this.transloco.translate('vendor.products.fileType', { name: file.name }); return false; }
       return true;
     });
     this.uploadNext(accepted);
@@ -534,7 +539,7 @@ export class VendorProductsPage implements OnInit {
       error: err => {
         this.uploading = false;
         this.pictureError = err?.fieldErrors?.['file']?.[0]
-          ?? (err?.status === 0 ? 'Network error. Try again.' : err?.status === 403 ? 'You cannot upload pictures right now.' : 'Upload failed.');
+          ?? (err?.status === 0 ? this.transloco.translate('errors.network') : err?.status === 403 ? this.transloco.translate('vendor.products.uploadForbidden') : this.transloco.translate('media.errors.failed'));
       }
     });
   }
@@ -562,10 +567,10 @@ export class VendorProductsPage implements OnInit {
     this.api.copy(this.vendorId, product.id).subscribe({
       next: created => {
         this.busy = false;
-        this.notice = `“${product.name}” copied as “${created.name}”. Add pictures and a SKU, then publish it.`;
+        this.notice = this.transloco.translate('vendor.products.copied', { name: product.name, copy: created.name });
         this.fetch();
       },
-      error: err => { this.busy = false; this.actionError = this.writeError(err, 'Unable to copy the product.'); }
+      error: err => { this.busy = false; this.actionError = this.writeError(err, this.transloco.translate('vendor.products.errors.copy')); }
     });
   }
 
@@ -587,10 +592,10 @@ export class VendorProductsPage implements OnInit {
   scheduleNote(product: VendorProduct): string {
     const now = Date.now();
     if (product.availableStartUtc && new Date(product.availableStartUtc).getTime() > now) {
-      return `Scheduled: on sale from ${new Date(product.availableStartUtc).toLocaleString()}`;
+      return this.transloco.translate('vendor.products.scheduled', { date: formatDate(product.availableStartUtc, 'dd/MM/yyyy HH:mm', 'vi') });
     }
     if (product.availableEndUtc && new Date(product.availableEndUtc).getTime() <= now) {
-      return `Sale window ended ${new Date(product.availableEndUtc).toLocaleString()}`;
+      return this.transloco.translate('vendor.products.windowEnded', { date: formatDate(product.availableEndUtc, 'dd/MM/yyyy HH:mm', 'vi') });
     }
     return '';
   }
@@ -601,7 +606,7 @@ export class VendorProductsPage implements OnInit {
     this.actionError = '';
     this.api.delete(this.vendorId, product.id).subscribe({
       next: () => { this.busy = false; this.pendingDelete = null; this.notice = `“${product.name}” deleted.`; this.fetch(); },
-      error: err => { this.busy = false; this.pendingDelete = null; this.actionError = this.writeError(err, 'Unable to delete the product.'); }
+      error: err => { this.busy = false; this.pendingDelete = null; this.actionError = this.writeError(err, this.transloco.translate('admin.catalog.errors.deleteProduct')); }
     });
   }
 
@@ -612,13 +617,13 @@ export class VendorProductsPage implements OnInit {
     this.api.setStatus(this.vendorId, product.id, target).subscribe({
       next: () => {
         this.busy = false;
-        this.notice = target === 'live' ? `“${product.name}” is now on sale.` : `“${product.name}” is no longer on sale.`;
+        this.notice = target === 'live' ? this.transloco.translate('vendor.products.nowOnSale', { name: product.name }) : this.transloco.translate('vendor.products.noLongerOnSale', { name: product.name });
         this.fetch();
       },
       error: err => {
         this.busy = false;
         const fields = err?.fieldErrors ? Object.values(err.fieldErrors as Record<string, string[]>).flat().join(' ') : '';
-        this.actionError = fields || this.writeError(err, 'Unable to change the product status.');
+        this.actionError = fields || this.writeError(err, this.transloco.translate('vendor.products.errors.status'));
         // The product may have been hidden meanwhile; show its real state.
         if (err?.status === 409) this.fetch();
       }
@@ -630,13 +635,13 @@ export class VendorProductsPage implements OnInit {
     this.busy = true;
     this.clearErrors();
     this.api.requestReview(this.vendorId, product.id).subscribe({
-      next: () => { this.busy = false; this.notice = 'Review requested. An administrator will look at it.'; this.fetch(); },
-      error: err => { this.busy = false; this.actionError = this.writeError(err, 'Unable to request a review.'); this.fetch(); }
+      next: () => { this.busy = false; this.notice = this.transloco.translate('vendor.products.reviewSent'); this.fetch(); },
+      error: err => { this.busy = false; this.actionError = this.writeError(err, this.transloco.translate('vendor.products.errors.review')); this.fetch(); }
     });
   }
 
   statusLabel(status: ProductStatus) {
-    return { draft: 'Draft', live: 'Live', stopped: 'Stopped', hiddenByAdmin: 'Hidden by admin' }[status];
+    return this.transloco.translate('admin.catalog.status.' + status);
   }
 
   statusClass(status: ProductStatus) {
@@ -663,7 +668,7 @@ export class VendorProductsPage implements OnInit {
       lowStock: this.status === 'lowStock' ? true : undefined
     }).subscribe({
       next: res => { this.products = res.items; this.totalPages = Math.max(res.totalPages, 1); this.loading = false; },
-      error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, 'Unable to load products.'); }
+      error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, this.transloco.translate('storefront.products.loadError')); }
     });
   }
 
@@ -683,7 +688,7 @@ export class VendorProductsPage implements OnInit {
   // A 403 on a write means the shop is switched off.
   private writeError(err: { status?: number; message?: string; fieldErrors?: Record<string, string[]> }, fallback: string) {
     return err.status === 403
-      ? 'Your shop is inactive, so products cannot be changed right now.'
+      ? this.transloco.translate('vendor.products.shopInactive')
       : vendorErrorMessage(err, fallback);
   }
 

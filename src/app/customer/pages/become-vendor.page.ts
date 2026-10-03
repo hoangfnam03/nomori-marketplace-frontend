@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthFacade } from '../../core/auth/auth.facade';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
@@ -20,128 +21,131 @@ type ViewState = 'loading' | 'error' | 'unverified' | 'form' | 'pending' | 'reje
 
 @Component({
   standalone: true,
-  imports: [FormsModule, RouterLink, DatePipe],
+  imports: [FormsModule, RouterLink, DatePipe, TranslocoDirective],
   styleUrls: ['../../shared/styles/vendor-pages.scss'],
   template: `
+    <ng-container *transloco="let t">
     <section class="page-intro" aria-labelledby="become-title">
-      <div class="eyebrow">Customer / Sell on Nomori</div>
-      <h1 id="become-title">Open your shop.</h1>
-      <p>Apply to sell on Nomori Marketplace. An administrator reviews every application.</p>
+      <div class="eyebrow">{{ t('becomeVendor.eyebrow') }}</div>
+      <h1 id="become-title">{{ t('becomeVendor.title') }}</h1>
+      <p>{{ t('becomeVendor.lede') }}</p>
     </section>
 
     <div class="panel">
       @switch (state) {
-        @case ('loading') { <p class="state">Loading…</p> }
+        @case ('loading') { <p class="state">{{ t('common.states.loading') }}</p> }
         @case ('error') {
           <div class="panel-body">
             <p class="banner" role="alert">{{ loadError }}</p>
-            <div class="actions"><button type="button" class="btn" (click)="load()">Try again</button></div>
+            <div class="actions"><button type="button" class="btn" (click)="load()">{{ t('common.actions.retry') }}</button></div>
           </div>
         }
         @case ('member') {
           <div class="panel-body">
-            <p class="banner banner-info">Your account already belongs to a shop.</p>
-            <div class="actions"><a class="btn" routerLink="/vendor">Open vendor portal</a></div>
+            <p class="banner banner-info">{{ t('errors.vendor_application.already_vendor') }}</p>
+            <div class="actions"><a class="btn" routerLink="/vendor">{{ t('becomeVendor.openPortal') }}</a></div>
           </div>
         }
         @case ('unverified') {
           <div class="panel-body">
-            <p class="banner" role="status">Verify your email address before applying to open a shop.</p>
+            <p class="banner" role="status">{{ t('errors.vendor_application.email_not_verified') }}</p>
             @if (verificationMessage) { <p class="banner banner-ok" role="status">{{ verificationMessage }}</p> }
             <div class="actions">
-              <button type="button" class="btn" (click)="resendVerification()" [disabled]="busy">Resend verification email</button>
+              <button type="button" class="btn" (click)="resendVerification()" [disabled]="busy">{{ t('becomeVendor.resendVerification') }}</button>
             </div>
           </div>
         }
         @case ('approved') {
           <div class="panel-body">
-            <p class="banner banner-ok" role="status">Your application was approved.</p>
-            <div class="actions"><a class="btn" routerLink="/vendor">Open vendor portal</a></div>
+            <p class="banner banner-ok" role="status">{{ t('becomeVendor.approved') }}</p>
+            <div class="actions"><a class="btn" routerLink="/vendor">{{ t('becomeVendor.openPortal') }}</a></div>
           </div>
         }
         @case ('pending') {
           @if (!editing) {
-            <div class="panel-header"><h2>Application waiting for review</h2><span class="badge badge-pending">Pending</span></div>
+            <div class="panel-header"><h2>{{ t('becomeVendor.pendingHeading') }}</h2><span class="badge badge-pending">{{ t('vendorStatus.application.pending') }}</span></div>
             <div class="panel-body">
               <dl class="detail-grid">
-                <dt>Shop name</dt><dd>{{ application!.shopName }}</dd>
-                <dt>Contact email</dt><dd>{{ application!.email }}</dd>
-                <dt>Phone</dt><dd>{{ application!.phoneNumber }}</dd>
-                <dt>Tax code</dt><dd>{{ application!.taxCode || '—' }}</dd>
-                <dt>Business address</dt><dd>{{ application!.businessAddress || '—' }}</dd>
-                <dt>Description</dt><dd>{{ application!.description || '—' }}</dd>
-                <dt>Submitted</dt><dd>{{ application!.createdOnUtc | date:'medium' }}</dd>
+                <dt>{{ t('becomeVendor.fields.shopName') }}</dt><dd>{{ application!.shopName }}</dd>
+                <dt>{{ t('vendor.portal.contactEmail') }}</dt><dd>{{ application!.email }}</dd>
+                <dt>{{ t('customer.fields.phone') }}</dt><dd>{{ application!.phoneNumber }}</dd>
+                <dt>{{ t('adminVendorApplications.taxCode') }}</dt><dd>{{ application!.taxCode || '—' }}</dd>
+                <dt>{{ t('adminVendorApplications.businessAddress') }}</dt><dd>{{ application!.businessAddress || '—' }}</dd>
+                <dt>{{ t('admin.common.description') }}</dt><dd>{{ application!.description || '—' }}</dd>
+                <dt>{{ t('adminVendorApplications.submitted') }}</dt><dd>{{ application!.createdOnUtc | date:'dd/MM/yyyy HH:mm' }}</dd>
               </dl>
               @if (actionError) { <p class="banner" role="alert">{{ actionError }}</p> }
               @if (confirmCancel) {
-                <div class="confirm confirm-danger" role="alertdialog" aria-label="Confirm cancel">
-                  <span>Cancel this application?</span>
+                <div class="confirm confirm-danger" role="alertdialog" [attr.aria-label]="t('becomeVendor.confirmCancelLabel')">
+                  <span>{{ t('becomeVendor.confirmCancel') }}</span>
                   <div class="actions">
-                    <button type="button" class="btn btn-danger" (click)="cancel()" [disabled]="busy">Yes, cancel application</button>
-                    <button type="button" class="btn btn-secondary" (click)="confirmCancel = false">Keep it</button>
+                    <button type="button" class="btn btn-danger" (click)="cancel()" [disabled]="busy">{{ t('becomeVendor.yesCancel') }}</button>
+                    <button type="button" class="btn btn-secondary" (click)="confirmCancel = false">{{ t('becomeVendor.keep') }}</button>
                   </div>
                 </div>
               } @else {
                 <div class="actions">
-                  <button type="button" class="btn" (click)="startEdit()">Edit</button>
-                  <button type="button" class="btn btn-danger" (click)="confirmCancel = true">Cancel application</button>
+                  <button type="button" class="btn" (click)="startEdit()">{{ t('common.actions.edit') }}</button>
+                  <button type="button" class="btn btn-danger" (click)="confirmCancel = true">{{ t('becomeVendor.cancelApplication') }}</button>
                 </div>
               }
             </div>
           }
         }
         @case ('rejected') {
-          <div class="panel-header"><h2>Application not approved</h2><span class="badge badge-rejected">Rejected</span></div>
+          <div class="panel-header"><h2>{{ t('becomeVendor.rejectedHeading') }}</h2><span class="badge badge-rejected">{{ t('vendorStatus.application.rejected') }}</span></div>
           <div class="panel-body">
-            <p class="banner" role="status"><strong>Reason:</strong> {{ application!.rejectReason }}</p>
-            <div class="actions"><button type="button" class="btn" (click)="startReapply()">Apply again</button></div>
+            <p class="banner" role="status"><strong>{{ t('becomeVendor.reason') }}</strong> {{ application!.rejectReason }}</p>
+            <div class="actions"><button type="button" class="btn" (click)="startReapply()">{{ t('becomeVendor.applyAgain') }}</button></div>
           </div>
         }
       }
 
       @if (showForm) {
-        <div class="panel-header"><h2>{{ editing ? 'Edit application' : 'Shop application' }}</h2></div>
+        <div class="panel-header"><h2>{{ editing ? t('becomeVendor.editHeading') : t('becomeVendor.formHeading') }}</h2></div>
         <form class="form panel-body" (ngSubmit)="submit()" novalidate>
           @if (actionError) { <p class="banner" role="alert">{{ actionError }}</p> }
-          <label>Shop name *
+          <label>{{ t('becomeVendor.fields.shopName') }} *
             <input type="text" name="shopName" [(ngModel)]="form.shopName" maxlength="400" required />
             @if (fieldError('shopName')) { <span class="field-error">{{ fieldError('shopName') }}</span> }
           </label>
           <div class="form-row">
-            <label>Contact email *
+            <label>{{ t('vendor.portal.contactEmail') }} *
               <input type="email" name="email" [(ngModel)]="form.email" maxlength="320" required />
               @if (fieldError('email')) { <span class="field-error">{{ fieldError('email') }}</span> }
             </label>
-            <label>Phone number *
+            <label>{{ t('becomeVendor.fields.phoneNumber') }} *
               <input type="tel" name="phoneNumber" [(ngModel)]="form.phoneNumber" maxlength="50" required />
               @if (fieldError('phoneNumber')) { <span class="field-error">{{ fieldError('phoneNumber') }}</span> }
             </label>
           </div>
-          <label>Description
+          <label>{{ t('admin.common.description') }}
             <textarea name="description" rows="3" [(ngModel)]="form.description"></textarea>
           </label>
           <div class="form-row">
-            <label>Tax code
+            <label>{{ t('adminVendorApplications.taxCode') }}
               <input type="text" name="taxCode" [(ngModel)]="form.taxCode" maxlength="50" />
               @if (fieldError('taxCode')) { <span class="field-error">{{ fieldError('taxCode') }}</span> }
             </label>
-            <label>Business address
+            <label>{{ t('adminVendorApplications.businessAddress') }}
               <input type="text" name="businessAddress" [(ngModel)]="form.businessAddress" maxlength="1000" />
               @if (fieldError('businessAddress')) { <span class="field-error">{{ fieldError('businessAddress') }}</span> }
             </label>
           </div>
           <div class="actions">
-            <button type="submit" class="btn" [disabled]="busy || !canSubmit()">{{ busy ? 'Saving…' : (editing ? 'Save changes' : 'Submit application') }}</button>
-            @if (editing) { <button type="button" class="btn btn-secondary" (click)="editing = false">Cancel</button> }
+            <button type="submit" class="btn" [disabled]="busy || !canSubmit()">{{ busy ? t('common.states.saving') : (editing ? t('becomeVendor.saveChanges') : t('becomeVendor.submit')) }}</button>
+            @if (editing) { <button type="button" class="btn btn-secondary" (click)="editing = false">{{ t('common.actions.cancel') }}</button> }
           </div>
         </form>
       }
     </div>
+    </ng-container>
   `
 })
 export class BecomeVendorPage implements OnInit {
   private readonly api = inject(VendorApiService);
   private readonly auth = inject(AuthFacade);
+  private readonly transloco = inject(TranslocoService);
 
   state: ViewState = 'loading';
   application: VendorApplicationResponse | null = null;
@@ -171,7 +175,7 @@ export class BecomeVendorPage implements OnInit {
         if (session.emailVerified === false) { this.state = 'unverified'; return; }
         this.loadApplication();
       },
-      error: () => this.fail('Unable to load your account.')
+      error: () => this.fail(this.transloco.translate('vendor.portal.errors.loadAccount'))
     });
   }
 
@@ -191,7 +195,7 @@ export class BecomeVendorPage implements OnInit {
             this.state = 'form';
         }
       },
-      error: err => this.fail(vendorErrorMessage(err, 'Unable to load your application.'))
+      error: err => this.fail(vendorErrorMessage(err, this.transloco.translate('becomeVendor.errors.load')))
     });
   }
 
@@ -200,8 +204,8 @@ export class BecomeVendorPage implements OnInit {
     if (!email) return;
     this.busy = true;
     this.auth.sendEmailVerification(email).subscribe({
-      next: () => { this.busy = false; this.verificationMessage = 'If the email is not yet verified, a new link is on its way.'; },
-      error: () => { this.busy = false; this.verificationMessage = ''; this.actionError = 'Unable to send the email. Try again later.'; }
+      next: () => { this.busy = false; this.verificationMessage = this.transloco.translate('becomeVendor.verificationSent'); },
+      error: () => { this.busy = false; this.verificationMessage = ''; this.actionError = this.transloco.translate('becomeVendor.errors.sendEmail'); }
     });
   }
 
@@ -248,7 +252,7 @@ export class BecomeVendorPage implements OnInit {
       error: err => {
         this.busy = false;
         this.fieldErrors = err?.fieldErrors ?? {};
-        this.actionError = Object.keys(this.fieldErrors).length ? '' : vendorErrorMessage(err, 'Unable to save the application.');
+        this.actionError = Object.keys(this.fieldErrors).length ? '' : vendorErrorMessage(err, this.transloco.translate('becomeVendor.errors.save'));
         // The application changed under us (already processed or already pending): show the real state.
         if (err?.status === 409) this.loadApplication();
       }
@@ -263,7 +267,7 @@ export class BecomeVendorPage implements OnInit {
       error: err => {
         this.busy = false;
         this.confirmCancel = false;
-        this.actionError = vendorErrorMessage(err, 'Unable to cancel the application.');
+        this.actionError = vendorErrorMessage(err, this.transloco.translate('becomeVendor.errors.cancel'));
         if (err?.status === 409) this.loadApplication();
       }
     });
