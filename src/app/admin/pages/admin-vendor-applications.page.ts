@@ -75,6 +75,7 @@ type ReviewMode = 'approve' | 'reject' | null;
           <dl class="detail-grid">
             <dt>{{ t('adminVendorApplications.applicant') }}</dt><dd>{{ a.customerEmail }} (#{{ a.customerId }})</dd>
             <dt>{{ t('vendor.portal.contactEmail') }}</dt><dd>{{ a.email }}</dd>
+            <dt>{{ t('becomeVendor.fields.shopName') }}</dt><dd>{{ a.shopName }}</dd>
             <dt>{{ t('customer.fields.phone') }}</dt><dd>{{ a.phoneNumber }}</dd>
             <dt>{{ t('adminVendorApplications.taxCode') }}</dt><dd>{{ a.taxCode || '—' }}</dd>
             <dt>{{ t('adminVendorApplications.businessAddress') }}</dt><dd>{{ a.businessAddress || '—' }}</dd>
@@ -92,9 +93,6 @@ type ReviewMode = 'approve' | 'reject' | null;
               <div class="confirm" role="dialog" [attr.aria-label]="t('adminVendorApplications.approveLabel')">
                 <strong>{{ t('adminVendorApplications.approveConfirm') }}</strong>
                 <span class="muted">{{ t('adminVendorApplications.approveHint') }}</span>
-                <label>{{ t('adminVendorApplications.shopNameOverride') }}
-                  <input type="text" name="approveName" [(ngModel)]="approveShopName" maxlength="400" />
-                </label>
                 <label>{{ t('adminVendorApplications.internalComment') }}
                   <textarea name="approveComment" rows="2" [(ngModel)]="adminComment"></textarea>
                 </label>

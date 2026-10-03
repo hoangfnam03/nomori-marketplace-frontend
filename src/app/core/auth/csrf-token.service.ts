@@ -17,4 +17,9 @@ export class CsrfTokenService {
       map(response => response.token)
     );
   }
+
+  /** Antiforgery tokens are bound to the signed-in user, so drop the cached one whenever the identity changes. */
+  clear() {
+    this.token.set(null);
+  }
 }
