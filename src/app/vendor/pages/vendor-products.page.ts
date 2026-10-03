@@ -539,7 +539,10 @@ export class VendorProductsPage implements OnInit {
       error: err => {
         this.uploading = false;
         this.pictureError = err?.fieldErrors?.['file']?.[0]
-          ?? (err?.status === 0 ? this.transloco.translate('errors.network') : err?.status === 403 ? this.transloco.translate('vendor.products.uploadForbidden') : this.transloco.translate('media.errors.failed'));
+          ?? (err?.status === 0 ? this.transloco.translate('errors.network')
+            : err?.status === 403 ? this.transloco.translate('vendor.products.uploadForbidden')
+            : err?.status === 413 ? this.transloco.translate('media.errors.tooLarge')
+            : this.transloco.translate('media.errors.failed'));
       }
     });
   }
