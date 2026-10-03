@@ -42,7 +42,7 @@
           <span class="status-dot" aria-hidden="true"></span>
           <a class="account-email" routerLink="/auth/account">{{ auth.session()?.email }}</a>
           <a class="account-action" routerLink="/customer/profile">{{ t('nav.account.profile') }}</a>
-          @if (!auth.session()?.vendorId) {
+          @if (!auth.session()?.vendorId && !can(codes.adminAccess)) {
             <a class="account-action" routerLink="/customer/become-vendor">{{ t('nav.becomeVendor') }}</a>
           }
           <button type="button" class="account-action" (click)="logout()">{{ t('nav.account.signOut') }}</button>
