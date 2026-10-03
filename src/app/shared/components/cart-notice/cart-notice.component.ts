@@ -1,17 +1,18 @@
 import { Component, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslocoDirective } from '@jsverse/transloco';
 
 /** A small message after "Add to cart", with a way to the cart. */
 @Component({
   selector: 'app-cart-notice',
   standalone: true,
-  imports: [RouterLink],
+  imports: [RouterLink, TranslocoDirective],
   template: `
     @if (message()) {
-      <div class="notice" [class.error]="error()" [attr.role]="error() ? 'alert' : 'status'">
+      <div class="notice" *transloco="let t" [class.error]="error()" [attr.role]="error() ? 'alert' : 'status'">
         <span>{{ message() }}</span>
-        @if (!error()) { <a routerLink="/storefront/cart">View cart</a> }
-        <button type="button" (click)="dismissed.emit()" aria-label="Dismiss">×</button>
+        @if (!error()) { <a routerLink="/storefront/cart">{{ t('storefront.cart.view') }}</a> }
+        <button type="button" (click)="dismissed.emit()" [attr.aria-label]="t('common.actions.dismiss')">×</button>
       </div>
     }
   `,

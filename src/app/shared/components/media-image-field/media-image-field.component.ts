@@ -1,4 +1,5 @@
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { MEDIA_ACCEPT, MEDIA_MAX_BYTES, MediaApiService, MediaPurpose } from '../../../core/media/media-api.service';
 
 /**
@@ -8,24 +9,25 @@ import { MEDIA_ACCEPT, MEDIA_MAX_BYTES, MediaApiService, MediaPurpose } from '..
 @Component({
   selector: 'app-media-image-field',
   standalone: true,
+  imports: [TranslocoDirective],
   template: `
-    <div class="field">
-      <span class="label">{{ label }}</span>
+    <div class="field" *transloco="let t">
+      <span class="label">{{ label || t('media.image') }}</span>
       @if (preview) {
-        <img class="preview" [src]="preview" [alt]="label" />
+        <img class="preview" [src]="preview" [alt]="label || t('media.image')" />
       } @else {
-        <div class="preview empty" aria-hidden="true">No image</div>
+        <div class="preview empty" aria-hidden="true">{{ t('media.noImage') }}</div>
       }
       <div class="actions">
         <label class="pick" [class.disabled]="uploading">
           <input type="file" [accept]="accept" (change)="onFile($event)" [disabled]="uploading" />
-          {{ uploading ? 'Uploading…' : (pictureId ? 'Replace image' : 'Upload image') }}
+          {{ uploading ? t('media.uploading') : (pictureId ? t('media.replace') : t('media.upload')) }}
         </label>
         @if (pictureId) {
-          <button type="button" class="remove" (click)="remove()" [disabled]="uploading">Remove</button>
+          <button type="button" class="remove" (click)="remove()" [disabled]="uploading">{{ t('media.remove') }}</button>
         }
       </div>
-      <small class="hint">JPEG, PNG, GIF or WebP, up to 5 MB.</small>
+      <small class="hint">{{ t('media.hint') }}</small>
       @if (error) { <span class="error" role="alert">{{ error }}</span> }
     </div>
   `,
@@ -47,8 +49,9 @@ import { MEDIA_ACCEPT, MEDIA_MAX_BYTES, MediaApiService, MediaPurpose } from '..
 })
 export class MediaImageFieldComponent {
   private readonly media = inject(MediaApiService);
+  private readonly transloco = inject(TranslocoService);
 
-  @Input() label = 'Image';
+  @Input() label = '';
   @Input({ required: true }) purpose!: MediaPurpose;
   @Input() vendorId: number | null = null;
   @Input() pictureId = 0;
@@ -68,8 +71,8 @@ export class MediaImageFieldComponent {
     if (!file) return;
 
     this.error = '';
-    if (file.size > MEDIA_MAX_BYTES) { this.error = 'The file is larger than 5 MB.'; return; }
-    if (!MEDIA_ACCEPT.split(',').includes(file.type)) { this.error = 'Choose a JPEG, PNG, GIF or WebP image.'; return; }
+    if (file.size > MEDIA_MAX_BYTES) { this.error = this.transloco.translate('media.errors.tooLarge5'); return; }
+    if (!MEDIA_ACCEPT.split(',').includes(file.type)) { this.error = this.transloco.translate('media.errors.type'); return; }
 
     this.uploading = true;
     this.media.upload(file, this.purpose, this.vendorId).subscribe({
@@ -103,10 +106,10 @@ export class MediaImageFieldComponent {
   private message(err: { status?: number; fieldErrors?: Record<string, string[]> }) {
     const fileError = err.fieldErrors?.['file']?.[0];
     if (fileError) return fileError;
-    if (err.status === 403) return 'You do not have permission to upload this image.';
-    if (err.status === 401) return 'Sign in to upload images.';
-    if (err.status === 413) return 'The file is too large.';
-    if (err.status === 0) return 'Network error. Try again.';
-    return 'Upload failed.';
+    if (err.status === 403) return this.transloco.translate('media.errors.forbidden');
+    if (err.status === 401) return this.transloco.translate('media.errors.signIn');
+    if (err.status === 413) return this.transloco.translate('media.errors.tooLarge');
+    if (err.status === 0) return this.transloco.translate('errors.network');
+    return this.transloco.translate('media.errors.failed');
   }
 }

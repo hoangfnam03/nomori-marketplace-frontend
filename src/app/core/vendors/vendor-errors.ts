@@ -1,32 +1,15 @@
-/** Business-rule codes returned by the API in ProblemDetails.detail (HTTP 409). */
-const messages: Record<string, string> = {
-  'vendor_application.email_not_verified': 'Please verify your email before applying to open a shop.',
-  'vendor_application.already_vendor': 'Your account already belongs to a shop.',
-  'vendor_application.already_pending': 'You already have an application waiting for review.',
-  'vendor_application.not_pending': 'This application has already been processed.',
-  'vendor_application.applicant_already_vendor': 'The applicant already belongs to another shop.',
-  'vendor_member.email_already_exists': 'This email is already in use.',
-  'vendor_member.limit_reached': 'The shop has reached its member limit.',
-  'vendor_member.already_active': 'This member has already activated their account.',
-  'product.hidden_by_admin': 'An administrator hid this product. You can edit it and ask for a review, but only an administrator can put it back on sale.',
-  'product.not_hidden': 'This product is not hidden.',
-  'product.already_hidden': 'This product is already hidden.',
-  'product.invalid_transition': 'This change is not possible for the product in its current state.',
-  'inventory.insufficient_stock': 'There is not enough stock for this change. Stock cannot go below zero or below the quantity customers are holding in their carts.',
-  'inventory.reservation_expired': 'The stock hold has expired.',
-  'inventory.active_reservations': 'Customers are holding stock of this product right now, so its variants cannot be replaced. Try again in a few minutes.',
-  'currency.primary_locked': 'The primary currency cannot be switched or change its decimals once products exist, because their prices would change meaning.',
-  'currency.primary_required': 'The primary currency must stay published and cannot be deleted. Make another currency primary first.',
-  'currency.code_exists': 'A currency with this code already exists.',
-  'cart.own_product': 'You cannot buy products from your own shop.',
-  'cart.line_limit': 'Your cart is full (50 different items). Remove something to add more.',
-  'country.code_exists': 'A country with this code already exists.',
-  'country.in_use': 'Saved addresses use this country, so it cannot be deleted. Unpublish it instead.',
-  'state.code_exists': 'This country already has a state with this code.',
-  'state.in_use': 'Saved addresses use this state, so it cannot be deleted. Unpublish it instead.',
-  'vendor.platform_shop': 'The platform shop cannot be deleted or deactivated.',
-  'vendor_member.last_member': 'A shop must keep at least one member.'
-};
+import { translate } from '@jsverse/transloco';
+
+/** Business-rule codes returned by the API in ProblemDetails.detail (HTTP 409). Each one has the key errors.<code>. */
+const codes = new Set([
+  'vendor_application.email_not_verified', 'vendor_application.already_vendor', 'vendor_application.already_pending',
+  'vendor_application.not_pending', 'vendor_application.applicant_already_vendor', 'vendor_member.email_already_exists',
+  'vendor_member.limit_reached', 'vendor_member.already_active', 'vendor_member.last_member', 'product.hidden_by_admin',
+  'product.not_hidden', 'product.already_hidden', 'product.invalid_transition', 'inventory.insufficient_stock',
+  'inventory.reservation_expired', 'inventory.active_reservations', 'currency.primary_locked', 'currency.primary_required',
+  'currency.code_exists', 'cart.own_product', 'cart.line_limit', 'country.code_exists', 'country.in_use', 'state.code_exists',
+  'state.in_use', 'vendor.platform_shop'
+]);
 
 export interface ApiError {
   status?: number;
@@ -36,13 +19,13 @@ export interface ApiError {
 
 /** Turns an error normalised by the error interceptor into a message a person can read. */
 export function vendorErrorMessage(error: ApiError, fallback: string): string {
-  if (error.status === 409 && error.message && messages[error.message]) return messages[error.message];
+  if (error.status === 409 && error.message && codes.has(error.message)) return translate(`errors.${error.message}`);
   if (error.status === 400 && error.fieldErrors) {
     const all = Object.values(error.fieldErrors).flat();
     if (all.length) return all.join(' ');
   }
-  if (error.status === 403) return 'You do not have permission to do this.';
-  if (error.status === 404) return 'Not found.';
-  if (error.status === 0) return 'Network error. Check your connection and try again.';
+  if (error.status === 403) return translate('errors.forbidden');
+  if (error.status === 404) return translate('common.states.notFound');
+  if (error.status === 0) return translate('errors.network');
   return fallback;
 }

@@ -397,7 +397,7 @@ export class ProductListPage implements OnInit {
       const option = spec.options.find(o => o.id === id);
       if (option) return `${spec.name}: ${option.name}`;
     }
-    return `Filter ${id}`;
+    return this.transloco.translate('storefront.products.chipFilter', { id });
   }
 }
 

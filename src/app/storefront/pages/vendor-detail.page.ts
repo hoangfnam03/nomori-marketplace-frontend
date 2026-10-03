@@ -31,7 +31,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
       <div class="vendor-layout">
         <aside class="vendor-aside">
           @if (logoUrl(vendor.pictureId); as logo) {
-            <img class="vendor-avatar" [src]="logo" [alt]="vendor.name + ' logo'" />
+            <img class="vendor-avatar" [src]="logo" [alt]="t('storefront.vendors.logoAlt', { name: vendor.name })" />
           } @else {
             <div class="vendor-avatar" aria-hidden="true">{{ initial(vendor.name) }}</div>
           }
@@ -49,13 +49,13 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
           }
 
           <div class="vendor-products">
-            <h2>Products</h2>
+            <h2>{{ t('storefront.products.breadcrumb') }}</h2>
             @if (productsLoading) {
-              <p class="muted">Loading products…</p>
+              <p class="muted">{{ t('storefront.products.loading') }}</p>
             } @else if (productsError) {
-              <p class="state-error" role="alert">{{ productsError }}</p>
+              <p class="state-error" role="alert">{{ t(productsError) }}</p>
             } @else if (products.length === 0) {
-              <p class="muted">This shop has no products yet.</p>
+              <p class="muted">{{ t('storefront.vendorDetail.noProducts') }}</p>
             } @else {
               <ul class="product-list" role="list">
                 @for (p of products; track p.id) {
@@ -177,7 +177,7 @@ export class VendorDetailPage implements OnInit {
     this.productsError = '';
     this.catalog.getProducts({ vendorId, pageSize: 24 }).subscribe({
       next: r => { this.products = r.items; this.productsLoading = false; },
-      error: () => { this.productsLoading = false; this.productsError = 'Unable to load products.'; }
+      error: () => { this.productsLoading = false; this.productsError = 'storefront.products.loadError'; }
     });
   }
 

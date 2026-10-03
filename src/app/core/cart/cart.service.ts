@@ -1,6 +1,7 @@
 import { inject, Injectable, PLATFORM_ID, signal } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
+import { translate } from '@jsverse/transloco';
 import { catchError, map, Observable, of } from 'rxjs';
 import { AuthFacade } from '../auth/auth.facade';
 import { vendorErrorMessage } from '../vendors/vendor-errors';
@@ -53,7 +54,7 @@ export class CartService {
 
   private toOutcome(err: { status?: number; message?: string; fieldErrors?: Record<string, string[]> }, noValuesGiven: boolean): CartAddOutcome {
     if (err.status === 400 && err.fieldErrors?.['valueIds'] && noValuesGiven) return { kind: 'choose-options' };
-    if (err.status === 404) return { kind: 'error', message: 'This product is no longer available.' };
-    return { kind: 'error', message: vendorErrorMessage(err, 'Unable to add to the cart. Try again.') };
+    if (err.status === 404) return { kind: 'error', message: translate('storefront.cart.unavailable') };
+    return { kind: 'error', message: vendorErrorMessage(err, translate('storefront.cart.addFailed')) };
   }
 }

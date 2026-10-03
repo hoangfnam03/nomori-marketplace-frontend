@@ -14,7 +14,8 @@
       "create": "Create",
       "update": "Update",
       "search": "Search",
-      "reset": "Reset"
+      "reset": "Reset",
+      "dismiss": "Dismiss"
     },
     "states": {
       "loading": "Loading...",
@@ -37,6 +38,10 @@
       "prev": "Prev",
       "next": "Next",
       "pageOf": "Page {{page}} of {{total}}"
+    },
+    "notice": {
+      "saved": "{{name}} saved.",
+      "deleted": "{{name}} deleted."
     }
   },
   "nav": {
@@ -94,7 +99,7 @@
     },
     "vendor_member": {
       "email_already_exists": "This email is already in use.",
-      "limit_reached": "The shop already has 20 members.",
+      "limit_reached": "The shop has reached its member limit.",
       "already_active": "This member has already activated their account.",
       "last_member": "A shop must keep at least one member."
     },
@@ -107,7 +112,34 @@
     },
     "product": {
       "already_hidden": "This product is already hidden.",
-      "not_hidden": "This product is not hidden."
+      "not_hidden": "This product is not hidden.",
+      "hidden_by_admin": "An administrator hid this product. You can edit it and ask for a review, but only an administrator can put it back on sale.",
+      "invalid_transition": "This change is not possible for the product in its current state."
+    },
+    "inventory": {
+      "insufficient_stock": "There is not enough stock for this change. Stock cannot go below zero or below the quantity customers are holding in their carts.",
+      "reservation_expired": "The stock hold has expired.",
+      "active_reservations": "Customers are holding stock of this product right now, so its variants cannot be replaced. Try again in a few minutes."
+    },
+    "currency": {
+      "primary_locked": "The primary currency cannot be switched or change its decimals once products exist, because their prices would change meaning.",
+      "primary_required": "The primary currency must stay published and cannot be deleted. Make another currency primary first.",
+      "code_exists": "A currency with this code already exists."
+    },
+    "cart": {
+      "own_product": "You cannot buy products from your own shop.",
+      "line_limit": "Your cart is full (50 different items). Remove something to add more."
+    },
+    "country": {
+      "code_exists": "A country with this code already exists.",
+      "in_use": "Saved addresses use this country, so it cannot be deleted. Unpublish it instead."
+    },
+    "state": {
+      "code_exists": "This country already has a state with this code.",
+      "in_use": "Saved addresses use this state, so it cannot be deleted. Unpublish it instead."
+    },
+    "vendor": {
+      "platform_shop": "The platform shop cannot be deleted or deactivated."
     }
   },
   "vendorStatus": {
@@ -432,7 +464,8 @@
       "chipPrice": "Price: {{min}} – {{max}}",
       "chipInStock": "In stock",
       "chipBrand": "Brand: {{name}}",
-      "chipTag": "Tag: {{name}}"
+      "chipTag": "Tag: {{name}}",
+      "chipFilter": "Filter {{id}}"
     },
     "productDetail": {
       "loading": "Loading product...",
@@ -475,10 +508,47 @@
       "eyebrow": "Shop",
       "invalid": "Invalid shop.",
       "notFound": "Shop not found.",
-      "loadError": "Failed to load shop."
+      "loadError": "Failed to load shop.",
+      "noProducts": "This shop has no products yet."
     },
     "cart": {
-      "added": "{{name}} added to your cart."
+      "added": "{{name}} added to your cart.",
+      "unavailable": "This product is no longer available.",
+      "addFailed": "Unable to add to the cart. Try again.",
+      "view": "View cart",
+      "eyebrow": "Storefront / Cart",
+      "title": "Your cart.",
+      "loading": "Loading your cart…",
+      "emptyTitle": "Your cart is empty",
+      "emptyMessage": "Find something you like and add it to your cart.",
+      "browse": "Browse products",
+      "pricesChanged": "Some prices changed since you added them. Check the lines marked “Price changed”.",
+      "acceptPrices": "Accept new prices",
+      "itemsFrom": "Items from {{name}}",
+      "subtotalValue": "Subtotal {{amount}}",
+      "quantityOf": "Quantity of {{name}}",
+      "quantityPrice": "Quantity price",
+      "summaryLabel": "Order summary",
+      "summary": "Summary",
+      "items": "Items",
+      "subtotal": "Subtotal",
+      "currencyNote": "Shipping and taxes are added at checkout. Prices are in {{code}}; you always pay in {{code}}.",
+      "fixLines": "Fix or remove the lines marked above to continue.",
+      "checkout": "Checkout",
+      "checkoutSoon": "Checkout is the next step of the marketplace and is not available yet.",
+      "clear": "Clear cart",
+      "errors": {
+        "load": "Unable to load your cart."
+      },
+      "issues": {
+        "unavailable": "No longer available",
+        "variantUnavailable": "This option is no longer offered",
+        "outOfStock": "Out of stock",
+        "insufficientStock": "Not enough in stock",
+        "priceChanged": "Price changed",
+        "onlyInStock": "Only {{count}} in stock. Lower the quantity.",
+        "priceChangedFrom": "Price changed from {{from}} to {{to}} each."
+      }
     }
   },
   "admin": {
@@ -681,6 +751,356 @@
       "hiddenReason": "Hidden: {{reason}}",
       "hideReasonLabel": "Reason (emailed to the shop)",
       "hideProduct": "Hide product"
+    },
+    "currencies": {
+      "eyebrow": "Admin / Settings",
+      "title": "Currencies.",
+      "ledePrimary": "Every price is stored in the primary currency ({{code}}).",
+      "ledeRest": "Other published currencies are for display only: customers see an approximation and always pay in the primary currency. Rates are units of the currency for one unit of the primary.",
+      "new": "New currency",
+      "edit": "Edit currency",
+      "code": "Code",
+      "symbol": "Symbol",
+      "decimals": "Decimals",
+      "decimalPlaces": "Decimal places",
+      "rate": "Rate",
+      "rateUpdated": "Rate updated",
+      "primary": "Primary",
+      "hidden": "Hidden",
+      "confirmPrimary": "Make {{code}} the primary currency?",
+      "confirmDelete": "Delete {{code}}?",
+      "makePrimary": "Make primary",
+      "codeHint": "Three letters, for example EUR. It cannot change later.",
+      "symbolHint": "Shown before the amount. The code is used when empty.",
+      "decimalsHint": "0 for currencies without cents. Prices in the primary currency cannot have more decimals.",
+      "primaryRate": "The primary currency is always 1.",
+      "rateHint": "Units of this currency for 1 {{code}}.",
+      "publishedHint": "Published (customers can choose it)",
+      "save": "Save currency",
+      "primaryChanged": "{{code}} is now the primary currency. Rates were re-based.",
+      "errors": {
+        "load": "Unable to load currencies.",
+        "save": "Unable to save the currency.",
+        "primary": "Unable to change the primary currency.",
+        "delete": "Unable to delete the currency."
+      }
+    },
+    "countries": {
+      "title": "Countries and states.",
+      "lede": "Customers can only use published countries in their addresses. A country with published states needs one of them in every address. A postal code can be required and checked against a pattern.",
+      "new": "New country",
+      "edit": "Edit country",
+      "billing": "Billing",
+      "shipping": "Shipping",
+      "states": "States",
+      "requiredChecked": "Required, checked",
+      "required": "Required",
+      "optional": "Optional",
+      "confirmDelete": "Delete {{code}} and its states?",
+      "codeHint": "Two letters (ISO 3166-1), for example VN. It cannot change later.",
+      "alpha3": "Three-letter code",
+      "allowsBilling": "Allows billing",
+      "allowsShipping": "Allows shipping",
+      "postalRequired": "Postal code required",
+      "pattern": "Postal code pattern",
+      "patternPlaceholder": "for example \\d{5}(-\\d{4})?",
+      "patternHint": "Optional regular expression the whole code must match. Needs “Postal code required”.",
+      "save": "Save country",
+      "statesOf": "States and provinces of {{name}}",
+      "newState": "New state",
+      "noStates": "No states yet. Addresses in this country use a free text state.",
+      "saveState": "Save state",
+      "errors": {
+        "load": "Unable to load countries.",
+        "save": "Unable to save the country.",
+        "delete": "Unable to delete the country.",
+        "loadStates": "Unable to load the states.",
+        "saveState": "Unable to save the state.",
+        "deleteState": "Unable to delete the state."
+      }
+    }
+  },
+  "currency": {
+    "display": "Display currency",
+    "approximate": "Prices in other currencies are approximate. Payment is always in {{code}}."
+  },
+  "media": {
+    "image": "Image",
+    "noImage": "No image",
+    "uploading": "Uploading…",
+    "replace": "Replace image",
+    "upload": "Upload image",
+    "remove": "Remove",
+    "hint": "JPEG, PNG, GIF or WebP, up to 5 MB.",
+    "errors": {
+      "tooLarge5": "The file is larger than 5 MB.",
+      "type": "Choose a JPEG, PNG, GIF or WebP image.",
+      "forbidden": "You do not have permission to upload this image.",
+      "signIn": "Sign in to upload images.",
+      "tooLarge": "The file is too large.",
+      "failed": "Upload failed."
+    }
+  },
+  "vendor": {
+    "portal": {
+      "eyebrow": "Vendor portal",
+      "yourShop": "Your shop",
+      "lede": "Manage your shop and the people who work on it.",
+      "loading": "Loading shop…",
+      "details": "Shop details",
+      "inactiveHidden": "Inactive — hidden from the storefront",
+      "contactEmail": "Contact email",
+      "manageProducts": "Manage products",
+      "manageMembers": "Manage members",
+      "viewPublic": "View public page",
+      "noShop": "Your account does not belong to a shop.",
+      "apply": "Apply to open a shop",
+      "errors": {
+        "loadShop": "Unable to load your shop.",
+        "loadAccount": "Unable to load your account."
+      }
+    },
+    "members": {
+      "eyebrow": "Vendor portal / Members",
+      "title": "Shop members.",
+      "lede": "Everyone on this list has the same access.",
+      "backToShop": "Back to shop",
+      "you": "You",
+      "confirmLeave": "Leave this shop?",
+      "confirmRemove": "Remove this member?",
+      "leaveShop": "Leave shop",
+      "leave": "Leave",
+      "resend": "Resend email",
+      "onlyMember": "You are the only member, so you cannot leave the shop.",
+      "addHeading": "Add account",
+      "addHint": "The new member gets an email with a link to set their own password. You never see or choose it.",
+      "add": "Add account",
+      "setupSent": "A set-password email was sent to {{email}}.",
+      "setupResent": "A new set-password email was sent to {{email}}.",
+      "devToken": "Development setup token: {{token}}",
+      "errors": {
+        "add": "Unable to add the account.",
+        "resend": "Unable to resend the email."
+      }
+    },
+    "products": {
+      "eyebrow": "Vendor portal / Products",
+      "title": "Your products.",
+      "lede": "Create and manage the products of your shop.",
+      "lowStock": "Low stock",
+      "hiddenByAdmin": "Hidden by an administrator: {{reason}}",
+      "reviewRequested": "Review requested.",
+      "was": "was {{price}}",
+      "special": "special {{price}}",
+      "publish": "Publish",
+      "stop": "Stop selling",
+      "requestReview": "Request review",
+      "htmlHint": "Basic HTML is kept: p, br, strong, em, u, s, h2–h4, ul, ol, li, blockquote and links (http, https, mailto). Anything else is removed when you save.",
+      "oldPriceHint": "Must be higher than the price. Leave 0 for none.",
+      "stockHint": "Change stock in Details, Inventory, so every change is recorded.",
+      "stockSumHint": "It is the sum of the variant stocks.",
+      "skuHint": "Unique inside your shop.",
+      "gtinHint": "8, 12, 13 or 14 digits.",
+      "mpn": "Manufacturer part number",
+      "saleFrom": "On sale from",
+      "saleFromHint": "Optional. Empty means as soon as it is published.",
+      "saleUntil": "On sale until",
+      "saleUntilHint": "Optional. Empty means no end.",
+      "noCategories": "No categories available.",
+      "noManufacturers": "No manufacturers available.",
+      "pictures": "Pictures",
+      "picturesHint": "up to {{max}}; the first one is the main picture; one is needed to publish",
+      "noPictures": "No pictures yet.",
+      "picture": "Picture {{index}}",
+      "main": "Main",
+      "moveEarlier": "Move {{name}} earlier",
+      "moveLater": "Move {{name}} later",
+      "removePicture": "Remove picture {{index}}",
+      "addPictures": "Add pictures",
+      "picturesFileHint": "JPEG, PNG, GIF or WebP, up to 5 MB each. Pictures are saved with the product.",
+      "relatedHint": "up to {{max}}; shown on the product page in this order",
+      "relatedSaveFirst": "Save the product first, then edit it to add related products.",
+      "relatedNone": "Your shop has no other products.",
+      "draftNote": "New products start as drafts. Publish them from the list when they are ready.",
+      "save": "Save product",
+      "savedWithoutPictures": "“{{name}}” was saved, but its pictures were not.",
+      "savedWithoutRelated": "“{{name}}” was saved, but its related products were not.",
+      "onlyMorePictures": "Only {{count}} more picture(s) can be added.",
+      "fileTooLarge": "“{{name}}” is larger than 5 MB.",
+      "fileType": "“{{name}}” is not a JPEG, PNG, GIF or WebP image.",
+      "uploadForbidden": "You cannot upload pictures right now.",
+      "copied": "“{{name}}” copied as “{{copy}}”. Add pictures and a SKU, then publish it.",
+      "scheduled": "Scheduled: on sale from {{date}}",
+      "windowEnded": "Sale window ended {{date}}",
+      "nowOnSale": "“{{name}}” is now on sale.",
+      "noLongerOnSale": "“{{name}}” is no longer on sale.",
+      "reviewSent": "Review requested. An administrator will look at it.",
+      "shopInactive": "Your shop is inactive, so products cannot be changed right now.",
+      "errors": {
+        "save": "Unable to save the product.",
+        "savePictures": "Unable to save the pictures.",
+        "saveRelated": "Unable to save the related products.",
+        "copy": "Unable to copy the product.",
+        "status": "Unable to change the product status.",
+        "review": "Unable to request a review."
+      }
+    },
+    "details": {
+      "eyebrow": "Vendor portal / Products / Details",
+      "title": "Product details",
+      "lede": "Variants, specifications and tags.",
+      "backToProducts": "Back to products",
+      "pricing": "Pricing",
+      "pricingIntro": "The regular price is {{price}} ({{code}}). A special price and quantity prices must be lower than it; customers get the lowest price that applies to them.",
+      "specialPrice": "Special price",
+      "leaveEmpty": "Leave empty for none.",
+      "specialFrom": "Special price from",
+      "rightAway": "Empty means right away.",
+      "specialUntil": "Special price until",
+      "noEnd": "Empty means no end.",
+      "tiersHint": "up to {{max}}; each larger quantity needs a lower price",
+      "noTiers": "No quantity prices.",
+      "fromQuantity": "From quantity",
+      "stepQuantity": "Quantity of step {{index}}",
+      "priceEach": "Price each",
+      "stepPrice": "Price of step {{index}}",
+      "savePricing": "Save pricing",
+      "inventory": "Inventory",
+      "item": "Item",
+      "onHand": "On hand",
+      "reserved": "Held by carts",
+      "available": "Available",
+      "product": "Product",
+      "total": "Total",
+      "lowStockBanner": "Stock is at or below the low-stock threshold ({{threshold}}).",
+      "combination": "Combination",
+      "change": "Change",
+      "changeHint": "Positive adds stock, negative removes it.",
+      "reason": "Reason",
+      "note": "Note",
+      "applyChange": "Apply change",
+      "track": "Track stock for this product",
+      "threshold": "Low-stock threshold",
+      "saveSettings": "Save settings",
+      "recent": "Recent changes",
+      "noMovements": "No recorded changes yet. History starts with the next change.",
+      "when": "When",
+      "after": "After",
+      "variants": "Variants",
+      "variantsIntro": "Pick up to {{max}} attributes defined by the platform, list the values you sell, then describe each sellable combination. The product stock is the sum of the combination stocks.",
+      "attributeN": "Attribute {{index}}",
+      "attribute": "Attribute",
+      "mustChoose": "Customer must choose",
+      "removeAttribute": "Remove attribute",
+      "valuePlaceholder": "Value, for example Red",
+      "valueOf": "Value {{value}} of attribute {{attribute}}",
+      "colorPlaceholder": "#RRGGBB (optional)",
+      "priceAdjustment": "Price adjustment",
+      "removeValue": "Remove value {{index}}",
+      "value": "Value",
+      "generate": "Generate all combinations",
+      "noCombinations": "No combinations yet. Generate them or save with none to clear the variants.",
+      "comboSku": "SKU of combination {{index}}",
+      "comboStock": "Stock of combination {{index}}",
+      "comboPrice": "Price of combination {{index}}",
+      "productPrice": "product price",
+      "totalStock": "Total stock: {{total}}. Leave the price empty to use the product price plus the value adjustments.",
+      "saveVariants": "Save variants",
+      "noSpecs": "The platform has not defined specifications yet.",
+      "noValues": "No values defined.",
+      "saveSpecs": "Save specifications",
+      "tagsPlaceholder": "gift, summer, cotton",
+      "tagsHint": "Separate with commas. Up to {{max}}; they are saved in lower case.",
+      "saveTags": "Save tags",
+      "notFound": "Product not found in your shop.",
+      "pricingSaved": "Pricing saved.",
+      "stockUpdated": "Stock updated.",
+      "settingsSaved": "Inventory settings saved.",
+      "tooManyCombinations": "That would make {{count}} combinations; the limit is {{max}}. Remove some values.",
+      "variantsSaved": "Variants saved. The product stock was updated.",
+      "specsSaved": "Specifications saved.",
+      "tagsSaved": "Tags saved.",
+      "reasons": {
+        "restock": "Restock (goods received)",
+        "correction": "Correction (count)",
+        "damage": "Damaged or lost",
+        "return": "Customer return"
+      },
+      "errors": {
+        "load": "Unable to load the product details.",
+        "pricing": "Unable to save the pricing.",
+        "stock": "Unable to change the stock.",
+        "settings": "Unable to save the settings.",
+        "variants": "Unable to save the variants.",
+        "specs": "Unable to save the specifications.",
+        "tags": "Unable to save the tags."
+      }
+    }
+  },
+  "adminVendorApplications": {
+    "eyebrow": "Admin / Vendor applications",
+    "title": "Review shop applications.",
+    "lede": "Approving an application creates the shop and makes the applicant its first member.",
+    "heading": "Applications",
+    "filterStatus": "Filter by status",
+    "searchPlaceholder": "Shop name or email…",
+    "search": "Search applications",
+    "empty": "No applications found.",
+    "applicant": "Applicant",
+    "submitted": "Submitted",
+    "reviewed": "Reviewed",
+    "details": "Details",
+    "taxCode": "Tax code",
+    "businessAddress": "Business address",
+    "rejectReason": "Reject reason",
+    "approveLabel": "Approve application",
+    "approveConfirm": "Approve this application?",
+    "approveHint": "The shop is created and active immediately, and the applicant becomes its first member.",
+    "shopNameOverride": "Shop name (optional override)",
+    "internalComment": "Internal comment (optional)",
+    "approving": "Approving…",
+    "confirmApproval": "Confirm approval",
+    "rejectLabel": "Reject application",
+    "rejectConfirm": "Reject this application?",
+    "rejectReasonLabel": "Reason (sent to the applicant)",
+    "rejecting": "Rejecting…",
+    "approve": "Approve",
+    "reject": "Reject",
+    "errors": {
+      "load": "Unable to load applications.",
+      "update": "Unable to update the application."
+    }
+  },
+  "becomeVendor": {
+    "eyebrow": "Customer / Sell on Nomori",
+    "title": "Open your shop.",
+    "lede": "Apply to sell on Nomori Marketplace. An administrator reviews every application.",
+    "openPortal": "Open vendor portal",
+    "resendVerification": "Resend verification email",
+    "approved": "Your application was approved.",
+    "pendingHeading": "Application waiting for review",
+    "confirmCancelLabel": "Confirm cancel",
+    "confirmCancel": "Cancel this application?",
+    "yesCancel": "Yes, cancel application",
+    "keep": "Keep it",
+    "cancelApplication": "Cancel application",
+    "rejectedHeading": "Application not approved",
+    "reason": "Reason:",
+    "applyAgain": "Apply again",
+    "editHeading": "Edit application",
+    "formHeading": "Shop application",
+    "fields": {
+      "shopName": "Shop name",
+      "phoneNumber": "Phone number"
+    },
+    "saveChanges": "Save changes",
+    "submit": "Submit application",
+    "verificationSent": "If the email is not yet verified, a new link is on its way.",
+    "errors": {
+      "load": "Unable to load your application.",
+      "sendEmail": "Unable to send the email. Try again later.",
+      "save": "Unable to save the application.",
+      "cancel": "Unable to cancel the application."
     }
   }
 }

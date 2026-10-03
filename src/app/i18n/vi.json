@@ -14,7 +14,8 @@
       "create": "Tạo",
       "update": "Cập nhật",
       "search": "Tìm",
-      "reset": "Đặt lại"
+      "reset": "Đặt lại",
+      "dismiss": "Đóng thông báo"
     },
     "states": {
       "loading": "Đang tải...",
@@ -37,6 +38,10 @@
       "prev": "Trước",
       "next": "Sau",
       "pageOf": "Trang {{page}} / {{total}}"
+    },
+    "notice": {
+      "saved": "Đã lưu {{name}}.",
+      "deleted": "Đã xóa {{name}}."
     }
   },
   "nav": {
@@ -94,7 +99,7 @@
     },
     "vendor_member": {
       "email_already_exists": "Email đã được sử dụng.",
-      "limit_reached": "Shop đã đủ 20 thành viên.",
+      "limit_reached": "Shop đã đạt số thành viên tối đa.",
       "already_active": "Thành viên này đã kích hoạt tài khoản.",
       "last_member": "Shop phải còn ít nhất một thành viên."
     },
@@ -107,7 +112,34 @@
     },
     "product": {
       "already_hidden": "Sản phẩm này đã bị ẩn.",
-      "not_hidden": "Sản phẩm này không bị ẩn."
+      "not_hidden": "Sản phẩm này không bị ẩn.",
+      "hidden_by_admin": "Quản trị viên đã ẩn sản phẩm này. Bạn có thể sửa và yêu cầu xem lại, nhưng chỉ quản trị viên mới mở bán lại được.",
+      "invalid_transition": "Không thể thực hiện thay đổi này với trạng thái hiện tại của sản phẩm."
+    },
+    "inventory": {
+      "insufficient_stock": "Không đủ tồn kho cho thay đổi này. Tồn kho không được âm hoặc thấp hơn số lượng khách đang giữ trong giỏ.",
+      "reservation_expired": "Phần hàng được giữ đã hết hạn.",
+      "active_reservations": "Khách đang giữ hàng của sản phẩm này nên chưa thay được biến thể. Hãy thử lại sau vài phút."
+    },
+    "currency": {
+      "primary_locked": "Không thể đổi tiền tệ chính hoặc số chữ số thập phân khi đã có sản phẩm, vì giá sẽ đổi nghĩa.",
+      "primary_required": "Tiền tệ chính phải luôn được xuất bản và không xóa được. Hãy đặt tiền tệ khác làm chính trước.",
+      "code_exists": "Đã có tiền tệ với mã này."
+    },
+    "cart": {
+      "own_product": "Bạn không thể mua sản phẩm của chính shop mình.",
+      "line_limit": "Giỏ hàng đã đầy (50 sản phẩm khác nhau). Hãy bỏ bớt để thêm sản phẩm mới."
+    },
+    "country": {
+      "code_exists": "Đã có quốc gia với mã này.",
+      "in_use": "Có địa chỉ đã lưu đang dùng quốc gia này nên không xóa được. Hãy bỏ xuất bản thay vì xóa."
+    },
+    "state": {
+      "code_exists": "Quốc gia này đã có tỉnh/bang với mã này.",
+      "in_use": "Có địa chỉ đã lưu đang dùng tỉnh/bang này nên không xóa được. Hãy bỏ xuất bản thay vì xóa."
+    },
+    "vendor": {
+      "platform_shop": "Không thể xóa hoặc tắt shop của sàn."
     }
   },
   "vendorStatus": {
@@ -432,7 +464,8 @@
       "chipPrice": "Giá: {{min}} – {{max}}",
       "chipInStock": "Còn hàng",
       "chipBrand": "Thương hiệu: {{name}}",
-      "chipTag": "Tag: {{name}}"
+      "chipTag": "Tag: {{name}}",
+      "chipFilter": "Bộ lọc {{id}}"
     },
     "productDetail": {
       "loading": "Đang tải sản phẩm...",
@@ -475,10 +508,47 @@
       "eyebrow": "Shop",
       "invalid": "Shop không hợp lệ.",
       "notFound": "Không tìm thấy shop.",
-      "loadError": "Không tải được shop."
+      "loadError": "Không tải được shop.",
+      "noProducts": "Shop này chưa có sản phẩm nào."
     },
     "cart": {
-      "added": "Đã thêm {{name}} vào giỏ hàng."
+      "added": "Đã thêm {{name}} vào giỏ hàng.",
+      "unavailable": "Sản phẩm này không còn bán nữa.",
+      "addFailed": "Không thêm được vào giỏ hàng. Hãy thử lại.",
+      "view": "Xem giỏ hàng",
+      "eyebrow": "Cửa hàng / Giỏ hàng",
+      "title": "Giỏ hàng của bạn.",
+      "loading": "Đang tải giỏ hàng…",
+      "emptyTitle": "Giỏ hàng đang trống",
+      "emptyMessage": "Tìm món bạn thích và thêm vào giỏ hàng.",
+      "browse": "Xem sản phẩm",
+      "pricesChanged": "Một số giá đã thay đổi từ lúc bạn thêm vào giỏ. Hãy kiểm tra các dòng có ghi “Giá đã thay đổi”.",
+      "acceptPrices": "Chấp nhận giá mới",
+      "itemsFrom": "Sản phẩm của {{name}}",
+      "subtotalValue": "Tạm tính {{amount}}",
+      "quantityOf": "Số lượng của {{name}}",
+      "quantityPrice": "Giá theo số lượng",
+      "summaryLabel": "Tóm tắt đơn hàng",
+      "summary": "Tóm tắt",
+      "items": "Số sản phẩm",
+      "subtotal": "Tạm tính",
+      "currencyNote": "Phí vận chuyển và thuế được cộng khi thanh toán. Giá tính bằng {{code}} và bạn luôn thanh toán bằng {{code}}.",
+      "fixLines": "Hãy sửa hoặc bỏ các dòng được đánh dấu ở trên để tiếp tục.",
+      "checkout": "Thanh toán",
+      "checkoutSoon": "Thanh toán là bước tiếp theo của sàn và chưa có ở thời điểm này.",
+      "clear": "Xóa giỏ hàng",
+      "errors": {
+        "load": "Không tải được giỏ hàng."
+      },
+      "issues": {
+        "unavailable": "Không còn bán",
+        "variantUnavailable": "Tùy chọn này không còn được bán",
+        "outOfStock": "Hết hàng",
+        "insufficientStock": "Không đủ hàng",
+        "priceChanged": "Giá đã thay đổi",
+        "onlyInStock": "Chỉ còn {{count}} sản phẩm. Hãy giảm số lượng.",
+        "priceChangedFrom": "Giá đã đổi từ {{from}} thành {{to}} mỗi sản phẩm."
+      }
     }
   },
   "admin": {
@@ -681,6 +751,356 @@
       "hiddenReason": "Đã ẩn: {{reason}}",
       "hideReasonLabel": "Lý do (gửi email cho shop)",
       "hideProduct": "Ẩn sản phẩm"
+    },
+    "currencies": {
+      "eyebrow": "Quản trị / Cài đặt",
+      "title": "Tiền tệ.",
+      "ledePrimary": "Mọi giá được lưu theo tiền tệ chính ({{code}}).",
+      "ledeRest": "Các tiền tệ đã xuất bản khác chỉ để hiển thị: khách thấy giá ước tính và luôn thanh toán bằng tiền tệ chính. Tỷ giá là số đơn vị của tiền tệ đó cho một đơn vị tiền tệ chính.",
+      "new": "Tiền tệ mới",
+      "edit": "Sửa tiền tệ",
+      "code": "Mã",
+      "symbol": "Ký hiệu",
+      "decimals": "Số thập phân",
+      "decimalPlaces": "Số chữ số thập phân",
+      "rate": "Tỷ giá",
+      "rateUpdated": "Cập nhật tỷ giá",
+      "primary": "Chính",
+      "hidden": "Ẩn",
+      "confirmPrimary": "Đặt {{code}} làm tiền tệ chính?",
+      "confirmDelete": "Xóa {{code}}?",
+      "makePrimary": "Đặt làm chính",
+      "codeHint": "Ba chữ cái, ví dụ EUR. Không đổi được sau này.",
+      "symbolHint": "Hiện trước số tiền. Để trống thì dùng mã.",
+      "decimalsHint": "Chọn 0 cho tiền tệ không có số lẻ. Giá theo tiền tệ chính không được có nhiều chữ số thập phân hơn.",
+      "primaryRate": "Tiền tệ chính luôn có tỷ giá 1.",
+      "rateHint": "Số đơn vị của tiền tệ này cho 1 {{code}}.",
+      "publishedHint": "Đã xuất bản (khách chọn được)",
+      "save": "Lưu tiền tệ",
+      "primaryChanged": "{{code}} giờ là tiền tệ chính. Tỷ giá đã được tính lại.",
+      "errors": {
+        "load": "Không tải được danh sách tiền tệ.",
+        "save": "Không lưu được tiền tệ.",
+        "primary": "Không đổi được tiền tệ chính.",
+        "delete": "Không xóa được tiền tệ."
+      }
+    },
+    "countries": {
+      "title": "Quốc gia và tỉnh/bang.",
+      "lede": "Khách chỉ dùng được quốc gia đã xuất bản trong địa chỉ. Quốc gia có tỉnh/bang đã xuất bản thì mọi địa chỉ phải chọn một tỉnh/bang. Có thể bắt buộc mã bưu chính và kiểm tra theo mẫu.",
+      "new": "Quốc gia mới",
+      "edit": "Sửa quốc gia",
+      "billing": "Thanh toán",
+      "shipping": "Giao hàng",
+      "states": "Tỉnh/bang",
+      "requiredChecked": "Bắt buộc, có kiểm tra",
+      "required": "Bắt buộc",
+      "optional": "Không bắt buộc",
+      "confirmDelete": "Xóa {{code}} và các tỉnh/bang của nó?",
+      "codeHint": "Hai chữ cái (ISO 3166-1), ví dụ VN. Không đổi được sau này.",
+      "alpha3": "Mã ba chữ cái",
+      "allowsBilling": "Cho phép địa chỉ thanh toán",
+      "allowsShipping": "Cho phép giao hàng",
+      "postalRequired": "Bắt buộc mã bưu chính",
+      "pattern": "Mẫu mã bưu chính",
+      "patternPlaceholder": "ví dụ \\d{5}(-\\d{4})?",
+      "patternHint": "Biểu thức chính quy (không bắt buộc) mà toàn bộ mã phải khớp. Cần bật “Bắt buộc mã bưu chính”.",
+      "save": "Lưu quốc gia",
+      "statesOf": "Tỉnh/bang của {{name}}",
+      "newState": "Tỉnh/bang mới",
+      "noStates": "Chưa có tỉnh/bang nào. Địa chỉ ở quốc gia này nhập tỉnh/bang tự do.",
+      "saveState": "Lưu tỉnh/bang",
+      "errors": {
+        "load": "Không tải được danh sách quốc gia.",
+        "save": "Không lưu được quốc gia.",
+        "delete": "Không xóa được quốc gia.",
+        "loadStates": "Không tải được danh sách tỉnh/bang.",
+        "saveState": "Không lưu được tỉnh/bang.",
+        "deleteState": "Không xóa được tỉnh/bang."
+      }
+    }
+  },
+  "currency": {
+    "display": "Tiền tệ hiển thị",
+    "approximate": "Giá theo tiền tệ khác chỉ là ước tính. Thanh toán luôn bằng {{code}}."
+  },
+  "media": {
+    "image": "Ảnh",
+    "noImage": "Chưa có ảnh",
+    "uploading": "Đang tải lên…",
+    "replace": "Thay ảnh",
+    "upload": "Tải ảnh lên",
+    "remove": "Xóa ảnh",
+    "hint": "JPEG, PNG, GIF hoặc WebP, tối đa 5 MB.",
+    "errors": {
+      "tooLarge5": "File lớn hơn 5 MB.",
+      "type": "Hãy chọn ảnh JPEG, PNG, GIF hoặc WebP.",
+      "forbidden": "Bạn không có quyền tải ảnh này lên.",
+      "signIn": "Hãy đăng nhập để tải ảnh lên.",
+      "tooLarge": "File quá lớn.",
+      "failed": "Tải lên thất bại."
+    }
+  },
+  "vendor": {
+    "portal": {
+      "eyebrow": "Kênh người bán",
+      "yourShop": "Shop của bạn",
+      "lede": "Quản lý shop và những người cùng vận hành shop.",
+      "loading": "Đang tải shop…",
+      "details": "Thông tin shop",
+      "inactiveHidden": "Đã tắt — không hiện trên cửa hàng",
+      "contactEmail": "Email liên hệ",
+      "manageProducts": "Quản lý sản phẩm",
+      "manageMembers": "Quản lý thành viên",
+      "viewPublic": "Xem trang công khai",
+      "noShop": "Tài khoản của bạn không thuộc shop nào.",
+      "apply": "Đăng ký mở shop",
+      "errors": {
+        "loadShop": "Không tải được shop của bạn.",
+        "loadAccount": "Không tải được tài khoản của bạn."
+      }
+    },
+    "members": {
+      "eyebrow": "Kênh người bán / Thành viên",
+      "title": "Thành viên shop.",
+      "lede": "Mọi người trong danh sách có quyền như nhau.",
+      "backToShop": "Quay lại shop",
+      "you": "Bạn",
+      "confirmLeave": "Rời shop này?",
+      "confirmRemove": "Gỡ thành viên này?",
+      "leaveShop": "Rời shop",
+      "leave": "Rời",
+      "resend": "Gửi lại email",
+      "onlyMember": "Bạn là thành viên duy nhất nên không thể rời shop.",
+      "addHeading": "Thêm tài khoản",
+      "addHint": "Thành viên mới sẽ nhận email có link để tự đặt mật khẩu. Bạn không bao giờ thấy hay chọn mật khẩu đó.",
+      "add": "Thêm tài khoản",
+      "setupSent": "Đã gửi email đặt mật khẩu tới {{email}}.",
+      "setupResent": "Đã gửi lại email đặt mật khẩu tới {{email}}.",
+      "devToken": "Token thiết lập (development): {{token}}",
+      "errors": {
+        "add": "Không thêm được tài khoản.",
+        "resend": "Không gửi lại được email."
+      }
+    },
+    "products": {
+      "eyebrow": "Kênh người bán / Sản phẩm",
+      "title": "Sản phẩm của bạn.",
+      "lede": "Tạo và quản lý sản phẩm của shop.",
+      "lowStock": "Sắp hết hàng",
+      "hiddenByAdmin": "Bị quản trị viên ẩn: {{reason}}",
+      "reviewRequested": "Đã yêu cầu xem lại.",
+      "was": "giá cũ {{price}}",
+      "special": "giá đặc biệt {{price}}",
+      "publish": "Đăng bán",
+      "stop": "Ngừng bán",
+      "requestReview": "Yêu cầu xem lại",
+      "htmlHint": "Giữ lại HTML cơ bản: p, br, strong, em, u, s, h2–h4, ul, ol, li, blockquote và link (http, https, mailto). Phần còn lại bị xóa khi lưu.",
+      "oldPriceHint": "Phải cao hơn giá bán. Để 0 nếu không có.",
+      "stockHint": "Đổi tồn kho trong Chi tiết, mục Tồn kho, để mọi thay đổi đều được ghi lại.",
+      "stockSumHint": "Đây là tổng tồn kho của các biến thể.",
+      "skuHint": "Không trùng trong shop của bạn.",
+      "gtinHint": "8, 12, 13 hoặc 14 chữ số.",
+      "mpn": "Mã linh kiện của nhà sản xuất",
+      "saleFrom": "Mở bán từ",
+      "saleFromHint": "Không bắt buộc. Để trống là mở bán ngay khi đăng.",
+      "saleUntil": "Bán đến",
+      "saleUntilHint": "Không bắt buộc. Để trống là không giới hạn.",
+      "noCategories": "Chưa có danh mục nào để chọn.",
+      "noManufacturers": "Chưa có nhà sản xuất nào để chọn.",
+      "pictures": "Ảnh",
+      "picturesHint": "tối đa {{max}}; ảnh đầu tiên là ảnh chính; cần ít nhất một ảnh để đăng bán",
+      "noPictures": "Chưa có ảnh nào.",
+      "picture": "Ảnh {{index}}",
+      "main": "Ảnh chính",
+      "moveEarlier": "Đưa {{name}} lên trước",
+      "moveLater": "Đưa {{name}} ra sau",
+      "removePicture": "Xóa ảnh {{index}}",
+      "addPictures": "Thêm ảnh",
+      "picturesFileHint": "JPEG, PNG, GIF hoặc WebP, mỗi ảnh tối đa 5 MB. Ảnh được lưu cùng sản phẩm.",
+      "relatedHint": "tối đa {{max}}; hiện trên trang sản phẩm theo thứ tự này",
+      "relatedSaveFirst": "Hãy lưu sản phẩm trước, rồi sửa để thêm sản phẩm liên quan.",
+      "relatedNone": "Shop của bạn chưa có sản phẩm nào khác.",
+      "draftNote": "Sản phẩm mới bắt đầu ở trạng thái nháp. Hãy đăng bán từ danh sách khi đã sẵn sàng.",
+      "save": "Lưu sản phẩm",
+      "savedWithoutPictures": "Đã lưu “{{name}}”, nhưng chưa lưu được ảnh.",
+      "savedWithoutRelated": "Đã lưu “{{name}}”, nhưng chưa lưu được sản phẩm liên quan.",
+      "onlyMorePictures": "Chỉ thêm được {{count}} ảnh nữa.",
+      "fileTooLarge": "“{{name}}” lớn hơn 5 MB.",
+      "fileType": "“{{name}}” không phải ảnh JPEG, PNG, GIF hoặc WebP.",
+      "uploadForbidden": "Hiện bạn không tải ảnh lên được.",
+      "copied": "Đã sao chép “{{name}}” thành “{{copy}}”. Hãy thêm ảnh và SKU rồi đăng bán.",
+      "scheduled": "Đã lên lịch: mở bán từ {{date}}",
+      "windowEnded": "Thời gian bán đã kết thúc lúc {{date}}",
+      "nowOnSale": "“{{name}}” đã được đăng bán.",
+      "noLongerOnSale": "“{{name}}” đã ngừng bán.",
+      "reviewSent": "Đã gửi yêu cầu xem lại. Quản trị viên sẽ kiểm tra.",
+      "shopInactive": "Shop của bạn đang tắt nên hiện chưa sửa được sản phẩm.",
+      "errors": {
+        "save": "Không lưu được sản phẩm.",
+        "savePictures": "Không lưu được ảnh.",
+        "saveRelated": "Không lưu được sản phẩm liên quan.",
+        "copy": "Không sao chép được sản phẩm.",
+        "status": "Không đổi được trạng thái sản phẩm.",
+        "review": "Không gửi được yêu cầu xem lại."
+      }
+    },
+    "details": {
+      "eyebrow": "Kênh người bán / Sản phẩm / Chi tiết",
+      "title": "Chi tiết sản phẩm",
+      "lede": "Biến thể, thông số và tag.",
+      "backToProducts": "Quay lại danh sách sản phẩm",
+      "pricing": "Giá",
+      "pricingIntro": "Giá thường là {{price}} ({{code}}). Giá đặc biệt và giá theo số lượng phải thấp hơn giá này; khách được hưởng mức giá thấp nhất áp dụng cho họ.",
+      "specialPrice": "Giá đặc biệt",
+      "leaveEmpty": "Để trống nếu không có.",
+      "specialFrom": "Giá đặc biệt từ",
+      "rightAway": "Để trống là áp dụng ngay.",
+      "specialUntil": "Giá đặc biệt đến",
+      "noEnd": "Để trống là không giới hạn.",
+      "tiersHint": "tối đa {{max}}; số lượng càng lớn thì giá phải càng thấp",
+      "noTiers": "Chưa có giá theo số lượng.",
+      "fromQuantity": "Từ số lượng",
+      "stepQuantity": "Số lượng của bậc {{index}}",
+      "priceEach": "Giá mỗi sản phẩm",
+      "stepPrice": "Giá của bậc {{index}}",
+      "savePricing": "Lưu giá",
+      "inventory": "Tồn kho",
+      "item": "Mục",
+      "onHand": "Trong kho",
+      "reserved": "Đang giữ trong giỏ",
+      "available": "Còn bán được",
+      "product": "Sản phẩm",
+      "total": "Tổng",
+      "lowStockBanner": "Tồn kho đang bằng hoặc dưới ngưỡng sắp hết hàng ({{threshold}}).",
+      "combination": "Tổ hợp",
+      "change": "Thay đổi",
+      "changeHint": "Số dương để thêm, số âm để bớt.",
+      "reason": "Lý do",
+      "note": "Ghi chú",
+      "applyChange": "Áp dụng thay đổi",
+      "track": "Theo dõi tồn kho cho sản phẩm này",
+      "threshold": "Ngưỡng sắp hết hàng",
+      "saveSettings": "Lưu cài đặt",
+      "recent": "Thay đổi gần đây",
+      "noMovements": "Chưa có thay đổi nào được ghi. Lịch sử bắt đầu từ lần thay đổi tiếp theo.",
+      "when": "Thời điểm",
+      "after": "Sau thay đổi",
+      "variants": "Biến thể",
+      "variantsIntro": "Chọn tối đa {{max}} thuộc tính do sàn định nghĩa, liệt kê các giá trị bạn bán, rồi mô tả từng tổ hợp có thể bán. Tồn kho sản phẩm bằng tổng tồn kho các tổ hợp.",
+      "attributeN": "Thuộc tính {{index}}",
+      "attribute": "Thuộc tính",
+      "mustChoose": "Khách bắt buộc phải chọn",
+      "removeAttribute": "Xóa thuộc tính",
+      "valuePlaceholder": "Giá trị, ví dụ Đỏ",
+      "valueOf": "Giá trị {{value}} của thuộc tính {{attribute}}",
+      "colorPlaceholder": "#RRGGBB (không bắt buộc)",
+      "priceAdjustment": "Điều chỉnh giá",
+      "removeValue": "Xóa giá trị {{index}}",
+      "value": "Giá trị",
+      "generate": "Tạo tất cả tổ hợp",
+      "noCombinations": "Chưa có tổ hợp nào. Hãy tạo tổ hợp, hoặc lưu khi không có tổ hợp để xóa biến thể.",
+      "comboSku": "SKU của tổ hợp {{index}}",
+      "comboStock": "Tồn kho của tổ hợp {{index}}",
+      "comboPrice": "Giá của tổ hợp {{index}}",
+      "productPrice": "giá sản phẩm",
+      "totalStock": "Tổng tồn kho: {{total}}. Để trống giá thì dùng giá sản phẩm cộng các điều chỉnh của giá trị.",
+      "saveVariants": "Lưu biến thể",
+      "noSpecs": "Sàn chưa định nghĩa thông số nào.",
+      "noValues": "Chưa có giá trị nào.",
+      "saveSpecs": "Lưu thông số",
+      "tagsPlaceholder": "quà tặng, mùa hè, cotton",
+      "tagsHint": "Phân cách bằng dấu phẩy. Tối đa {{max}}; tag được lưu dạng chữ thường.",
+      "saveTags": "Lưu tag",
+      "notFound": "Không tìm thấy sản phẩm trong shop của bạn.",
+      "pricingSaved": "Đã lưu giá.",
+      "stockUpdated": "Đã cập nhật tồn kho.",
+      "settingsSaved": "Đã lưu cài đặt tồn kho.",
+      "tooManyCombinations": "Như vậy sẽ có {{count}} tổ hợp; giới hạn là {{max}}. Hãy bỏ bớt giá trị.",
+      "variantsSaved": "Đã lưu biến thể. Tồn kho sản phẩm đã được cập nhật.",
+      "specsSaved": "Đã lưu thông số.",
+      "tagsSaved": "Đã lưu tag.",
+      "reasons": {
+        "restock": "Nhập hàng (đã nhận hàng)",
+        "correction": "Điều chỉnh (kiểm kê)",
+        "damage": "Hỏng hoặc mất",
+        "return": "Khách trả hàng"
+      },
+      "errors": {
+        "load": "Không tải được chi tiết sản phẩm.",
+        "pricing": "Không lưu được giá.",
+        "stock": "Không thay đổi được tồn kho.",
+        "settings": "Không lưu được cài đặt.",
+        "variants": "Không lưu được biến thể.",
+        "specs": "Không lưu được thông số.",
+        "tags": "Không lưu được tag."
+      }
+    }
+  },
+  "adminVendorApplications": {
+    "eyebrow": "Quản trị / Đơn đăng ký vendor",
+    "title": "Duyệt đơn mở shop.",
+    "lede": "Duyệt một đơn sẽ tạo shop và đưa người nộp đơn thành thành viên đầu tiên.",
+    "heading": "Đơn đăng ký",
+    "filterStatus": "Lọc theo trạng thái",
+    "searchPlaceholder": "Tên shop hoặc email…",
+    "search": "Tìm đơn đăng ký",
+    "empty": "Không có đơn đăng ký nào.",
+    "applicant": "Người nộp đơn",
+    "submitted": "Ngày nộp",
+    "reviewed": "Ngày xử lý",
+    "details": "Chi tiết",
+    "taxCode": "Mã số thuế",
+    "businessAddress": "Địa chỉ kinh doanh",
+    "rejectReason": "Lý do từ chối",
+    "approveLabel": "Duyệt đơn",
+    "approveConfirm": "Duyệt đơn này?",
+    "approveHint": "Shop được tạo và hoạt động ngay, người nộp đơn trở thành thành viên đầu tiên.",
+    "shopNameOverride": "Tên shop (không bắt buộc, dùng thay tên trong đơn)",
+    "internalComment": "Ghi chú nội bộ (không bắt buộc)",
+    "approving": "Đang duyệt…",
+    "confirmApproval": "Xác nhận duyệt",
+    "rejectLabel": "Từ chối đơn",
+    "rejectConfirm": "Từ chối đơn này?",
+    "rejectReasonLabel": "Lý do (gửi cho người nộp đơn)",
+    "rejecting": "Đang từ chối…",
+    "approve": "Duyệt",
+    "reject": "Từ chối",
+    "errors": {
+      "load": "Không tải được danh sách đơn.",
+      "update": "Không cập nhật được đơn."
+    }
+  },
+  "becomeVendor": {
+    "eyebrow": "Khách hàng / Bán hàng cùng Nomori",
+    "title": "Mở shop của bạn.",
+    "lede": "Đăng ký bán hàng trên Nomori Marketplace. Mọi đơn đều được quản trị viên xét duyệt.",
+    "openPortal": "Mở Kênh người bán",
+    "resendVerification": "Gửi lại email xác thực",
+    "approved": "Đơn của bạn đã được duyệt.",
+    "pendingHeading": "Đơn đang chờ duyệt",
+    "confirmCancelLabel": "Xác nhận hủy",
+    "confirmCancel": "Hủy đơn đăng ký này?",
+    "yesCancel": "Có, hủy đơn",
+    "keep": "Giữ lại",
+    "cancelApplication": "Hủy đơn",
+    "rejectedHeading": "Đơn chưa được duyệt",
+    "reason": "Lý do:",
+    "applyAgain": "Nộp lại",
+    "editHeading": "Sửa đơn đăng ký",
+    "formHeading": "Đơn đăng ký mở shop",
+    "fields": {
+      "shopName": "Tên shop",
+      "phoneNumber": "Số điện thoại"
+    },
+    "saveChanges": "Lưu thay đổi",
+    "submit": "Gửi đơn",
+    "verificationSent": "Nếu email chưa được xác thực, link mới đang được gửi tới bạn.",
+    "errors": {
+      "load": "Không tải được đơn đăng ký của bạn.",
+      "sendEmail": "Không gửi được email. Hãy thử lại sau.",
+      "save": "Không lưu được đơn đăng ký.",
+      "cancel": "Không hủy được đơn đăng ký."
     }
   }
 }
