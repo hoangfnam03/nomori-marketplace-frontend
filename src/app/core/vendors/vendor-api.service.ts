@@ -2,64 +2,101 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { API_BASE_URL } from '../config/api-config';
 import {
-  VendorAdminPagedResponse, VendorAdminResponse,
-  VendorPublicPagedResponse, VendorPublicResponse
+  ChangeVendorApplicationStatusRequest, CreateVendorMemberRequest, PagedResponse,
+  SaveVendorApplicationRequest, VendorApplicationResponse, VendorApplicationStatus,
+  VendorMemberCreatedResponse, VendorMemberResponse, VendorNoteResponse, VendorPagedResponse, VendorResponse
 } from './vendor.models';
 
-export interface SaveVendorRequest {
+export interface UpdateVendorRequest {
   name: string;
   email: string;
   description?: string | null;
   adminComment?: string | null;
   active?: boolean;
   displayOrder?: number;
+  /** Omit to keep the current logo; 0 removes it. */
+  pictureId?: number;
 }
 
+/** One set of routes for every caller; the API decides what each caller may see. */
 @Injectable({ providedIn: 'root' })
 export class VendorApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiBaseUrl = inject(API_BASE_URL);
+  private readonly base = `${inject(API_BASE_URL)}/v1`;
 
-  // Public
-  getVendors(page = 1, pageSize = 20, search?: string) {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (search) params = params.set('search', search);
-    return this.http.get<VendorPublicPagedResponse>(`${this.apiBaseUrl}/v1/vendors`, { params });
-  }
-
-  getVendor(id: number) {
-    return this.http.get<VendorPublicResponse>(`${this.apiBaseUrl}/v1/vendors/${id}`);
-  }
-
-  // Admin
-  adminGetVendors(page = 1, pageSize = 50, search?: string, active?: boolean) {
+  // Vendors
+  getVendors(page = 1, pageSize = 20, search?: string, active?: boolean) {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (search) params = params.set('search', search);
     if (active !== undefined) params = params.set('active', active);
-    return this.http.get<VendorAdminPagedResponse>(`${this.apiBaseUrl}/v1/admin/vendors`, { params });
+    return this.http.get<VendorPagedResponse>(`${this.base}/vendors`, { params });
   }
 
-  adminGetVendor(id: number) {
-    return this.http.get<VendorAdminResponse>(`${this.apiBaseUrl}/v1/admin/vendors/${id}`);
+  getVendor(id: number) {
+    return this.http.get<VendorResponse>(`${this.base}/vendors/${id}`);
   }
 
-  adminCreateVendor(body: SaveVendorRequest) {
-    return this.http.post<VendorAdminResponse>(`${this.apiBaseUrl}/v1/admin/vendors`, body);
+  updateVendor(id: number, body: UpdateVendorRequest) {
+    return this.http.put<VendorResponse>(`${this.base}/vendors/${id}`, body);
   }
 
-  adminUpdateVendor(id: number, body: SaveVendorRequest) {
-    return this.http.put<VendorAdminResponse>(`${this.apiBaseUrl}/v1/admin/vendors/${id}`, body);
+  deleteVendor(id: number) {
+    return this.http.delete<void>(`${this.base}/vendors/${id}`);
   }
 
-  adminDeleteVendor(id: number) {
-    return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/vendors/${id}`);
+  // Notes (administrators)
+  getNotes(vendorId: number, page = 1, pageSize = 20) {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<PagedResponse<VendorNoteResponse>>(`${this.base}/vendors/${vendorId}/notes`, { params });
   }
 
-  adminAssignCustomer(vendorId: number, customerId: number) {
-    return this.http.post<void>(`${this.apiBaseUrl}/v1/admin/vendors/${vendorId}/customer`, { customerId });
+  addNote(vendorId: number, note: string) {
+    return this.http.post<VendorNoteResponse>(`${this.base}/vendors/${vendorId}/notes`, { note });
   }
 
-  adminUnassignCustomer(vendorId: number, customerId: number) {
-    return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/vendors/${vendorId}/customer/${customerId}`);
+  deleteNote(vendorId: number, noteId: number) {
+    return this.http.delete<void>(`${this.base}/vendors/${vendorId}/notes/${noteId}`);
+  }
+
+  // Members
+  getMembers(vendorId: number) {
+    return this.http.get<VendorMemberResponse[]>(`${this.base}/vendors/${vendorId}/members`);
+  }
+
+  createMember(vendorId: number, body: CreateVendorMemberRequest) {
+    return this.http.post<VendorMemberCreatedResponse>(`${this.base}/vendors/${vendorId}/members`, body);
+  }
+
+  resendSetupEmail(vendorId: number, customerId: number) {
+    return this.http.post<{ developmentSetupToken: string | null }>(
+      `${this.base}/vendors/${vendorId}/members/${customerId}/setup-email`, {});
+  }
+
+  removeMember(vendorId: number, customerId: number) {
+    return this.http.delete<void>(`${this.base}/vendors/${vendorId}/members/${customerId}`);
+  }
+
+  // Applications
+  submitApplication(body: SaveVendorApplicationRequest) {
+    return this.http.post<VendorApplicationResponse>(`${this.base}/vendor-applications`, body);
+  }
+
+  getApplications(options: { status?: VendorApplicationStatus; search?: string; page?: number; pageSize?: number } = {}) {
+    let params = new HttpParams().set('page', options.page ?? 1).set('pageSize', options.pageSize ?? 20);
+    if (options.status) params = params.set('status', options.status);
+    if (options.search) params = params.set('search', options.search);
+    return this.http.get<PagedResponse<VendorApplicationResponse>>(`${this.base}/vendor-applications`, { params });
+  }
+
+  getApplication(id: number) {
+    return this.http.get<VendorApplicationResponse>(`${this.base}/vendor-applications/${id}`);
+  }
+
+  updateApplication(id: number, body: SaveVendorApplicationRequest) {
+    return this.http.put<VendorApplicationResponse>(`${this.base}/vendor-applications/${id}`, body);
+  }
+
+  changeApplicationStatus(id: number, body: ChangeVendorApplicationStatusRequest) {
+    return this.http.put<VendorApplicationResponse>(`${this.base}/vendor-applications/${id}/status`, body);
   }
 }

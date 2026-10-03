@@ -2,13 +2,13 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { API_BASE_URL } from '../config/api-config';
 import {
-  AdminCategoryResponse, AdminManufacturerResponse,
+  AdminCategoryResponse, AdminCategoryTreeNode, SelectableCategory, AdminManufacturerResponse,
   AdminProductDetailResponse, AdminProductResponse,
   CategoryResponse, CategoryTreeNode, ManufacturerResponse,
-  PagedResult, ProductDetailResponse, ProductResponse
+  PagedResult, PriceQuote, ProductDetailResponse, ProductFacets, ProductResponse, ProductSuggestion
 } from './catalog.models';
 import {
-  ProductAttributeSpec, ProductAttributeDetail,
+  ProductAttributeSpec, ProductAttributeDetail, PublicAttributeDetail,
   ProductAttributeMapping, ProductAttributeValue, ProductAttributeCombination
 } from './product-attribute.models';
 import {
@@ -25,6 +25,13 @@ export interface ProductListParams {
   maxPrice?: number | null;
   search?: string | null;
   sort?: string;
+  /** Only products sold by this shop. */
+  vendorId?: number | null;
+  manufacturerIds?: number[];
+  tags?: string[];
+  specOptionIds?: number[];
+  /** Only products that can still be bought. */
+  inStock?: boolean;
 }
 
 export interface SaveCategoryRequest {
@@ -34,6 +41,7 @@ export interface SaveCategoryRequest {
   pictureId?: number;
   showOnHomepage?: boolean;
   published?: boolean;
+  restrictFromVendors?: boolean;
   displayOrder?: number;
 }
 
@@ -82,16 +90,44 @@ export class CatalogApiService {
   }
 
   getProducts(p: ProductListParams = {}) {
-    let params = new HttpParams()
+    let params = this.filterParams(p)
       .set('page', p.page ?? 1)
       .set('pageSize', p.pageSize ?? 20);
+    if (p.sort) params = params.set('sort', p.sort);
+    return this.http.get<PagedResult<ProductResponse>>(`${this.apiBaseUrl}/v1/catalog/products`, { params });
+  }
+
+  /** Counts for the filter panel; paging and sort do not apply. */
+  getFacets(p: ProductListParams = {}) {
+    return this.http.get<ProductFacets>(`${this.apiBaseUrl}/v1/catalog/products/facets`, { params: this.filterParams(p) });
+  }
+
+  /** Up to 8 products for the text typed so far; nothing for fewer than 2 characters. */
+  suggest(text: string) {
+    return this.http.get<ProductSuggestion[]>(`${this.apiBaseUrl}/v1/catalog/products/suggest`, { params: new HttpParams().set('q', text) });
+  }
+
+  /** Lists are sent as repeated keys, for example manufacturerIds=1&manufacturerIds=2. */
+  private filterParams(p: ProductListParams): HttpParams {
+    let params = new HttpParams();
     if (p.categoryId != null) params = params.set('categoryId', p.categoryId);
     if (p.manufacturerId != null) params = params.set('manufacturerId', p.manufacturerId);
     if (p.minPrice != null) params = params.set('minPrice', p.minPrice);
     if (p.maxPrice != null) params = params.set('maxPrice', p.maxPrice);
     if (p.search) params = params.set('search', p.search);
-    if (p.sort) params = params.set('sort', p.sort);
-    return this.http.get<PagedResult<ProductResponse>>(`${this.apiBaseUrl}/v1/catalog/products`, { params });
+    if (p.vendorId != null) params = params.set('vendorId', p.vendorId);
+    if (p.inStock) params = params.set('inStock', true);
+    for (const id of p.manufacturerIds ?? []) params = params.append('manufacturerIds', id);
+    for (const tag of p.tags ?? []) params = params.append('tags', tag);
+    for (const id of p.specOptionIds ?? []) params = params.append('specOptionIds', id);
+    return params;
+  }
+
+  /** Price of a quantity with the chosen variant values; the server applies special, tier and variant rules. */
+  getPriceQuote(id: number, quantity: number, valueIds: number[]) {
+    let params = new HttpParams().set('quantity', quantity);
+    for (const valueId of valueIds) params = params.append('valueIds', valueId);
+    return this.http.get<PriceQuote>(`${this.apiBaseUrl}/v1/catalog/products/${id}/price`, { params });
   }
 
   getProduct(id: number) {
@@ -114,6 +150,16 @@ export class CatalogApiService {
     return this.http.get<PagedResult<AdminCategoryResponse>>(`${this.apiBaseUrl}/v1/admin/catalog/categories`, { params });
   }
 
+  /** Whole tree including unpublished categories. */
+  adminGetCategoryTree() {
+    return this.http.get<AdminCategoryTreeNode[]>(`${this.apiBaseUrl}/v1/admin/catalog/categories/tree`);
+  }
+
+  /** Categories a shop member may attach products to. Requires the vendor portal permission. */
+  getSelectableCategories() {
+    return this.http.get<SelectableCategory[]>(`${this.apiBaseUrl}/v1/catalog/categories/selectable`);
+  }
+
   adminGetCategory(id: number) {
     return this.http.get<AdminCategoryResponse>(`${this.apiBaseUrl}/v1/admin/catalog/categories/${id}`);
   }
@@ -130,10 +176,28 @@ export class CatalogApiService {
     return this.http.delete<void>(`${this.apiBaseUrl}/v1/admin/catalog/categories/${id}`);
   }
 
-  adminGetProducts(page = 1, pageSize = 50, search?: string | null) {
+  adminGetProducts(page = 1, pageSize = 50, search?: string | null, vendorId?: number | null, status?: string | null, reviewRequested?: boolean) {
     let params = new HttpParams().set('page', page).set('pageSize', pageSize);
     if (search) params = params.set('search', search);
+    if (vendorId) params = params.set('vendorId', vendorId);
+    if (status) params = params.set('status', status);
+    if (reviewRequested) params = params.set('reviewRequested', true);
     return this.http.get<PagedResult<AdminProductResponse>>(`${this.apiBaseUrl}/v1/admin/catalog/products`, { params });
+  }
+
+  /** Hides a product from the storefront. The reason is emailed to the shop and shown to it. */
+  adminHideProduct(id: number, reason: string) {
+    return this.http.post<AdminProductResponse>(`${this.apiBaseUrl}/v1/admin/catalog/products/${id}/hide`, { reason });
+  }
+
+  /** Puts the product back in the state it had before it was hidden. */
+  adminUnhideProduct(id: number) {
+    return this.http.post<AdminProductResponse>(`${this.apiBaseUrl}/v1/admin/catalog/products/${id}/unhide`, {});
+  }
+
+  /** Moves a product to another shop. The only way to change a product's owner. */
+  adminTransferProduct(id: number, vendorId: number) {
+    return this.http.post<AdminProductResponse>(`${this.apiBaseUrl}/v1/admin/catalog/products/${id}/transfer`, { vendorId });
   }
 
   adminGetProduct(id: number) {
@@ -176,7 +240,7 @@ export class CatalogApiService {
   // ---- Product Attributes (public) ----
 
   getProductAttributes(productId: number) {
-    return this.http.get<ProductAttributeDetail>(`${this.apiBaseUrl}/v1/products/${productId}/attributes`);
+    return this.http.get<PublicAttributeDetail>(`${this.apiBaseUrl}/v1/products/${productId}/attributes`);
   }
 
   // ---- Product Attributes (admin — specs) ----

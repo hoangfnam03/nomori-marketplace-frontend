@@ -1,10 +1,15 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { VendorApiService, SaveVendorRequest } from '../../core/vendors/vendor-api.service';
-import { VendorAdminResponse } from '../../core/vendors/vendor.models';
+import { MediaImageFieldComponent } from '../../shared/components/media-image-field/media-image-field.component';
+import { UpdateVendorRequest, VendorApiService } from '../../core/vendors/vendor-api.service';
+import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
+import { VendorMemberResponse, VendorResponse } from '../../core/vendors/vendor.models';
 
 interface VendorForm {
+  pictureId: number;
   name: string;
   email: string;
   description: string;
@@ -15,272 +20,177 @@ interface VendorForm {
 
 @Component({
   standalone: true,
-  imports: [FormsModule, TranslocoDirective],
+  imports: [FormsModule, DatePipe, RouterLink, MediaImageFieldComponent, TranslocoDirective],
+  styleUrls: ['../../shared/styles/vendor-pages.scss'],
   template: `
     <ng-container *transloco="let t">
-    <section class="admin-intro" aria-labelledby="vendors-title">
-      <div>
-        <div class="eyebrow">{{ t('admin.vendors.eyebrow') }}</div>
-        <h1 id="vendors-title">{{ t('admin.vendors.title') }}</h1>
-        <p>{{ t('admin.vendors.lede') }}</p>
-      </div>
+    <section class="page-intro" aria-labelledby="vendors-title">
+      <div class="eyebrow">{{ t('admin.vendors.eyebrow') }}</div>
+      <h1 id="vendors-title">{{ t('admin.vendors.title') }}</h1>
+      <p>
+        {{ t('admin.vendors.ledeBefore') }}
+        <a routerLink="/admin/vendor-applications">{{ t('admin.vendors.ledeLink') }}</a>{{ t('admin.vendors.ledeAfter') }}
+      </p>
     </section>
 
     <div class="panel">
       <div class="panel-header">
         <h2>{{ t('admin.vendors.heading') }}</h2>
-        <div class="panel-header-actions">
-          <input
-            type="search"
-            [placeholder]="t('admin.vendors.search')"
-            [(ngModel)]="searchTerm"
-            (input)="onSearch()"
-            name="vendorSearch"
-            [attr.aria-label]="t('admin.vendors.search')"
-            style="min-width:200px"
-          />
-          <button type="button" class="new-btn" (click)="openForm()">+ {{ t('admin.vendors.new') }}</button>
+        <div class="actions">
+          <input type="search" [placeholder]="t('admin.vendors.search')" [(ngModel)]="searchTerm" (input)="onSearch()" name="vendorSearch" [attr.aria-label]="t('admin.vendors.search')" />
         </div>
       </div>
 
-      @if (formOpen) {
-        <form class="inline-form" (ngSubmit)="submitVendor()" [attr.aria-label]="editingId ? t('admin.vendors.edit') : t('admin.vendors.new')">
-          <div class="form-title">{{ editingId ? t('admin.vendors.edit') : t('admin.vendors.new') }}</div>
-          @if (formError) { <p class="form-error" role="alert">{{ t(formError) }}</p> }
-          <div class="form-row">
-            <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="form.name" name="name" required /></label>
-            <label>{{ t('admin.common.email') }} <input type="email" [(ngModel)]="form.email" name="email" required /></label>
-          </div>
-          <label>{{ t('admin.common.description') }} <textarea [(ngModel)]="form.description" name="description" rows="2"></textarea></label>
-          <label>{{ t('admin.vendors.adminComment') }} <textarea [(ngModel)]="form.adminComment" name="adminComment" rows="2"></textarea></label>
-          <div class="form-row">
-            <label class="check-label"><input type="checkbox" [(ngModel)]="form.active" name="active" /> {{ t('admin.common.active') }}</label>
-            <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="form.displayOrder" name="displayOrder" style="width:80px" /></label>
-          </div>
-          <div class="form-actions">
-            <button type="submit" [disabled]="saving">{{ saving ? t('common.states.saving') : t('common.actions.save') }}</button>
-            <button type="button" class="cancel-btn" (click)="closeForm()">{{ t('common.actions.cancel') }}</button>
-          </div>
-        </form>
-      }
-
       @if (loading) {
-        <p class="loading-msg">{{ t('common.states.loading') }}</p>
+        <p class="state">{{ t('common.states.loading') }}</p>
+      } @else if (loadError) {
+        <p class="state state-error" role="alert">{{ loadError }}</p>
       } @else if (vendors.length === 0) {
-        <p class="empty-msg">{{ t('admin.vendors.empty') }}</p>
+        <p class="state">{{ t('admin.vendors.empty') }}</p>
       } @else {
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>{{ t('admin.common.name') }}</th>
-              <th>{{ t('admin.common.email') }}</th>
-              <th>{{ t('admin.common.status') }}</th>
-              <th>{{ t('admin.common.order') }}</th>
-              <th>{{ t('admin.common.created') }}</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (v of vendors; track v.id) {
-              <tr>
-                <td><strong>{{ v.name }}</strong></td>
-                <td>{{ v.email }}</td>
-                <td>
-                  <span [class]="v.active ? 'status-active' : 'status-inactive'">
-                    {{ v.active ? t('vendorStatus.vendor.active') : t('vendorStatus.vendor.inactive') }}
-                  </span>
-                </td>
-                <td>{{ v.displayOrder }}</td>
-                <td>{{ formatDate(v.createdOnUtc) }}</td>
-                <td class="row-actions">
-                  <button type="button" class="edit-btn" (click)="openForm(v)">{{ t('common.actions.edit') }}</button>
-                  <button type="button" class="delete-btn" (click)="deleteVendor(v)">{{ t('common.actions.delete') }}</button>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th>{{ t('admin.common.name') }}</th><th>{{ t('admin.common.email') }}</th><th>{{ t('admin.common.status') }}</th><th>{{ t('admin.common.order') }}</th><th>{{ t('admin.common.created') }}</th><th></th></tr></thead>
+            <tbody>
+              @for (v of vendors; track v.id) {
+                <tr [class.selected]="selected?.id === v.id">
+                  <td><strong>{{ v.name }}</strong></td>
+                  <td>{{ v.email }}</td>
+                  <td><span [class]="v.active ? 'badge badge-active' : 'badge'">{{ v.active ? t('vendorStatus.vendor.active') : t('vendorStatus.vendor.inactive') }}</span></td>
+                  <td>{{ v.displayOrder }}</td>
+                  <td>{{ v.createdOnUtc | date:'dd/MM/yyyy' }}</td>
+                  <td class="row-actions">
+                    <button type="button" class="btn btn-secondary btn-small" (click)="openForm(v)">{{ t('common.actions.edit') }}</button>
+                    <button type="button" class="btn btn-secondary btn-small" (click)="showMembers(v)">{{ t('admin.vendors.members') }}</button>
+                    <button type="button" class="btn btn-danger btn-small" (click)="askDelete(v)">{{ t('common.actions.delete') }}</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
         @if (totalPages > 1) {
           <div class="pagination">
-            <button [disabled]="page === 1" (click)="goPage(page - 1)">‹ {{ t('common.pagination.prev') }}</button>
+            <button type="button" [disabled]="page === 1" (click)="goPage(page - 1)">‹ {{ t('common.pagination.prev') }}</button>
             <span>{{ t('common.pagination.pageOf', { page: page, total: totalPages }) }}</span>
-            <button [disabled]="page === totalPages" (click)="goPage(page + 1)">{{ t('common.pagination.next') }} ›</button>
+            <button type="button" [disabled]="page === totalPages" (click)="goPage(page + 1)">{{ t('common.pagination.next') }} ›</button>
           </div>
         }
       }
     </div>
+
+    @if (pendingDelete; as d) {
+      <div class="panel">
+        <div class="panel-body">
+          <div class="confirm confirm-danger" role="alertdialog" [attr.aria-label]="t('admin.vendors.confirmDeleteLabel')">
+            <strong>{{ t('admin.vendors.confirmDelete', { name: d.name }) }}</strong>
+            <span class="muted">{{ t('admin.vendors.deleteWarning') }}</span>
+            @if (actionError) { <p class="banner" role="alert">{{ actionError }}</p> }
+            <div class="actions">
+              <button type="button" class="btn btn-danger" (click)="confirmDelete(d)" [disabled]="saving">{{ saving ? t('admin.vendors.deleting') : t('admin.vendors.deleteVendor') }}</button>
+              <button type="button" class="btn btn-secondary" (click)="pendingDelete = null">{{ t('common.actions.cancel') }}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+
+    @if (formOpen) {
+      <div class="panel">
+        <div class="panel-header"><h2>{{ t('admin.vendors.edit') }}</h2></div>
+        <form class="form panel-body" (ngSubmit)="submitVendor()" [attr.aria-label]="t('admin.vendors.edit')">
+          @if (actionError) { <p class="banner" role="alert">{{ actionError }}</p> }
+          <div class="form-row">
+            <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="form.name" name="name" required maxlength="400" /></label>
+            <label>{{ t('admin.common.email') }} <input type="email" [(ngModel)]="form.email" name="email" required maxlength="320" /></label>
+          </div>
+          <label>{{ t('admin.common.description') }} <textarea [(ngModel)]="form.description" name="description" rows="2"></textarea></label>
+          <app-media-image-field [label]="t('admin.vendors.logo')" purpose="vendorLogo" [vendorId]="editingId" [(pictureId)]="form.pictureId" />
+          <label>{{ t('admin.vendors.adminComment') }} <textarea [(ngModel)]="form.adminComment" name="adminComment" rows="2"></textarea></label>
+          <div class="form-row">
+            <label class="check-label"><input type="checkbox" [(ngModel)]="form.active" name="active" /> {{ t('admin.common.active') }}</label>
+            <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="form.displayOrder" name="displayOrder" /></label>
+          </div>
+          <div class="actions">
+            <button type="submit" class="btn" [disabled]="saving">{{ saving ? t('common.states.saving') : t('common.actions.save') }}</button>
+            <button type="button" class="btn btn-secondary" (click)="closeForm()">{{ t('common.actions.cancel') }}</button>
+          </div>
+        </form>
+      </div>
+    }
+
+    @if (selected; as v) {
+      <div class="panel">
+        <div class="panel-header"><h2>{{ t('admin.vendors.membersOf', { name: v.name }) }}</h2></div>
+        @if (membersLoading) {
+          <p class="state">{{ t('admin.vendors.loadingMembers') }}</p>
+        } @else if (membersError) {
+          <p class="state state-error" role="alert">{{ membersError }}</p>
+        } @else {
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>{{ t('admin.vendors.account') }}</th><th>{{ t('admin.common.status') }}</th><th>{{ t('admin.vendors.lastSignIn') }}</th><th></th></tr></thead>
+              <tbody>
+                @for (m of members; track m.customerId) {
+                  <tr>
+                    <td>{{ m.email }}@if (fullName(m)) { <br /><span class="muted">{{ fullName(m) }}</span> }</td>
+                    <td><span [class]="'badge badge-' + m.status">{{ m.status === 'active' ? t('vendorStatus.member.active') : t('vendorStatus.member.pendingSetup') }}</span></td>
+                    <td>{{ m.lastLoginDateUtc ? (m.lastLoginDateUtc | date:'dd/MM/yyyy HH:mm') : '—' }}</td>
+                    <td class="row-actions">
+                      @if (pendingRemove?.customerId === m.customerId) {
+                        <button type="button" class="btn btn-danger btn-small" (click)="removeMember(v, m)" [disabled]="saving">{{ t('admin.vendors.confirmRemove') }}</button>
+                        <button type="button" class="btn btn-secondary btn-small" (click)="pendingRemove = null">{{ t('common.actions.cancel') }}</button>
+                      } @else {
+                        <button type="button" class="btn btn-danger btn-small" (click)="pendingRemove = m" [disabled]="members.length <= 1" [title]="members.length <= 1 ? t('errors.vendor_member.last_member') : ''">{{ t('admin.vendors.remove') }}</button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (members.length <= 1) { <p class="state">{{ t('admin.vendors.lastMemberNote') }}</p> }
+          @if (actionError) { <p class="banner" role="alert">{{ actionError }}</p> }
+        }
+      </div>
+    }
     </ng-container>
-  `,
-  styles: [`
-    :host { display: block; }
-
-    .admin-intro {
-      padding: 2.5rem var(--page-gutter, 2rem) 2rem;
-      border-bottom: 1px solid var(--line);
-    }
-    .eyebrow {
-      font-family: var(--mono-font);
-      font-size: .75rem;
-      letter-spacing: .08em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: .4rem;
-    }
-    h1 { font-family: var(--display-font); font-size: 2rem; margin: 0 0 .5rem; }
-    p { color: var(--muted); margin: 0; }
-
-    .panel {
-      margin: 2rem var(--page-gutter, 2rem);
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--line);
-      flex-wrap: wrap;
-      gap: .75rem;
-    }
-    .panel-header h2 { margin: 0; font-size: 1rem; }
-    .panel-header-actions { display: flex; gap: .75rem; align-items: center; }
-
-    input[type=search], input[type=text], input[type=email], input[type=number], textarea {
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      padding: .4rem .7rem;
-      background: var(--paper);
-      color: var(--ink);
-      font-size: .9rem;
-    }
-    input[type=search]:focus, input[type=text]:focus, input[type=email]:focus,
-    input[type=number]:focus, textarea:focus {
-      outline: 2px solid var(--green);
-      outline-offset: 1px;
-    }
-
-    .new-btn {
-      background: var(--green);
-      color: var(--paper);
-      border: none;
-      border-radius: 6px;
-      padding: .45rem 1rem;
-      font-size: .875rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .inline-form {
-      margin: 1.25rem 1.5rem;
-      padding: 1.25rem;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: .75rem;
-    }
-    .form-title { font-weight: 600; font-size: .95rem; }
-    .form-error { color: #d32f2f; font-size: .875rem; margin: 0; }
-    .inline-form label { display: flex; flex-direction: column; gap: .3rem; font-size: .875rem; font-weight: 500; }
-    .inline-form input, .inline-form textarea { width: 100%; box-sizing: border-box; }
-    .form-row { display: flex; gap: 1rem; flex-wrap: wrap; }
-    .form-row label { flex: 1; min-width: 160px; }
-    .check-label { flex-direction: row !important; align-items: center; gap: .5rem !important; cursor: pointer; }
-    .form-actions { display: flex; gap: .75rem; margin-top: .25rem; }
-    .form-actions button {
-      border: 1px solid var(--green);
-      border-radius: 6px;
-      padding: .4rem .9rem;
-      font-size: .875rem;
-      cursor: pointer;
-    }
-    .form-actions button[type=submit] { background: var(--green); color: var(--paper); font-weight: 600; border: none; }
-    .form-actions button[type=submit]:disabled { opacity: .5; cursor: not-allowed; }
-    .cancel-btn { background: transparent; color: var(--ink); }
-
-    .loading-msg, .empty-msg { padding: 2rem 1.5rem; color: var(--muted); font-size: .9rem; }
-
-    .data-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
-    .data-table th {
-      text-align: left;
-      padding: .6rem 1rem;
-      background: var(--paper);
-      border-bottom: 1px solid var(--line);
-      font-size: .75rem;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: var(--muted);
-    }
-    .data-table td { padding: .65rem 1rem; border-bottom: 1px solid var(--line); vertical-align: middle; }
-    .data-table tbody tr:last-child td { border-bottom: none; }
-    .data-table tbody tr:hover { background: color-mix(in srgb, var(--green) 4%, var(--paper)); }
-
-    .status-active { color: var(--green); font-weight: 600; font-size: .8rem; }
-    .status-inactive { color: var(--muted); font-size: .8rem; }
-
-    .row-actions { display: flex; gap: .5rem; }
-    .edit-btn, .delete-btn {
-      border-radius: 4px;
-      padding: .25rem .6rem;
-      font-size: .8rem;
-      cursor: pointer;
-      border: 1px solid var(--line);
-      background: var(--paper);
-      color: var(--ink);
-    }
-    .delete-btn { color: #d32f2f; border-color: #d32f2f20; }
-    .delete-btn:hover { background: #d32f2f10; }
-
-    .pagination {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: .75rem 1.5rem;
-      border-top: 1px solid var(--line);
-      font-size: .875rem;
-    }
-    .pagination button {
-      border: 1px solid var(--line);
-      border-radius: 4px;
-      padding: .25rem .6rem;
-      background: var(--paper);
-      cursor: pointer;
-    }
-    .pagination button:disabled { opacity: .4; cursor: not-allowed; }
-  `]
+  `
 })
 export class AdminVendorsPage implements OnInit {
   private readonly api = inject(VendorApiService);
   private readonly transloco = inject(TranslocoService);
 
-  vendors: VendorAdminResponse[] = [];
+  vendors: VendorResponse[] = [];
   loading = false;
+  loadError = '';
   page = 1;
-  pageSize = 50;
+  readonly pageSize = 50;
   totalPages = 1;
   searchTerm = '';
   private searchTimer: ReturnType<typeof setTimeout> | null = null;
 
   formOpen = false;
   editingId: number | null = null;
-  saving = false;
-  formError = '';
   form: VendorForm = this.emptyForm();
+  saving = false;
+  actionError = '';
+  pendingDelete: VendorResponse | null = null;
+
+  selected: VendorResponse | null = null;
+  members: VendorMemberResponse[] = [];
+  membersLoading = false;
+  membersError = '';
+  pendingRemove: VendorMemberResponse | null = null;
 
   ngOnInit() { this.loadVendors(); }
 
   loadVendors() {
     this.loading = true;
-    this.api.adminGetVendors(this.page, this.pageSize, this.searchTerm || undefined).subscribe({
-      next: res => {
-        this.vendors = res.items;
-        this.totalPages = res.totalPages;
-        this.loading = false;
-      },
-      error: () => { this.loading = false; }
+    this.loadError = '';
+    this.api.getVendors(this.page, this.pageSize, this.searchTerm.trim() || undefined).subscribe({
+      next: res => { this.vendors = res.items; this.totalPages = Math.max(res.totalPages, 1); this.loading = false; },
+      error: err => { this.loading = false; this.loadError = vendorErrorMessage(err, this.transloco.translate('admin.vendors.errors.load')); }
     });
   }
 
@@ -291,57 +201,98 @@ export class AdminVendorsPage implements OnInit {
 
   goPage(p: number) { this.page = p; this.loadVendors(); }
 
-  openForm(v?: VendorAdminResponse) {
-    if (v) {
-      this.editingId = v.id;
-      this.form = { name: v.name, email: v.email, description: v.description ?? '', adminComment: '', active: v.active, displayOrder: v.displayOrder };
-    } else {
-      this.editingId = null;
-      this.form = this.emptyForm();
-    }
-    this.formError = '';
+  openForm(v: VendorResponse) {
+    this.editingId = v.id;
+    this.form = {
+      pictureId: v.pictureId,
+      name: v.name, email: v.email, description: v.description ?? '',
+      adminComment: v.adminComment ?? '', active: v.active ?? true, displayOrder: v.displayOrder
+    };
+    this.actionError = '';
+    this.pendingDelete = null;
     this.formOpen = true;
   }
 
-  closeForm() { this.formOpen = false; this.editingId = null; }
+  closeForm() { this.formOpen = false; this.editingId = null; this.actionError = ''; }
 
   submitVendor() {
+    if (!this.editingId) return;
     if (!this.form.name.trim() || !this.form.email.trim()) {
-      this.formError = 'admin.vendors.nameEmailRequired';
+      this.actionError = this.transloco.translate('admin.vendors.nameEmailRequired');
       return;
     }
     this.saving = true;
-    this.formError = '';
-    const body: SaveVendorRequest = {
+    this.actionError = '';
+    const body: UpdateVendorRequest = {
       name: this.form.name,
       email: this.form.email,
       description: this.form.description || null,
+      pictureId: this.form.pictureId,
       adminComment: this.form.adminComment || null,
       active: this.form.active,
       displayOrder: this.form.displayOrder
     };
-    const req = this.editingId
-      ? this.api.adminUpdateVendor(this.editingId, body)
-      : this.api.adminCreateVendor(body);
-    req.subscribe({
+    this.api.updateVendor(this.editingId, body).subscribe({
       next: () => { this.saving = false; this.closeForm(); this.loadVendors(); },
+      error: err => { this.saving = false; this.actionError = vendorErrorMessage(err, this.transloco.translate('admin.common.saveFailed')); }
+    });
+  }
+
+  askDelete(v: VendorResponse) {
+    this.pendingDelete = v;
+    this.actionError = '';
+    this.formOpen = false;
+  }
+
+  confirmDelete(v: VendorResponse) {
+    this.saving = true;
+    this.actionError = '';
+    this.api.deleteVendor(v.id).subscribe({
+      next: () => {
+        this.saving = false;
+        this.pendingDelete = null;
+        if (this.selected?.id === v.id) this.selected = null;
+        this.loadVendors();
+      },
+      error: err => { this.saving = false; this.actionError = vendorErrorMessage(err, this.transloco.translate('admin.common.deleteFailed')); }
+    });
+  }
+
+  showMembers(v: VendorResponse) {
+    this.selected = v;
+    this.pendingRemove = null;
+    this.actionError = '';
+    this.loadMembers(v);
+  }
+
+  removeMember(v: VendorResponse, m: VendorMemberResponse) {
+    this.saving = true;
+    this.actionError = '';
+    this.api.removeMember(v.id, m.customerId).subscribe({
+      next: () => { this.saving = false; this.pendingRemove = null; this.loadMembers(v); },
       error: err => {
         this.saving = false;
-        this.formError = err?.status === 400 ? 'errors.badRequest' : 'admin.common.saveFailed';
+        this.pendingRemove = null;
+        this.actionError = vendorErrorMessage(err, this.transloco.translate('admin.vendors.errors.removeMember'));
+        this.loadMembers(v);
       }
     });
   }
 
-  deleteVendor(v: VendorAdminResponse) {
-    if (!confirm(this.transloco.translate('admin.vendors.confirmDelete', { name: v.name }))) return;
-    this.api.adminDeleteVendor(v.id).subscribe({ next: () => this.loadVendors() });
+  fullName(m: VendorMemberResponse) {
+    return [m.firstName, m.lastName].filter(Boolean).join(' ');
   }
 
-  formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  private loadMembers(v: VendorResponse) {
+    this.membersLoading = true;
+    this.membersError = '';
+    this.api.getMembers(v.id).subscribe({
+      next: members => { this.members = members; this.membersLoading = false; },
+      error: err => { this.membersLoading = false; this.membersError = vendorErrorMessage(err, this.transloco.translate('admin.vendors.errors.loadMembers')); }
+    });
   }
 
   private emptyForm(): VendorForm {
-    return { name: '', email: '', description: '', adminComment: '', active: true, displayOrder: 0 };
+    return { pictureId: 0, name: '', email: '', description: '', adminComment: '', active: true, displayOrder: 0 };
   }
 }

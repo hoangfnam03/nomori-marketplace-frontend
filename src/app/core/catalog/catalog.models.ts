@@ -34,13 +34,70 @@ export interface ProductResponse {
   showOnHomepage: boolean;
   displayOrder: number;
   createdOnUtc: string;
+  vendorId: number;
+  vendorName: string | null;
+  /** Media asset id of the first picture; 0 when the product has none. */
+  mainPictureId: number;
+  /** Not tracked, or something on hand. The exact available quantity is on the product page. */
+  inStock: boolean;
+  /** What one unit costs now: the special price while its window is open, otherwise price. */
+  finalPrice: number;
+  /** True while a special price applies; price is then the regular price to strike through. */
+  onSale: boolean;
+}
+
+/** From quantity units on, each unit costs price. */
+export interface TierPrice {
+  quantity: number;
+  price: number;
+}
+
+/** The server's answer to "what does this cost": every pricing rule is applied there, never in the browser. */
+export interface PriceQuote {
+  productId: number;
+  combinationId: number | null;
+  quantity: number;
+  currencyCode: string;
+  regularPrice: number;
+  unitPrice: number;
+  /** The price to strike through, when there is one. */
+  comparePrice: number | null;
+  lineTotal: number;
+  appliedRule: 'base' | 'special' | 'tier' | 'variant_override';
+}
+
+/** Counts for the filter panel, taken without the selected manufacturers, tags and specification values. */
+export interface ProductFacets {
+  totalCount: number;
+  minPrice: number | null;
+  maxPrice: number | null;
+  manufacturers: { id: number; name: string; count: number }[];
+  tags: { name: string; count: number }[];
+  specifications: { id: number; name: string; options: { id: number; name: string; count: number }[] }[];
+}
+
+export interface ProductSuggestion {
+  id: number;
+  name: string;
+  price: number;
+  mainPictureId: number;
 }
 
 export interface ProductDetailResponse {
   product: ProductResponse;
   fullDescription: string | null;
+  /** Picture ids in display order. */
+  pictureIds: number[];
   categories: CategoryResponse[];
   manufacturers: ManufacturerResponse[];
+  /** Related products that are on sale now, in the order the shop chose. */
+  relatedProducts: ProductResponse[];
+  /** Quantity prices, lowest quantity first. */
+  tierPrices: TierPrice[];
+  /** False for products without a stock limit: always available. */
+  trackInventory: boolean;
+  /** What can still be bought: on hand minus what customers hold. Ignore when trackInventory is false. */
+  availableQuantity: number;
 }
 
 export interface ManufacturerResponse {
@@ -59,9 +116,29 @@ export interface AdminCategoryResponse {
   pictureId: number;
   showOnHomepage: boolean;
   published: boolean;
+  /** When true, sellers cannot attach products to this category. */
+  restrictFromVendors: boolean;
   displayOrder: number;
   createdOnUtc: string;
   updatedOnUtc: string;
+}
+
+export interface AdminCategoryTreeNode {
+  id: number;
+  name: string;
+  parentCategoryId: number;
+  displayOrder: number;
+  published: boolean;
+  restrictFromVendors: boolean;
+  children: AdminCategoryTreeNode[];
+}
+
+/** A category a seller may attach products to, with its full path, for example "Fashion > Women". */
+export interface SelectableCategory {
+  id: number;
+  name: string;
+  parentCategoryId: number;
+  path: string;
 }
 
 export interface AdminProductResponse {
@@ -74,10 +151,15 @@ export interface AdminProductResponse {
   stockQuantity: number;
   published: boolean;
   vendorId: number;
+  vendorName: string | null;
   showOnHomepage: boolean;
   displayOrder: number;
   createdOnUtc: string;
   updatedOnUtc: string;
+  status: 'draft' | 'live' | 'stopped' | 'hiddenByAdmin';
+  hiddenReason: string | null;
+  hiddenOnUtc: string | null;
+  reviewRequestedOnUtc: string | null;
 }
 
 export interface AdminProductDetailResponse {

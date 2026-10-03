@@ -1,9 +1,13 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService, translate } from '@jsverse/transloco';
+import { CurrencyService } from '../../core/money/currency.service';
+import { VendorApiService } from '../../core/vendors/vendor-api.service';
+import { VendorResponse } from '../../core/vendors/vendor.models';
+import { MediaImageFieldComponent } from '../../shared/components/media-image-field/media-image-field.component';
 import { CatalogApiService, SaveCategoryRequest, SaveManufacturerRequest, SaveProductRequest } from '../../core/catalog/catalog-api.service';
 import {
-  AdminCategoryResponse, AdminManufacturerResponse,
+  AdminCategoryResponse, AdminCategoryTreeNode, AdminManufacturerResponse,
   AdminProductDetailResponse, AdminProductResponse
 } from '../../core/catalog/catalog.models';
 
@@ -13,12 +17,21 @@ interface CategoryForm {
   name: string;
   description: string;
   parentCategoryId: number;
+  pictureId: number;
   showOnHomepage: boolean;
   published: boolean;
+  restrictFromVendors: boolean;
   displayOrder: number;
 }
 
+interface ParentOption {
+  id: number;
+  label: string;
+}
+
 interface ProductForm {
+  /** Shop for a new product; 0 means the platform shop. Not used when editing. */
+  vendorId: number;
   name: string;
   shortDescription: string;
   fullDescription: string;
@@ -28,20 +41,21 @@ interface ProductForm {
   published: boolean;
   showOnHomepage: boolean;
   displayOrder: number;
-  categoryIds: string;
-  manufacturerIds: string;
+  categoryIds: number[];
+  manufacturerIds: number[];
 }
 
 interface ManufacturerForm {
   name: string;
   description: string;
+  pictureId: number;
   published: boolean;
   displayOrder: number;
 }
 
 @Component({
   standalone: true,
-  imports: [FormsModule, TranslocoDirective],
+  imports: [FormsModule, MediaImageFieldComponent, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
     <section class="admin-intro" aria-labelledby="catalog-title">
@@ -58,6 +72,8 @@ interface ManufacturerForm {
       <button role="tab" [class.active]="tab === 'manufacturers'" (click)="switchTab('manufacturers')">{{ t('admin.catalog.manufacturers') }}</button>
     </div>
 
+    @if (notice) { <p class="form-error notice" role="alert">{{ notice }}</p> }
+
     <!-- =========== CATEGORIES =========== -->
     @if (tab === 'categories') {
       <div class="panel" role="tabpanel">
@@ -69,13 +85,20 @@ interface ManufacturerForm {
         @if (catFormOpen) {
           <form class="inline-form" (ngSubmit)="submitCategory()" [attr.aria-label]="editingCategoryId ? t('admin.catalog.editCategory') : t('admin.catalog.newCategory')">
             <div class="form-title">{{ editingCategoryId ? t('admin.catalog.editCategory') : t('admin.catalog.newCategory') }}</div>
-            @if (catError) { <p class="form-error" role="alert">{{ t(catError) }}</p> }
+            @if (catError) { <p class="form-error" role="alert">{{ catError }}</p> }
             <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="catForm.name" name="name" required /></label>
             <label>{{ t('admin.common.description') }} <textarea [(ngModel)]="catForm.description" name="description" rows="2"></textarea></label>
-            <label>{{ t('admin.catalog.parentCategoryId') }} <input type="number" [(ngModel)]="catForm.parentCategoryId" name="parentCategoryId" min="0" /></label>
+            <label>{{ t('admin.catalog.parentCategory') }}
+              <select [(ngModel)]="catForm.parentCategoryId" name="parentCategoryId">
+                <option [ngValue]="0">{{ t('admin.catalog.topLevel') }}</option>
+                @for (opt of parentOptions; track opt.id) { <option [ngValue]="opt.id">{{ opt.label }}</option> }
+              </select>
+            </label>
+            <app-media-image-field [label]="t('admin.catalog.categoryImage')" purpose="category" [(pictureId)]="catForm.pictureId" />
             <div class="form-row">
               <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.published" name="published" /> {{ t('admin.catalog.published') }}</label>
               <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.showOnHomepage" name="showOnHomepage" /> {{ t('admin.catalog.showOnHomepage') }}</label>
+              <label class="check-label"><input type="checkbox" [(ngModel)]="catForm.restrictFromVendors" name="restrictFromVendors" /> {{ t('admin.catalog.restrictSellers') }} <small>({{ t('admin.catalog.restrictSellersHint') }})</small></label>
               <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="catForm.displayOrder" name="displayOrder" style="width:80px" /></label>
             </div>
             <div class="form-actions">
@@ -86,7 +109,7 @@ interface ManufacturerForm {
         }
 
         @if (catLoading) { <p class="state">{{ t('admin.catalog.loadingCategories') }}</p> }
-        @if (catLoadError) { <p class="state state-error" role="alert">{{ t(catLoadError) }}</p> }
+        @if (catLoadError) { <p class="state state-error" role="alert">{{ catLoadError }}</p> }
         @if (!catLoading && categories.length === 0 && !catLoadError) { <p class="state">{{ t('admin.catalog.noCategories') }}</p> }
 
         <div class="item-list">
@@ -122,6 +145,14 @@ interface ManufacturerForm {
           <h2>{{ t('admin.catalog.products') }}</h2>
           <div class="panel-header-right">
             <input type="text" class="search-input" [placeholder]="t('admin.catalog.searchProducts')" [(ngModel)]="prodSearch" (keydown.enter)="loadProducts(1)" />
+            <select [(ngModel)]="prodFilter" name="prodFilter" (ngModelChange)="loadProducts(1)" [attr.aria-label]="t('admin.catalog.filterProducts')">
+              <option value="all">{{ t('admin.catalog.filterAll') }}</option>
+              <option value="review">{{ t('admin.catalog.filterReview') }}</option>
+              <option value="hiddenByAdmin">{{ t('admin.catalog.status.hiddenByAdmin') }}</option>
+              <option value="live">{{ t('admin.catalog.status.live') }}</option>
+              <option value="draft">{{ t('admin.catalog.status.draft') }}</option>
+              <option value="stopped">{{ t('admin.catalog.status.stopped') }}</option>
+            </select>
             <button type="button" (click)="loadProducts(1)">{{ t('common.actions.search') }}</button>
             <button type="button" class="new-btn" (click)="openProductForm()">+ {{ t('admin.catalog.newProduct') }}</button>
           </div>
@@ -130,19 +161,48 @@ interface ManufacturerForm {
         @if (prodFormOpen) {
           <form class="inline-form" (ngSubmit)="submitProduct()" [attr.aria-label]="editingProductId ? t('admin.catalog.editProduct') : t('admin.catalog.newProduct')">
             <div class="form-title">{{ editingProductId ? t('admin.catalog.editProduct') : t('admin.catalog.newProduct') }}</div>
-            @if (prodError) { <p class="form-error" role="alert">{{ t(prodError) }}</p> }
+            @if (prodError) { <p class="form-error" role="alert">{{ prodError }}</p> }
+            @if (!editingProductId) {
+              <label>{{ t('admin.catalog.shop') }}
+                <select [(ngModel)]="prodForm.vendorId" name="vendorId">
+                  <option [ngValue]="0">{{ t('admin.catalog.platformShop') }}</option>
+                  @for (v of shops; track v.id) { <option [ngValue]="v.id">{{ v.name }}</option> }
+                </select>
+              </label>
+            } @else {
+              <div class="transfer">
+                <span class="muted">{{ t('admin.catalog.shop') }}: <strong>{{ editingVendorName }}</strong></span>
+                <select [(ngModel)]="transferVendorId" name="transferVendorId" [attr.aria-label]="t('admin.catalog.transferTo')">
+                  <option [ngValue]="0">{{ t('admin.catalog.transferTo') }}</option>
+                  @for (v of shops; track v.id) { @if (v.id !== editingVendorId) { <option [ngValue]="v.id">{{ v.name }}</option> } }
+                </select>
+                <button type="button" (click)="transferProduct()" [disabled]="!transferVendorId || prodSaving">{{ t('admin.catalog.transfer') }}</button>
+              </div>
+            }
             <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="prodForm.name" name="name" required /></label>
             <label>{{ t('admin.catalog.shortDescription') }} <textarea [(ngModel)]="prodForm.shortDescription" name="shortDescription" rows="2"></textarea></label>
             <label>{{ t('admin.catalog.fullDescription') }} <textarea [(ngModel)]="prodForm.fullDescription" name="fullDescription" rows="4"></textarea></label>
             <div class="form-row">
-              <label>{{ t('admin.catalog.price') }} <input type="number" [(ngModel)]="prodForm.price" name="price" min="0" step="0.01" /></label>
-              <label>{{ t('admin.catalog.compareAtPrice') }} <input type="number" [(ngModel)]="prodForm.oldPrice" name="oldPrice" min="0" step="0.01" /></label>
+              <label>{{ t('admin.catalog.price') }} ({{ currency.primary().code }}) <input type="number" [(ngModel)]="prodForm.price" name="price" min="0" [step]="currency.step()" /></label>
+              <label>{{ t('admin.catalog.compareAtPrice') }} ({{ currency.primary().code }}) <input type="number" [(ngModel)]="prodForm.oldPrice" name="oldPrice" min="0" [step]="currency.step()" /></label>
               <label>{{ t('admin.catalog.stock') }} <input type="number" [(ngModel)]="prodForm.stockQuantity" name="stockQuantity" min="0" /></label>
             </div>
-            <label>{{ t('admin.catalog.categoryIds') }} <small>({{ t('admin.catalog.commaSeparated') }})</small> <input type="text" [(ngModel)]="prodForm.categoryIds" name="categoryIds" placeholder="1,2,3" /></label>
-            <label>{{ t('admin.catalog.manufacturerIds') }} <small>({{ t('admin.catalog.commaSeparated') }})</small> <input type="text" [(ngModel)]="prodForm.manufacturerIds" name="manufacturerIds" placeholder="1,2" /></label>
+            <fieldset class="pick-list">
+              <legend>{{ t('admin.catalog.categories') }} <small>({{ t('admin.catalog.upTo10') }})</small></legend>
+              @if (categoryOptions.length === 0) { <span class="muted">{{ t('admin.catalog.noCategories') }}</span> }
+              @for (opt of categoryOptions; track opt.id) {
+                <label class="check-label"><input type="checkbox" [checked]="prodForm.categoryIds.includes(opt.id)" (change)="toggleId(prodForm.categoryIds, opt.id)" [name]="'cat' + opt.id" /> {{ opt.label }}</label>
+              }
+            </fieldset>
+            <fieldset class="pick-list">
+              <legend>{{ t('admin.catalog.manufacturers') }} <small>({{ t('admin.catalog.upTo10') }})</small></legend>
+              @if (manufacturerOptions.length === 0) { <span class="muted">{{ t('admin.catalog.noManufacturers') }}</span> }
+              @for (m of manufacturerOptions; track m.id) {
+                <label class="check-label"><input type="checkbox" [checked]="prodForm.manufacturerIds.includes(m.id)" (change)="toggleId(prodForm.manufacturerIds, m.id)" [name]="'mfr' + m.id" /> {{ m.name }}</label>
+              }
+            </fieldset>
             <div class="form-row">
-              <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.published" name="published" /> {{ t('admin.catalog.published') }}</label>
+              <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.published" name="published" /> {{ t('admin.catalog.onSale') }} <small>({{ t('admin.catalog.onSaleHint') }})</small></label>
               <label class="check-label"><input type="checkbox" [(ngModel)]="prodForm.showOnHomepage" name="showOnHomepage" /> {{ t('admin.catalog.showOnHomepage') }}</label>
               <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="prodForm.displayOrder" name="displayOrder" style="width:80px" /></label>
             </div>
@@ -154,7 +214,7 @@ interface ManufacturerForm {
         }
 
         @if (prodLoading) { <p class="state">{{ t('admin.catalog.loadingProducts') }}</p> }
-        @if (prodLoadError) { <p class="state state-error" role="alert">{{ t(prodLoadError) }}</p> }
+        @if (prodLoadError) { <p class="state state-error" role="alert">{{ prodLoadError }}</p> }
         @if (!prodLoading && products.length === 0 && !prodLoadError) { <p class="state">{{ t('admin.catalog.noProducts') }}</p> }
 
         <div class="item-list">
@@ -162,14 +222,35 @@ interface ManufacturerForm {
             <div class="item-row">
               <div class="item-info">
                 <span class="item-name">{{ prod.name }}</span>
-                @if (!prod.published) { <span class="badge-unpub">{{ t('admin.catalog.unpublished') }}</span> }
+                <span [class]="prod.status === 'hiddenByAdmin' ? 'badge-unpub' : 'item-meta'">{{ statusLabel(prod.status) }}</span>
+                @if (prod.reviewRequestedOnUtc) { <span class="badge-unpub">{{ t('admin.catalog.reviewRequested') }}</span> }
                 <span class="item-meta">{{ formatPrice(prod.price) }}</span>
+                <span class="item-meta">{{ t('admin.catalog.shopValue', { name: prod.vendorName }) }}</span>
                 <span class="item-meta">{{ t('admin.catalog.stockValue', { count: prod.stockQuantity }) }}</span>
               </div>
               <div class="item-actions">
                 <button type="button" (click)="editProduct(prod)">{{ t('common.actions.edit') }}</button>
+                @if (prod.status === 'hiddenByAdmin') {
+                  <button type="button" (click)="unhideProduct(prod)">{{ t('admin.catalog.unhide') }}</button>
+                } @else {
+                  <button type="button" (click)="startHide(prod)">{{ t('admin.catalog.hide') }}</button>
+                }
                 <button type="button" class="del-btn" (click)="deleteProduct(prod.id)">{{ t('common.actions.delete') }}</button>
               </div>
+              @if (prod.status === 'hiddenByAdmin' && prod.hiddenReason) {
+                <p class="hidden-reason">{{ t('admin.catalog.hiddenReason', { reason: prod.hiddenReason }) }}</p>
+              }
+              @if (hidingId === prod.id) {
+                <form class="hide-form" (ngSubmit)="confirmHide(prod)">
+                  <label>{{ t('admin.catalog.hideReasonLabel') }} *
+                    <textarea [(ngModel)]="hideReason" name="hideReason" rows="2" maxlength="2000"></textarea>
+                  </label>
+                  <div class="form-actions">
+                    <button type="submit" [disabled]="!hideReason.trim() || prodSaving">{{ t('admin.catalog.hideProduct') }}</button>
+                    <button type="button" class="cancel-btn" (click)="hidingId = null">{{ t('common.actions.cancel') }}</button>
+                  </div>
+                </form>
+              }
             </div>
           }
         </div>
@@ -195,9 +276,10 @@ interface ManufacturerForm {
         @if (mfrFormOpen) {
           <form class="inline-form" (ngSubmit)="submitManufacturer()" [attr.aria-label]="editingManufacturerId ? t('admin.catalog.editManufacturer') : t('admin.catalog.newManufacturer')">
             <div class="form-title">{{ editingManufacturerId ? t('admin.catalog.editManufacturer') : t('admin.catalog.newManufacturer') }}</div>
-            @if (mfrError) { <p class="form-error" role="alert">{{ t(mfrError) }}</p> }
+            @if (mfrError) { <p class="form-error" role="alert">{{ mfrError }}</p> }
             <label>{{ t('admin.common.name') }} <input type="text" [(ngModel)]="mfrForm.name" name="name" required /></label>
             <label>{{ t('admin.common.description') }} <textarea [(ngModel)]="mfrForm.description" name="description" rows="2"></textarea></label>
+            <app-media-image-field [label]="t('admin.catalog.manufacturerImage')" purpose="manufacturer" [(pictureId)]="mfrForm.pictureId" />
             <div class="form-row">
               <label class="check-label"><input type="checkbox" [(ngModel)]="mfrForm.published" name="published" /> {{ t('admin.catalog.published') }}</label>
               <label>{{ t('admin.common.displayOrder') }} <input type="number" [(ngModel)]="mfrForm.displayOrder" name="displayOrder" style="width:80px" /></label>
@@ -210,7 +292,7 @@ interface ManufacturerForm {
         }
 
         @if (mfrLoading) { <p class="state">{{ t('admin.catalog.loadingManufacturers') }}</p> }
-        @if (mfrLoadError) { <p class="state state-error" role="alert">{{ t(mfrLoadError) }}</p> }
+        @if (mfrLoadError) { <p class="state state-error" role="alert">{{ mfrLoadError }}</p> }
         @if (!mfrLoading && manufacturers.length === 0 && !mfrLoadError) { <p class="state">{{ t('admin.catalog.noManufacturers') }}</p> }
 
         <div class="item-list">
@@ -270,6 +352,14 @@ interface ManufacturerForm {
     .del-btn { background: transparent; color: #8d3128; border-color: #c9a09c; font-size: .78rem; padding: .4rem .7rem; }
     .del-btn:hover { background: #8d3128; color: var(--paper); }
     .form-error { color: #8d3128; font-size: .88rem; margin: 0; }
+    .notice { margin: 1rem 0; padding: .75rem 1rem; border-left: 3px solid #b74e3c; background: #f8e9e4; }
+    .pick-list { border: 1px solid var(--line); padding: .6rem .9rem; display: grid; gap: .35rem; max-height: 200px; overflow: auto; }
+    .pick-list legend { color: var(--muted); font: .7rem var(--mono-font); text-transform: uppercase; padding: 0 .3rem; }
+    .muted { color: var(--muted); font-size: .85rem; }
+    .hidden-reason { flex-basis: 100%; margin: .4rem 0 0; color: #7d3026; font-size: .85rem; }
+    .hide-form { flex-basis: 100%; display: grid; gap: .6rem; margin-top: .6rem; }
+    .transfer { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+    select { border: 1px solid var(--line-strong); padding: .55rem; background: var(--paper); font: inherit; }
     .item-list { border-top: 1px solid var(--line-strong); }
     .item-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .75rem .25rem; border-bottom: 1px solid var(--line); }
     .item-info { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; min-width: 0; }
@@ -289,6 +379,8 @@ interface ManufacturerForm {
 export class AdminCatalogPage {
   private readonly api = inject(CatalogApiService);
   private readonly transloco = inject(TranslocoService);
+  readonly currency = inject(CurrencyService);
+  private readonly vendorApi = inject(VendorApiService);
 
   tab: Tab = 'categories';
 
@@ -303,6 +395,9 @@ export class AdminCatalogPage {
   catError: string | null = null;
   editingCategoryId: number | null = null;
   catForm: CategoryForm = this.emptyCatForm();
+  parentOptions: ParentOption[] = [];
+  private categoryTree: AdminCategoryTreeNode[] = [];
+  notice: string | null = null;
 
   // ----- Products -----
   products: AdminProductResponse[] = [];
@@ -311,11 +406,20 @@ export class AdminCatalogPage {
   prodPage = 1;
   prodTotalPages = 1;
   prodSearch = '';
+  prodFilter: 'all' | 'review' | 'hiddenByAdmin' | 'live' | 'draft' | 'stopped' = 'all';
+  hidingId: number | null = null;
+  hideReason = '';
   prodFormOpen = false;
   prodSaving = false;
   prodError: string | null = null;
   editingProductId: number | null = null;
   prodForm: ProductForm = this.emptyProdForm();
+  categoryOptions: ParentOption[] = [];
+  shops: VendorResponse[] = [];
+  editingVendorId = 0;
+  editingVendorName = '';
+  transferVendorId = 0;
+  manufacturerOptions: AdminManufacturerResponse[] = [];
 
   // ----- Manufacturers -----
   manufacturers: AdminManufacturerResponse[] = [];
@@ -347,7 +451,7 @@ export class AdminCatalogPage {
     this.catLoadError = null;
     this.api.adminGetCategories(page).subscribe({
       next: r => { this.categories = r.items; this.catPage = r.page; this.catTotalPages = r.totalPages; this.catLoading = false; },
-      error: () => { this.catLoadError = 'admin.catalog.errors.loadCategories'; this.catLoading = false; }
+      error: () => { this.catLoadError = this.transloco.translate('admin.catalog.errors.loadCategories'); this.catLoading = false; }
     });
   }
 
@@ -355,6 +459,8 @@ export class AdminCatalogPage {
     this.editingCategoryId = null;
     this.catForm = this.emptyCatForm();
     this.catError = null;
+    this.notice = null;
+    this.loadParentOptions(null);
     this.catFormOpen = true;
   }
 
@@ -368,9 +474,13 @@ export class AdminCatalogPage {
     this.catForm = {
       name: cat.name, description: cat.description ?? '',
       parentCategoryId: cat.parentCategoryId,
-      showOnHomepage: cat.showOnHomepage, published: cat.published, displayOrder: cat.displayOrder
+      pictureId: cat.pictureId,
+      showOnHomepage: cat.showOnHomepage, published: cat.published,
+      restrictFromVendors: cat.restrictFromVendors, displayOrder: cat.displayOrder
     };
     this.catError = null;
+    this.notice = null;
+    this.loadParentOptions(cat.id);
     this.catFormOpen = true;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -382,8 +492,10 @@ export class AdminCatalogPage {
       name: this.catForm.name,
       description: this.catForm.description || null,
       parentCategoryId: this.catForm.parentCategoryId,
+      pictureId: this.catForm.pictureId,
       showOnHomepage: this.catForm.showOnHomepage,
       published: this.catForm.published,
+      restrictFromVendors: this.catForm.restrictFromVendors,
       displayOrder: this.catForm.displayOrder
     };
     const obs = this.editingCategoryId
@@ -391,15 +503,16 @@ export class AdminCatalogPage {
       : this.api.adminCreateCategory(req);
     obs.subscribe({
       next: () => { this.catSaving = false; this.closeCategoryForm(); this.loadCategories(this.catPage); },
-      error: err => { this.catError = extractError(err, 'admin.common.saveFailed'); this.catSaving = false; }
+      error: err => { this.catError = extractError(err, this.transloco.translate('admin.common.saveFailed')); this.catSaving = false; }
     });
   }
 
   deleteCategory(id: number) {
     if (!confirm(this.transloco.translate('admin.catalog.confirmDeleteCategory'))) return;
+    this.notice = null;
     this.api.adminDeleteCategory(id).subscribe({
       next: () => this.loadCategories(this.catPage),
-      error: () => alert(this.transloco.translate('admin.catalog.errors.deleteCategory'))
+      error: err => { this.notice = conflictMessage(err, this.transloco.translate('admin.catalog.errors.deleteCategory')); }
     });
   }
 
@@ -408,9 +521,10 @@ export class AdminCatalogPage {
   loadProducts(page: number) {
     this.prodLoading = true;
     this.prodLoadError = null;
-    this.api.adminGetProducts(page, 50, this.prodSearch || null).subscribe({
+    const status = this.prodFilter === 'all' ? null : this.prodFilter === 'review' ? 'hiddenByAdmin' : this.prodFilter;
+    this.api.adminGetProducts(page, 50, this.prodSearch || null, null, status, this.prodFilter === 'review').subscribe({
       next: r => { this.products = r.items; this.prodPage = r.page; this.prodTotalPages = r.totalPages; this.prodLoading = false; },
-      error: () => { this.prodLoadError = 'admin.catalog.errors.loadProducts'; this.prodLoading = false; }
+      error: () => { this.prodLoadError = this.transloco.translate('admin.catalog.errors.loadProducts'); this.prodLoading = false; }
     });
   }
 
@@ -418,6 +532,7 @@ export class AdminCatalogPage {
     this.editingProductId = null;
     this.prodForm = this.emptyProdForm();
     this.prodError = null;
+    this.loadTaxonomyOptions();
     this.prodFormOpen = true;
   }
 
@@ -431,16 +546,21 @@ export class AdminCatalogPage {
     this.api.adminGetProduct(prod.id).subscribe({
       next: (detail: AdminProductDetailResponse) => {
         this.editingProductId = prod.id;
+        this.editingVendorId = prod.vendorId;
+        this.editingVendorName = prod.vendorName ?? `#${prod.vendorId}`;
+        this.transferVendorId = 0;
         this.prodForm = {
+          vendorId: prod.vendorId,
           name: prod.name,
           shortDescription: prod.shortDescription ?? '',
           fullDescription: prod.fullDescription ?? '',
           price: prod.price, oldPrice: prod.oldPrice, stockQuantity: prod.stockQuantity,
           published: prod.published, showOnHomepage: prod.showOnHomepage, displayOrder: prod.displayOrder,
-          categoryIds: detail.categoryIds.join(','),
-          manufacturerIds: detail.manufacturerIds.join(',')
+          categoryIds: [...detail.categoryIds],
+          manufacturerIds: [...detail.manufacturerIds]
         };
         this.prodError = null;
+        this.loadTaxonomyOptions();
         this.prodFormOpen = true;
         this.prodSaving = false;
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -460,15 +580,17 @@ export class AdminCatalogPage {
       stockQuantity: this.prodForm.stockQuantity,
       published: this.prodForm.published, showOnHomepage: this.prodForm.showOnHomepage,
       displayOrder: this.prodForm.displayOrder,
-      categoryIds: parseIds(this.prodForm.categoryIds),
-      manufacturerIds: parseIds(this.prodForm.manufacturerIds)
+      categoryIds: this.prodForm.categoryIds,
+      manufacturerIds: this.prodForm.manufacturerIds,
+      // The owner is only chosen on creation. Updates never send it; the API rejects attempts to change it.
+      ...(this.editingProductId || !this.prodForm.vendorId ? {} : { vendorId: this.prodForm.vendorId })
     };
     const obs = this.editingProductId
       ? this.api.adminUpdateProduct(this.editingProductId, req)
       : this.api.adminCreateProduct(req);
     obs.subscribe({
       next: () => { this.prodSaving = false; this.closeProductForm(); this.loadProducts(this.prodPage); },
-      error: err => { this.prodError = extractError(err, 'admin.common.saveFailed'); this.prodSaving = false; }
+      error: err => { this.prodError = extractError(err, this.transloco.translate('admin.common.saveFailed')); this.prodSaving = false; }
     });
   }
 
@@ -487,7 +609,7 @@ export class AdminCatalogPage {
     this.mfrLoadError = null;
     this.api.adminGetManufacturers(page).subscribe({
       next: r => { this.manufacturers = r.items; this.mfrPage = r.page; this.mfrTotalPages = r.totalPages; this.mfrLoading = false; },
-      error: () => { this.mfrLoadError = 'admin.catalog.errors.loadManufacturers'; this.mfrLoading = false; }
+      error: () => { this.mfrLoadError = this.transloco.translate('admin.catalog.errors.loadManufacturers'); this.mfrLoading = false; }
     });
   }
 
@@ -506,7 +628,7 @@ export class AdminCatalogPage {
   editManufacturer(mfr: AdminManufacturerResponse) {
     this.editingManufacturerId = mfr.id;
     this.mfrForm = {
-      name: mfr.name, description: mfr.description ?? '',
+      name: mfr.name, description: mfr.description ?? '', pictureId: mfr.pictureId,
       published: mfr.published, displayOrder: mfr.displayOrder
     };
     this.mfrError = null;
@@ -520,6 +642,7 @@ export class AdminCatalogPage {
     const req: SaveManufacturerRequest = {
       name: this.mfrForm.name,
       description: this.mfrForm.description || null,
+      pictureId: this.mfrForm.pictureId,
       published: this.mfrForm.published,
       displayOrder: this.mfrForm.displayOrder
     };
@@ -528,40 +651,140 @@ export class AdminCatalogPage {
       : this.api.adminCreateManufacturer(req);
     obs.subscribe({
       next: () => { this.mfrSaving = false; this.closeManufacturerForm(); this.loadManufacturers(this.mfrPage); },
-      error: err => { this.mfrError = extractError(err, 'admin.common.saveFailed'); this.mfrSaving = false; }
+      error: err => { this.mfrError = extractError(err, this.transloco.translate('admin.common.saveFailed')); this.mfrSaving = false; }
     });
   }
 
   deleteManufacturer(id: number) {
     if (!confirm(this.transloco.translate('admin.catalog.confirmDeleteManufacturer'))) return;
+    this.notice = null;
     this.api.adminDeleteManufacturer(id).subscribe({
       next: () => this.loadManufacturers(this.mfrPage),
-      error: () => alert(this.transloco.translate('admin.catalog.errors.deleteManufacturer'))
+      error: err => { this.notice = conflictMessage(err, this.transloco.translate('admin.catalog.errors.deleteManufacturer')); }
+    });
+  }
+
+  // ---- Taxonomy pickers ----
+
+  toggleId(list: number[], id: number) {
+    const index = list.indexOf(id);
+    if (index >= 0) list.splice(index, 1);
+    else list.push(id);
+  }
+
+  /** Parent choices: every category except the one being edited and its own subcategories. */
+  private loadParentOptions(editingId: number | null) {
+    this.api.adminGetCategoryTree().subscribe({
+      next: tree => {
+        this.categoryTree = tree;
+        this.parentOptions = flattenTree(tree, editingId);
+      },
+      error: () => { this.parentOptions = []; this.catError = this.transloco.translate('admin.catalog.errors.loadCategoryList'); }
+    });
+  }
+
+  startHide(prod: AdminProductResponse) {
+    this.hidingId = prod.id;
+    this.hideReason = '';
+    this.notice = null;
+  }
+
+  confirmHide(prod: AdminProductResponse) {
+    if (!this.hideReason.trim()) return;
+    this.prodSaving = true;
+    this.notice = null;
+    this.api.adminHideProduct(prod.id, this.hideReason.trim()).subscribe({
+      next: () => { this.prodSaving = false; this.hidingId = null; this.loadProducts(this.prodPage); },
+      error: err => { this.prodSaving = false; this.notice = conflictMessage(err, extractError(err, this.transloco.translate('admin.catalog.errors.hide'))); }
+    });
+  }
+
+  unhideProduct(prod: AdminProductResponse) {
+    this.notice = null;
+    this.api.adminUnhideProduct(prod.id).subscribe({
+      next: () => this.loadProducts(this.prodPage),
+      error: err => { this.notice = conflictMessage(err, this.transloco.translate('admin.catalog.errors.unhide')); }
+    });
+  }
+
+  statusLabel(status: AdminProductResponse['status']) {
+    return this.transloco.translate('admin.catalog.status.' + status);
+  }
+
+  transferProduct() {
+    if (!this.editingProductId || !this.transferVendorId) return;
+    const target = this.shops.find(s => s.id === this.transferVendorId);
+    if (!confirm(this.transloco.translate('admin.catalog.confirmTransfer', { name: target?.name ?? this.transloco.translate('admin.catalog.selectedShop') }))) return;
+    this.prodSaving = true;
+    this.prodError = null;
+    this.api.adminTransferProduct(this.editingProductId, this.transferVendorId).subscribe({
+      next: moved => {
+        this.prodSaving = false;
+        this.editingVendorId = moved.vendorId;
+        this.editingVendorName = moved.vendorName ?? target?.name ?? '';
+        this.transferVendorId = 0;
+        this.loadProducts(this.prodPage);
+      },
+      error: err => { this.prodError = extractError(err, this.transloco.translate('admin.catalog.errors.transfer')); this.prodSaving = false; }
+    });
+  }
+
+  private loadTaxonomyOptions() {
+    this.vendorApi.getVendors(1, 100).subscribe({ next: r => { this.shops = r.items.filter(v => v.active !== false); }, error: () => { this.shops = []; } });
+    this.api.adminGetCategoryTree().subscribe({
+      next: tree => { this.categoryTree = tree; this.categoryOptions = flattenTree(tree, null); },
+      error: () => { this.categoryOptions = []; }
+    });
+    this.api.adminGetManufacturers(1, 100).subscribe({
+      next: r => { this.manufacturerOptions = r.items; },
+      error: () => { this.manufacturerOptions = []; }
     });
   }
 
   formatPrice(price: number): string {
-    return price % 1 === 0 ? `$${price}` : `$${price.toFixed(2)}`;
+    return this.currency.formatPrimary(price);
   }
 
   private emptyCatForm(): CategoryForm {
-    return { name: '', description: '', parentCategoryId: 0, showOnHomepage: false, published: true, displayOrder: 0 };
+    return { name: '', description: '', parentCategoryId: 0, pictureId: 0, showOnHomepage: false, published: true, restrictFromVendors: false, displayOrder: 0 };
   }
 
   private emptyProdForm(): ProductForm {
-    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, published: true, showOnHomepage: false, displayOrder: 0, categoryIds: '', manufacturerIds: '' };
+    return { vendorId: 0, name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, published: true, showOnHomepage: false, displayOrder: 0, categoryIds: [], manufacturerIds: [] };
   }
 
   private emptyMfrForm(): ManufacturerForm {
-    return { name: '', description: '', published: true, displayOrder: 0 };
+    return { name: '', description: '', pictureId: 0, published: true, displayOrder: 0 };
   }
 }
 
-function parseIds(value: string): number[] {
-  return value.split(',').map(s => parseInt(s.trim(), 10)).filter(n => !isNaN(n) && n > 0);
+/** Flattens the tree into indented labels, skipping one category and its subcategories. */
+function flattenTree(nodes: AdminCategoryTreeNode[], excludeId: number | null, depth = 0): ParentOption[] {
+  return nodes.flatMap(node => {
+    if (node.id === excludeId) return [];
+    const label = `${'— '.repeat(depth)}${node.name}${node.published ? '' : ` (${translate('admin.catalog.unpublishedLower')})`}`;
+    return [{ id: node.id, label }, ...flattenTree(node.children, excludeId, depth + 1)];
+  });
 }
 
-/** Returns a translation key for a failed save. */
-function extractError(err: { status?: number }, fallbackKey: string): string {
-  return err?.status === 400 ? 'errors.badRequest' : fallbackKey;
+const conflictMessages: Record<string, string> = {
+  'category.has_children': 'errors.category.has_children',
+  'category.in_use': 'errors.category.in_use',
+  'manufacturer.in_use': 'errors.manufacturer.in_use',
+  'product.already_hidden': 'errors.product.already_hidden',
+  'product.not_hidden': 'errors.product.not_hidden'
+};
+
+function conflictMessage(err: { status?: number; message?: string }, fallback: string): string {
+  const key = err.status === 409 && err.message ? conflictMessages[err.message] : undefined;
+  return key ? translate(key) : fallback;
+}
+
+function extractError(err: { error?: { errors?: Record<string, string[]> }; fieldErrors?: Record<string, string[]> }, fallback: string): string {
+  // The error interceptor moves validation errors to `fieldErrors`; keep reading `error.errors` for raw responses.
+  const errors = err?.fieldErrors ?? err?.error?.errors;
+  if (errors) {
+    return Object.values(errors).flat().join(' ');
+  }
+  return fallback;
 }

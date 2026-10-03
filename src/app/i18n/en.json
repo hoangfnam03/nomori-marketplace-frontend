@@ -62,7 +62,11 @@
     "footer": {
       "brand": "Nomori Marketplace",
       "workspace": "Foundation workspace"
-    }
+    },
+    "cart": "Cart",
+    "cartItems": "items in cart",
+    "currencies": "Currencies",
+    "countries": "Countries"
   },
   "language": {
     "label": "Language",
@@ -93,6 +97,17 @@
       "limit_reached": "The shop already has 20 members.",
       "already_active": "This member has already activated their account.",
       "last_member": "A shop must keep at least one member."
+    },
+    "category": {
+      "has_children": "This category still has subcategories. Move or delete them first.",
+      "in_use": "Products still use this category. Remove it from those products first."
+    },
+    "manufacturer": {
+      "in_use": "Products still use this manufacturer. Remove it from those products first."
+    },
+    "product": {
+      "already_hidden": "This product is already hidden.",
+      "not_hidden": "This product is not hidden."
     }
   },
   "vendorStatus": {
@@ -195,7 +210,12 @@
       "heading": "Reset password",
       "success": "Password reset. You can sign in with the new password.",
       "submit": "Reset password",
-      "submitting": "Resetting..."
+      "submitting": "Resetting...",
+      "setupTitle": "Welcome aboard.",
+      "setupLede": "Choose a password to activate your shop account.",
+      "setupHeading": "Set your password",
+      "setupSuccess": "Password set. You can now sign in.",
+      "setupSubmit": "Set password"
     },
     "verify": {
       "eyebrow": "Account / Email",
@@ -264,7 +284,13 @@
       "phone": "Phone",
       "address": "Address",
       "city": "City",
-      "countryCode": "Country code"
+      "countryCode": "Country code",
+      "companyOptional": "Company (optional)",
+      "address2Optional": "Address line 2 (optional)",
+      "country": "Country",
+      "stateProvince": "State / province",
+      "stateProvinceOptional": "State / province (optional)",
+      "postalCode": "Postal code"
     },
     "gender": {
       "none": "Prefer not to say",
@@ -324,8 +350,10 @@
       "errors": {
         "saveAddress": "Unable to save address.",
         "savePreferences": "Unable to save preferences.",
-        "emailChange": "Unable to request email change."
-      }
+        "emailChange": "Unable to request email change.",
+        "loadCountries": "Unable to load the country list."
+      },
+      "choose": "Choose…"
     }
   },
   "storefront": {
@@ -336,13 +364,15 @@
     "search": {
       "label": "Search products",
       "placeholder": "Search the marketplace",
-      "submit": "Search"
+      "submit": "Search",
+      "suggestions": "Suggestions"
     },
     "card": {
       "view": "View {{name}}",
       "rating": "{{rating}} out of 5 stars",
       "reviews": "{{count}} reviews",
-      "addToCart": "Add to cart"
+      "addToCart": "Add to cart",
+      "sale": "Sale"
     },
     "home": {
       "breadcrumb": "Featured collection",
@@ -378,7 +408,31 @@
       "loading": "Loading products...",
       "emptyTitle": "No products found",
       "emptyMessage": "Try adjusting your filters or search query.",
-      "loadError": "Unable to load products."
+      "loadError": "Unable to load products.",
+      "resultsFor": "Results for “{{search}}”",
+      "price": "Price",
+      "min": "Min",
+      "max": "Max",
+      "minPrice": "Minimum price",
+      "maxPrice": "Maximum price",
+      "apply": "Apply",
+      "priceRange": "From {{min}} to {{max}}",
+      "inStockOnly": "In stock only",
+      "tags": "Tags",
+      "sortRelevance": "Best match",
+      "sortNameAsc": "Name: A to Z",
+      "activeFilters": "Active filters",
+      "removeFilter": "Remove filter {{label}}",
+      "clearAll": "Clear all",
+      "clearAllFilters": "Clear all filters",
+      "invalidFilters": "Some filters are not valid. Check the search text and the price range.",
+      "priceNegative": "Prices cannot be negative.",
+      "priceOrder": "The minimum cannot be higher than the maximum.",
+      "chipCategory": "Category: {{name}}",
+      "chipPrice": "Price: {{min}} – {{max}}",
+      "chipInStock": "In stock",
+      "chipBrand": "Brand: {{name}}",
+      "chipTag": "Tag: {{name}}"
     },
     "productDetail": {
       "loading": "Loading product...",
@@ -388,14 +442,33 @@
       "brand": "Brand",
       "specifications": "Specifications",
       "notFound": "Product not found.",
-      "loadError": "Unable to load product."
+      "loadError": "Unable to load product.",
+      "showPicture": "Show picture {{index}}",
+      "soldBy": "Sold by",
+      "tierPrices": "Quantity prices",
+      "tierCaption": "Buy more, pay less",
+      "tierUnits": "{{count}}+ units",
+      "tierEach": "{{price}} each",
+      "chooseToSee": "Choose {{options}} to see price and availability.",
+      "inStockShort": "In stock",
+      "sku": "SKU {{sku}}",
+      "quantity": "Quantity",
+      "lineTotal": "Total {{total}}",
+      "adding": "Adding…",
+      "chooseFirst": "Choose {{options}} first.",
+      "chooseOptions": "Choose your options first.",
+      "related": "Related products",
+      "quantityRange": "Enter a quantity between 1 and 10,000.",
+      "quoteInvalid": "The chosen options or quantity are not valid.",
+      "quoteError": "Unable to get the price. Try again."
     },
     "vendors": {
       "eyebrow": "Marketplace",
       "title": "Shops",
       "lede": "Browse all shops on Nomori Marketplace.",
       "loading": "Loading shops...",
-      "empty": "No shops at the moment."
+      "empty": "No shops at the moment.",
+      "logoAlt": "{{name}} logo"
     },
     "vendorDetail": {
       "loading": "Loading shop...",
@@ -403,6 +476,9 @@
       "invalid": "Invalid shop.",
       "notFound": "Shop not found.",
       "loadError": "Failed to load shop."
+    },
+    "cart": {
+      "added": "{{name}} added to your cart."
     }
   },
   "admin": {
@@ -473,7 +549,28 @@
       "adminComment": "Admin comment",
       "empty": "No shops found.",
       "nameEmailRequired": "Name and email are required.",
-      "confirmDelete": "Delete shop \"{{name}}\"?"
+      "confirmDelete": "Delete shop \"{{name}}\"?",
+      "ledeBefore": "Shops are created by approving a",
+      "ledeLink": "vendor application",
+      "ledeAfter": ". Members manage their own shop accounts from the vendor portal.",
+      "members": "Members",
+      "membersOf": "Members of {{name}}",
+      "confirmDeleteLabel": "Confirm delete",
+      "deleteWarning": "Every member loses seller access and is signed out. Their accounts remain as normal customer accounts.",
+      "deleting": "Deleting…",
+      "deleteVendor": "Delete vendor",
+      "logo": "Shop logo",
+      "loadingMembers": "Loading members…",
+      "account": "Account",
+      "lastSignIn": "Last sign-in",
+      "confirmRemove": "Confirm remove",
+      "remove": "Remove",
+      "lastMemberNote": "The last member cannot be removed. Delete the vendor to close the shop.",
+      "errors": {
+        "load": "Unable to load vendors.",
+        "loadMembers": "Unable to load members.",
+        "removeMember": "Unable to remove the member."
+      }
     },
     "specs": {
       "eyebrow": "Admin / Catalog",
@@ -546,8 +643,44 @@
         "loadProduct": "Unable to load product.",
         "deleteProduct": "Unable to delete product.",
         "loadManufacturers": "Unable to load manufacturers.",
-        "deleteManufacturer": "Unable to delete manufacturer."
-      }
+        "deleteManufacturer": "Unable to delete manufacturer.",
+        "loadCategoryList": "Unable to load the category list.",
+        "hide": "Unable to hide the product.",
+        "unhide": "Unable to unhide the product.",
+        "transfer": "Transfer failed."
+      },
+      "parentCategory": "Parent category",
+      "topLevel": "None (top level)",
+      "categoryImage": "Category image",
+      "manufacturerImage": "Manufacturer image",
+      "restrictSellers": "Restrict sellers",
+      "restrictSellersHint": "sellers cannot add products here",
+      "unpublishedLower": "unpublished",
+      "filterProducts": "Filter products",
+      "filterAll": "All products",
+      "filterReview": "Awaiting review",
+      "status": {
+        "draft": "Draft",
+        "live": "Live",
+        "stopped": "Stopped",
+        "hiddenByAdmin": "Hidden by admin"
+      },
+      "shop": "Shop",
+      "platformShop": "Nomori Official (platform)",
+      "transferTo": "Transfer to…",
+      "transfer": "Transfer",
+      "confirmTransfer": "Move this product to \"{{name}}\"?",
+      "selectedShop": "the selected shop",
+      "upTo10": "up to 10",
+      "onSale": "On sale",
+      "onSaleHint": "never changes a hidden product",
+      "reviewRequested": "Review requested",
+      "shopValue": "shop: {{name}}",
+      "hide": "Hide",
+      "unhide": "Unhide",
+      "hiddenReason": "Hidden: {{reason}}",
+      "hideReasonLabel": "Reason (emailed to the shop)",
+      "hideProduct": "Hide product"
     }
   }
 }

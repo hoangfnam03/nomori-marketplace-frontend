@@ -1,15 +1,20 @@
 import { Component, inject, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { TranslocoDirective } from '@jsverse/transloco';
+import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
-import { ProductDetailResponse } from '../../core/catalog/catalog.models';
-import { ProductAttributeDetail } from '../../core/catalog/product-attribute.models';
+import { MediaApiService } from '../../core/media/media-api.service';
+import { CurrencyService } from '../../core/money/currency.service';
+import { CartService } from '../../core/cart/cart.service';
+import { CartNoticeComponent } from '../../shared/components/cart-notice/cart-notice.component';
+import { PriceQuote, ProductDetailResponse, TierPrice } from '../../core/catalog/catalog.models';
+import { PublicAttributeCombination, PublicAttributeDetail } from '../../core/catalog/product-attribute.models';
 import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute.models';
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, RouterLink, TranslocoDirective],
+  imports: [BreadcrumbComponent, CartNoticeComponent, FormsModule, RouterLink, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
     @if (loading) {
@@ -28,7 +33,20 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 
       <div class="product-layout">
         <div class="product-image-area">
-          <div class="product-image-placeholder" aria-hidden="true"></div>
+          @if (selectedPictureUrl(); as url) {
+            <img class="product-image" [src]="url" [alt]="detail.product.name" />
+            @if (detail.pictureIds.length > 1) {
+              <div class="thumbs">
+                @for (id of detail.pictureIds; track id) {
+                  <button type="button" class="thumb" [class.active]="id === selectedPictureId" (click)="selectedPictureId = id" [attr.aria-label]="t('storefront.productDetail.showPicture', { index: $index + 1 })">
+                    <img [src]="media.url(id)" alt="" loading="lazy" />
+                  </button>
+                }
+              </div>
+            }
+          } @else {
+            <div class="product-image-placeholder" aria-hidden="true"></div>
+          }
         </div>
 
         <div class="product-info">
@@ -36,41 +54,64 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
             <div class="eyebrow">{{ detail.categories[0].name }}</div>
           }
           <h1>{{ detail.product.name }}</h1>
+          @if (detail.product.vendorName) {
+            <p class="sold-by">{{ t('storefront.productDetail.soldBy') }} <a [routerLink]="['/storefront/vendors', detail.product.vendorId]">{{ detail.product.vendorName }}</a></p>
+          }
 
           <div class="price-row">
-            <span class="price">{{ formatPrice(detail.product.price) }}</span>
-            @if (detail.product.oldPrice > 0) {
-              <span class="compare-price">{{ formatPrice(detail.product.oldPrice) }}</span>
+            <span class="price">{{ formatPrice(unitPrice()) }}</span>
+            @if (comparePrice(); as compare) {
+              <span class="compare-price">{{ formatPrice(compare) }}</span>
             }
+            @if (quote?.appliedRule === 'special' || (!quote && detail.product.onSale)) { <span class="sale-tag">{{ t('storefront.card.sale') }}</span> }
           </div>
+          @if (quoteError) { <p class="quote-error" role="alert">{{ t(quoteError) }}</p> }
+
+          @if (detail.tierPrices.length > 0) {
+            <table class="tiers" [attr.aria-label]="t('storefront.productDetail.tierPrices')">
+              <caption>{{ t('storefront.productDetail.tierCaption') }}</caption>
+              <tbody>
+                @for (tier of detail.tierPrices; track tier.quantity) {
+                  <tr [class.active]="activeTier()?.quantity === tier.quantity">
+                    <th scope="row">{{ t('storefront.productDetail.tierUnits', { count: tier.quantity }) }}</th>
+                    <td>{{ t('storefront.productDetail.tierEach', { price: formatPrice(tier.price) }) }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
 
           @if (detail.product.shortDescription) {
             <p class="short-desc">{{ detail.product.shortDescription }}</p>
           }
 
           <div class="stock-info">
-            @if (detail.product.stockQuantity > 0) {
-              <span class="in-stock">{{ t('storefront.productDetail.inStock', { count: detail.product.stockQuantity }) }}</span>
+            @if (needsChoice()) {
+              <span class="muted-note">{{ t('storefront.productDetail.chooseToSee', { options: missingChoices() }) }}</span>
+            } @else if (currentStock() > 0) {
+              <span class="in-stock">@if (detail.trackInventory) { {{ t('storefront.productDetail.inStock', { count: currentStock() }) }} } @else { {{ t('storefront.productDetail.inStockShort') }} }</span>
             } @else {
               <span class="out-of-stock">{{ t('storefront.productDetail.outOfStock') }}</span>
             }
+            @if (combination()?.sku; as sku) { <span class="sku"> · {{ t('storefront.productDetail.sku', { sku: sku }) }}</span> }
           </div>
 
           @if (attrs && attrs.mappings.length > 0) {
             <div class="attrs-section">
-              @for (m of attrs.mappings; track m.mapping.id) {
+              @for (m of attrs.mappings; track m.id) {
                 <div class="attr-group">
-                  <div class="attr-label">{{ m.prompt || m.attribute.name }}</div>
+                  <div class="attr-label">{{ m.prompt || m.attribute.name }}@if (m.isRequired) { <span aria-hidden="true"> *</span> }</div>
                   @if (m.controlType === 'ColorSquares') {
                     <div class="attr-swatches" role="group" [attr.aria-label]="m.attribute.name">
                       @for (v of m.values; track v.id) {
-                        <button type="button" class="swatch" [style.background]="v.colorSquaresRgb || '#ccc'" [title]="v.name" [attr.aria-label]="v.name"></button>
+                        <button type="button" class="swatch" [class.selected]="selected[m.id] === v.id" [attr.aria-pressed]="selected[m.id] === v.id"
+                          [style.background]="v.colorSquaresRgb || '#ccc'" [title]="v.name" [attr.aria-label]="v.name" (click)="choose(m.id, v.id)"></button>
                       }
                     </div>
                   } @else {
                     <div class="attr-options" role="group" [attr.aria-label]="m.attribute.name">
                       @for (v of m.values; track v.id) {
-                        <button type="button" class="attr-option" [class.selected]="v.isPreSelected">
+                        <button type="button" class="attr-option" [class.selected]="selected[m.id] === v.id" [attr.aria-pressed]="selected[m.id] === v.id" (click)="choose(m.id, v.id)">
                           {{ v.name }}
                           @if (v.priceAdjustment !== 0) { <span class="adj">{{ v.priceAdjustment > 0 ? '+' : '' }}{{ formatPrice(v.priceAdjustment) }}</span> }
                         </button>
@@ -82,12 +123,20 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
             </div>
           }
 
-          <button type="button" class="add-to-cart" [disabled]="detail.product.stockQuantity === 0">{{ t('storefront.card.addToCart') }}</button>
+          <div class="quantity-row">
+            <label for="quantity">{{ t('storefront.productDetail.quantity') }}</label>
+            <input id="quantity" type="number" name="quantity" min="1" max="10000" step="1" [(ngModel)]="quantity" (ngModelChange)="onQuantityChange()" />
+            @if (quote && !needsChoice()) { <span class="line-total">{{ t('storefront.productDetail.lineTotal', { total: formatPrice(quote.lineTotal) }) }}</span> }
+          </div>
+
+          <button type="button" class="add-to-cart" [disabled]="needsChoice() || currentStock() === 0 || adding" (click)="addToCart()">{{ adding ? t('storefront.productDetail.adding') : t('storefront.card.addToCart') }}</button>
+          @if (needsChoice()) { <p class="quote-error" role="status">{{ t('storefront.productDetail.chooseFirst', { options: missingChoices() }) }}</p> }
 
           @if (detail.fullDescription) {
             <div class="full-desc">
               <div class="section-label">{{ t('storefront.productDetail.description') }}</div>
-              <p>{{ detail.fullDescription }}</p>
+              <!-- Sanitized by the API on save; Angular sanitizes again when binding. -->
+              <div class="rich" [innerHTML]="detail.fullDescription"></div>
             </div>
           }
 
@@ -114,6 +163,24 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
           }
         </div>
       </div>
+
+      <app-cart-notice [message]="cartMessage" [error]="cartFailed" (dismissed)="cartMessage = ''" />
+
+      @if (detail.relatedProducts.length > 0) {
+        <section class="related" aria-labelledby="related-title">
+          <h2 id="related-title" class="specs-title">{{ t('storefront.productDetail.related') }}</h2>
+          <div class="related-grid">
+            @for (r of detail.relatedProducts; track r.id) {
+              <a class="related-card" [routerLink]="['/storefront/products', r.id]">
+                @if (media.url(r.mainPictureId); as url) { <img [src]="url" alt="" loading="lazy" /> }
+                @else { <span class="related-empty" aria-hidden="true"></span> }
+                <span class="related-name">{{ r.name }}</span>
+                <span class="related-price">{{ formatPrice(r.finalPrice) }}</span>
+              </a>
+            }
+          </div>
+        </section>
+      }
 
       @if (specs && (specs.groups.length > 0 || specs.ungrouped.length > 0)) {
         <div class="specs-section">
@@ -161,10 +228,17 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
     </ng-container>
   `,
   styles: [`
+    .sold-by { margin: .2rem 0 1rem; color: var(--muted); font-size: .9rem; }
+    .sold-by a { color: var(--green); }
     :host { display: block; }
     .page-heading { padding: .75rem 0 2rem; animation: rise-in 600ms ease both; }
     .product-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; padding-bottom: 5rem; }
     .product-image-placeholder { aspect-ratio: 4/5; background: #e4e8df; }
+    .product-image { display: block; width: 100%; aspect-ratio: 4/5; object-fit: cover; background: #e4e8df; }
+    .thumbs { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .6rem; }
+    .thumb { width: 64px; height: 64px; padding: 0; border: 1px solid var(--line); background: transparent; cursor: pointer; }
+    .thumb.active { border-color: var(--green); outline: 2px solid var(--green); }
+    .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .product-info { padding-top: 1rem; }
     .eyebrow { color: var(--green); font: 700 .72rem/1 var(--mono-font); letter-spacing: .13em; text-transform: uppercase; margin-bottom: .75rem; }
     h1 { margin: 0 0 1.5rem; font: 700 clamp(2rem, 4vw, 3.5rem)/1.08 var(--display-font); }
@@ -188,9 +262,30 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
     .attr-swatches { display: flex; flex-wrap: wrap; gap: .5rem; }
     .swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer; }
     .swatch:hover { border-color: var(--ink); }
+    .swatch.selected { border-color: var(--ink); outline: 2px solid var(--ink); outline-offset: 2px; }
+    .muted-note, .sku { color: var(--muted); }
+    .sale-tag { align-self: center; padding: .2rem .5rem; background: var(--green); color: var(--paper); font: 700 .65rem var(--mono-font); letter-spacing: .08em; text-transform: uppercase; }
+    .quote-error { color: #8d3128; font-size: .85rem; margin: 0 0 1rem; }
+    .tiers { border-collapse: collapse; margin: 0 0 1.25rem; font-size: .85rem; }
+    .tiers caption { text-align: left; color: var(--muted); font: 700 .68rem var(--mono-font); letter-spacing: .1em; text-transform: uppercase; padding-bottom: .4rem; }
+    .tiers th { text-align: left; font-weight: 500; padding: .25rem 1.5rem .25rem 0; color: var(--muted); }
+    .tiers tr.active th, .tiers tr.active td { color: var(--ink); font-weight: 700; }
+    .quantity-row { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; }
+    .quantity-row label { font: 700 .68rem var(--mono-font); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .quantity-row input { width: 5.5rem; border: 1px solid var(--line-strong); padding: .5rem .6rem; background: transparent; color: var(--ink); font: inherit; }
+    .line-total { color: var(--muted); font: .78rem var(--mono-font); }
     .full-desc { border-top: 1px solid var(--line); padding-top: 1.5rem; margin-top: 1.5rem; }
     .section-label { color: var(--muted); font: 700 .68rem var(--mono-font); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .6rem; }
     .full-desc p { color: var(--muted); font-size: .95rem; line-height: 1.75; margin: 0; }
+    .rich { color: var(--muted); font-size: .95rem; line-height: 1.75; }
+    .rich p { margin: 0 0 .8rem; }
+    .rich a { color: var(--green); }
+    .related { border-top: 1px solid var(--line); padding: 2.5rem 0 3rem; }
+    .related-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.25rem; }
+    .related-card { display: grid; gap: .4rem; color: inherit; text-decoration: none; }
+    .related-card img, .related-empty { width: 100%; aspect-ratio: 4/5; object-fit: cover; background: #e4e8df; display: block; }
+    .related-name { font-weight: 600; font-size: .9rem; }
+    .related-price { color: var(--muted); font-size: .85rem; }
     .meta-section { display: flex; gap: 1rem; padding: .75rem 0; border-bottom: 1px solid var(--line); font-size: .9rem; }
     .meta-label { flex: 0 0 100px; color: var(--muted); font: .72rem var(--mono-font); text-transform: uppercase; padding-top: .1em; }
     .state { color: var(--muted); padding: 3rem 0; }
@@ -211,21 +306,38 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
 export class ProductDetailPage implements OnInit {
   private readonly api = inject(CatalogApiService);
   private readonly route = inject(ActivatedRoute);
+  readonly media = inject(MediaApiService);
+  private readonly currency = inject(CurrencyService);
+  private readonly cart = inject(CartService);
+  private readonly transloco = inject(TranslocoService);
+  adding = false;
+  cartMessage = '';
+  cartFailed = false;
 
   detail: ProductDetailResponse | null = null;
-  attrs: ProductAttributeDetail | null = null;
+  attrs: PublicAttributeDetail | null = null;
+  /** Chosen value id per attribute mapping id. */
+  selected: Record<number, number> = {};
+  quantity = 1;
+  /** The server's price for the current choice; null until it answers or while a choice is missing. */
+  quote: PriceQuote | null = null;
+  quoteError = '';
+  private quoteRequest = 0;
   specs: ProductSpecDetail | null = null;
   tags: ProductTag[] = [];
   loading = true;
   error: string | null = null;
+  selectedPictureId = 0;
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.api.getProduct(id).subscribe({
       next: detail => {
         this.detail = detail;
+        this.selectedPictureId = detail.pictureIds[0] ?? 0;
         this.loading = false;
-        this.api.getProductAttributes(id).subscribe({ next: a => { this.attrs = a; }, error: () => {} });
+        this.api.getProductAttributes(id).subscribe({ next: a => { this.attrs = a; this.preselect(a); this.refreshQuote(); }, error: () => {} });
+        this.refreshQuote();
         this.api.getProductSpecs(id).subscribe({ next: s => { this.specs = s; }, error: () => {} });
         this.api.getProductTags(id).subscribe({ next: t => { this.tags = t; }, error: () => {} });
       },
@@ -236,8 +348,107 @@ export class ProductDetailPage implements OnInit {
     });
   }
 
+  private preselect(attrs: PublicAttributeDetail) {
+    this.selected = {};
+    for (const m of attrs.mappings) {
+      const first = m.values.find(v => v.isPreSelected);
+      if (first) this.selected[m.id] = first.id;
+    }
+  }
+
+  choose(mappingId: number, valueId: number) {
+    this.selected = { ...this.selected, [mappingId]: valueId };
+    this.refreshQuote();
+  }
+
+  onQuantityChange() {
+    const value = Number(this.quantity);
+    // Only a whole quantity in range is asked about; anything else keeps the last good price on screen.
+    if (!Number.isInteger(value) || value < 1 || value > 10000) { this.quoteError = 'storefront.productDetail.quantityRange'; return; }
+    this.quantity = value;
+    this.refreshQuote();
+  }
+
+  addToCart() {
+    if (!this.detail || this.adding) return;
+    this.adding = true;
+    this.cartMessage = '';
+    this.cart.add(this.detail.product.id, Number(this.quantity) || 1, Object.values(this.selected), `/storefront/products/${this.detail.product.id}`).subscribe(outcome => {
+      this.adding = false;
+      this.cartFailed = outcome.kind === 'error' || outcome.kind === 'choose-options';
+      if (outcome.kind === 'added') this.cartMessage = this.transloco.translate('storefront.cart.added', { name: this.detail?.product.name });
+      else if (outcome.kind === 'choose-options') this.cartMessage = this.transloco.translate('storefront.productDetail.chooseOptions');
+      else if (outcome.kind === 'error') this.cartMessage = outcome.message;
+      // A guest was sent to sign in; nothing to show.
+    });
+  }
+
+  /** Asks the server for the price of this quantity and choice. Only the newest answer is used. */
+  private refreshQuote() {
+    if (!this.detail) return;
+    this.quoteError = '';
+    if (this.needsChoice()) { this.quote = null; return; }
+
+    const request = ++this.quoteRequest;
+    this.api.getPriceQuote(this.detail.product.id, this.quantity, Object.values(this.selected)).subscribe({
+      next: quote => { if (request === this.quoteRequest) this.quote = quote; },
+      error: err => {
+        if (request !== this.quoteRequest) return;
+        this.quote = null;
+        this.quoteError = err?.status === 400 && err?.fieldErrors
+          ? 'storefront.productDetail.quoteInvalid'
+          : 'storefront.productDetail.quoteError';
+      }
+    });
+  }
+
+  /** Price of one unit: the server's quote, or the product's current price until it arrives. */
+  unitPrice(): number { return this.quote?.unitPrice ?? this.detail?.product.finalPrice ?? 0; }
+
+  /** The price to strike through. */
+  comparePrice(): number | null {
+    if (this.quote) return this.quote.comparePrice;
+    const p = this.detail?.product;
+    if (!p) return null;
+    return p.onSale ? p.price : p.oldPrice > 0 ? p.oldPrice : null;
+  }
+
+  /** The tier step the current quantity reaches, to highlight it in the table. */
+  activeTier(): TierPrice | null {
+    return [...(this.detail?.tierPrices ?? [])].filter(t => t.quantity <= this.quantity).sort((a, b) => b.quantity - a.quantity)[0] ?? null;
+  }
+
+  /** The product has variants and the customer has not chosen a value for every attribute yet. */
+  needsChoice(): boolean {
+    return !!this.attrs && this.attrs.combinations.length > 0 && this.attrs.mappings.some(m => this.selected[m.id] === undefined);
+  }
+
+  missingChoices(): string {
+    return (this.attrs?.mappings ?? []).filter(m => this.selected[m.id] === undefined).map(m => m.prompt || m.attribute.name).join(', ');
+  }
+
+  /** The combination that matches every chosen value, if there is one. */
+  combination(): PublicAttributeCombination | null {
+    if (!this.attrs || this.attrs.combinations.length === 0 || this.needsChoice()) return null;
+    return this.attrs.combinations.find(c => {
+      try {
+        const key = JSON.parse(c.attributesJson) as Record<string, number>;
+        return this.attrs!.mappings.every(m => key[String(m.id)] === this.selected[m.id]);
+      } catch { return false; }
+    }) ?? null;
+  }
+
+  currentStock(): number {
+    // Products without a stock limit are always available, whatever the stored numbers say.
+    if (this.detail && !this.detail.trackInventory) return Number.MAX_SAFE_INTEGER;
+    if (this.attrs && this.attrs.combinations.length > 0) return this.combination()?.stockQuantity ?? 0;
+    return this.detail?.availableQuantity ?? this.detail?.product.stockQuantity ?? 0;
+  }
+
+  selectedPictureUrl() { return this.media.url(this.selectedPictureId); }
+
   formatPrice(price: number): string {
-    return price % 1 === 0 ? `$${price}` : `$${price.toFixed(2)}`;
+    return this.currency.format(price);
   }
 
   categoryNames(detail: ProductDetailResponse): string {

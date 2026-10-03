@@ -1,0 +1,678 @@
+import { Component, inject, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { AuthFacade } from '../../core/auth/auth.facade';
+import {
+  InventoryOverview, OptionCatalog, SaveVariantsRequest, StockMovement, StockReason, VariantAttributeInput, VariantCombinationInput, VariantsResponse, VendorProduct, VendorProductApiService
+} from '../../core/catalog/vendor-product-api.service';
+import { CurrencyService } from '../../core/money/currency.service';
+import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
+
+const MAX_ATTRIBUTES = 3;
+const MAX_VALUES = 20;
+const MAX_COMBINATIONS = 100;
+const MAX_TAGS = 20;
+
+type Section = 'variants' | 'specs' | 'tags' | 'inventory' | 'pricing';
+
+const MAX_TIERS = 20;
+
+/** UTC ISO string to the value of a datetime-local input (local time), and back. */
+function toLocalInput(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function fromLocalInput(value: string): string | null {
+  return value ? new Date(value).toISOString() : null;
+}
+
+interface TierRow {
+  quantity: number | null;
+  price: number | null;
+}
+
+const REASONS: { value: StockReason; label: string }[] = [
+  { value: 'restock', label: 'Restock (goods received)' },
+  { value: 'correction', label: 'Correction (count)' },
+  { value: 'damage', label: 'Damaged or lost' },
+  { value: 'return', label: 'Customer return' }
+];
+
+@Component({
+  standalone: true,
+  imports: [DatePipe, FormsModule, RouterLink],
+  styleUrls: ['../../shared/styles/vendor-pages.scss'],
+  template: `
+    <section class="page-intro" aria-labelledby="details-title">
+      <div class="eyebrow">Vendor portal / Products / Details</div>
+      <h1 id="details-title">{{ product?.name ?? 'Product details' }}</h1>
+      <p>Variants, specifications and tags. <a routerLink="/vendor/products">Back to products</a></p>
+    </section>
+
+    @if (loading) {
+      <p class="state">Loading…</p>
+    } @else if (loadError) {
+      <div class="panel"><div class="panel-body">
+        <p class="banner" role="alert">{{ loadError }}</p>
+        <div class="actions"><button type="button" class="btn" (click)="load()">Try again</button></div>
+      </div></div>
+    } @else {
+      <!-- Pricing -->
+      <div class="panel">
+        <div class="panel-header"><h2>Pricing</h2></div>
+        <div class="panel-body">
+          <p class="muted">
+            The regular price is {{ product ? currency.formatPrimary(product.price) : '' }} ({{ currency.primary().code }}). A special price and quantity prices must be lower than it;
+            customers get the lowest price that applies to them.
+          </p>
+          @if (messages.pricing) { <p class="banner banner-ok" role="status">{{ messages.pricing }}</p> }
+          @if (errors.pricing) { <p class="banner" role="alert">{{ errors.pricing }}</p> }
+          <form class="form" (ngSubmit)="savePricing()" novalidate>
+            <div class="form-row">
+              <label>Special price ({{ currency.primary().code }})
+                <input type="number" name="specialPrice" [(ngModel)]="pricingForm.specialPrice" min="0" [step]="currency.step()" />
+                <span class="hint">Leave empty for none.</span>
+                @if (pricingFieldError('specialPrice')) { <span class="field-error">{{ pricingFieldError('specialPrice') }}</span> }
+              </label>
+              <label>Special price from
+                <input type="datetime-local" name="specialStart" [(ngModel)]="pricingForm.start" [disabled]="!hasSpecial()" />
+                <span class="hint">Empty means right away.</span>
+              </label>
+              <label>Special price until
+                <input type="datetime-local" name="specialEnd" [(ngModel)]="pricingForm.end" [disabled]="!hasSpecial()" />
+                <span class="hint">Empty means no end.</span>
+                @if (pricingFieldError('specialPriceEndUtc')) { <span class="field-error">{{ pricingFieldError('specialPriceEndUtc') }}</span> }
+              </label>
+            </div>
+
+            <fieldset class="block">
+              <legend>Quantity prices <span class="hint">(up to {{ maxTiers }}; each larger quantity needs a lower price)</span></legend>
+              @if (pricingForm.tiers.length === 0) { <span class="muted">No quantity prices.</span> }
+              @for (tier of pricingForm.tiers; track $index; let i = $index) {
+                <div class="tier-row">
+                  <label>From quantity
+                    <input type="number" [name]="'tierQty' + i" [(ngModel)]="tier.quantity" min="2" step="1" [attr.aria-label]="'Quantity of step ' + (i + 1)" />
+                  </label>
+                  <label>Price each ({{ currency.primary().code }})
+                    <input type="number" [name]="'tierPrice' + i" [(ngModel)]="tier.price" min="0" [step]="currency.step()" [attr.aria-label]="'Price of step ' + (i + 1)" />
+                  </label>
+                  <button type="button" class="btn btn-danger btn-small" (click)="removeTier(i)">Remove</button>
+                </div>
+              }
+              <div class="actions"><button type="button" class="btn btn-secondary btn-small" (click)="addTier()" [disabled]="pricingForm.tiers.length >= maxTiers">+ Quantity price</button></div>
+              @if (pricingFieldError('tierPrices')) { <span class="field-error">{{ pricingFieldError('tierPrices') }}</span> }
+            </fieldset>
+
+            <div class="actions">
+              <button type="submit" class="btn" [disabled]="busy.pricing">{{ busy.pricing ? 'Saving…' : 'Save pricing' }}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Inventory -->
+      <div class="panel">
+        <div class="panel-header"><h2>Inventory</h2></div>
+        <div class="panel-body">
+          @if (messages.inventory) { <p class="banner banner-ok" role="status">{{ messages.inventory }}</p> }
+          @if (errors.inventory) { <p class="banner" role="alert">{{ errors.inventory }}</p> }
+          @if (inventory; as inv) {
+            <div class="table-scroll">
+              <table class="data-table">
+                <thead><tr><th>Item</th><th>On hand</th><th>Held by carts</th><th>Available</th></tr></thead>
+                <tbody>
+                  @if (inv.combinations.length === 0) {
+                    <tr><td>Product</td><td>{{ inv.stock.onHand }}</td><td>{{ inv.stock.reserved }}</td><td>{{ inv.stock.available }}</td></tr>
+                  } @else {
+                    @for (c of inv.combinations; track c.id) {
+                      <tr><td>{{ combinationName(c.id) }}@if (c.sku) { <span class="muted"> · {{ c.sku }}</span> }</td><td>{{ c.stock.onHand }}</td><td>{{ c.stock.reserved }}</td><td>{{ c.stock.available }}</td></tr>
+                    }
+                    <tr><td><strong>Total</strong></td><td>{{ inv.stock.onHand }}</td><td>{{ inv.stock.reserved }}</td><td>{{ inv.stock.available }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+            @if (inv.isLowStock) { <p class="banner banner-info">Stock is at or below the low-stock threshold ({{ inv.lowStockThreshold }}).</p> }
+
+            <form class="form" (ngSubmit)="adjust()" novalidate>
+              <div class="form-row">
+                @if (inv.combinations.length > 0) {
+                  <label>Combination
+                    <select [(ngModel)]="adjustForm.combinationId" name="adjCombination">
+                      <option [ngValue]="null" disabled>Choose…</option>
+                      @for (c of inv.combinations; track c.id) { <option [ngValue]="c.id">{{ combinationName(c.id) }}</option> }
+                    </select>
+                  </label>
+                }
+                <label>Change
+                  <input type="number" name="adjDelta" [(ngModel)]="adjustForm.delta" step="1" />
+                  <span class="hint">Positive adds stock, negative removes it.</span>
+                </label>
+                <label>Reason
+                  <select [(ngModel)]="adjustForm.reason" name="adjReason">
+                    @for (r of reasons; track r.value) { <option [ngValue]="r.value">{{ r.label }}</option> }
+                  </select>
+                </label>
+                <label>Note
+                  <input type="text" name="adjNote" [(ngModel)]="adjustForm.note" maxlength="500" />
+                </label>
+              </div>
+              <div class="actions">
+                <button type="submit" class="btn" [disabled]="busy.inventory || !adjustForm.delta">{{ busy.inventory ? 'Saving…' : 'Apply change' }}</button>
+              </div>
+            </form>
+
+            <form class="form" (ngSubmit)="saveInventorySettings()" novalidate>
+              <div class="form-row">
+                <label class="check-label"><input type="checkbox" name="track" [(ngModel)]="settingsForm.trackInventory" /> Track stock for this product</label>
+                <label>Low-stock threshold
+                  <input type="number" name="threshold" [(ngModel)]="settingsForm.lowStockThreshold" min="0" step="1" [disabled]="!settingsForm.trackInventory" />
+                  @if (fieldError('lowStockThreshold')) { <span class="field-error">{{ fieldError('lowStockThreshold') }}</span> }
+                </label>
+              </div>
+              <div class="actions"><button type="submit" class="btn btn-secondary" [disabled]="busy.inventory">Save settings</button></div>
+            </form>
+
+            <h3 class="sub">Recent changes</h3>
+            @if (movements.length === 0) {
+              <p class="muted">No recorded changes yet. History starts with the next change.</p>
+            } @else {
+              <div class="table-scroll">
+                <table class="data-table">
+                  <thead><tr><th>When</th><th>Change</th><th>After</th><th>Reason</th><th>Note</th></tr></thead>
+                  <tbody>
+                    @for (m of movements; track m.id) {
+                      <tr>
+                        <td>{{ m.createdOnUtc | date: 'short' }}</td>
+                        <td>{{ m.delta > 0 ? '+' : '' }}{{ m.delta }}@if (m.combinationId) { <span class="muted"> ({{ combinationName(m.combinationId) }})</span> }</td>
+                        <td>{{ m.quantityAfter }}</td>
+                        <td>{{ m.reason }}</td>
+                        <td>{{ m.note || m.reference || '' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Variants -->
+      <div class="panel">
+        <div class="panel-header"><h2>Variants</h2></div>
+        <div class="panel-body">
+          <p class="muted">Pick up to {{ maxAttributes }} attributes defined by the platform, list the values you sell, then describe each sellable combination. The product stock is the sum of the combination stocks.</p>
+          @if (messages.variants) { <p class="banner banner-ok" role="status">{{ messages.variants }}</p> }
+          @if (errors.variants) { <p class="banner" role="alert">{{ errors.variants }}</p> }
+
+          @for (attr of attrs; track $index; let a = $index) {
+            <fieldset class="block">
+              <legend>Attribute {{ a + 1 }}</legend>
+              <div class="form-row">
+                <label>Attribute
+                  <select [(ngModel)]="attr.productAttributeId" [name]="'attr' + a" (ngModelChange)="onAttributeChanged()">
+                    <option [ngValue]="0" disabled>Choose…</option>
+                    @for (o of catalog.attributes; track o.id) { <option [ngValue]="o.id">{{ o.name }}</option> }
+                  </select>
+                </label>
+                <label class="check-label"><input type="checkbox" [(ngModel)]="attr.isRequired" [name]="'req' + a" /> Customer must choose</label>
+                <button type="button" class="btn btn-danger btn-small" (click)="removeAttribute(a)">Remove attribute</button>
+              </div>
+              @for (value of attr.values; track $index; let v = $index) {
+                <div class="value-row">
+                  <input type="text" [(ngModel)]="value.name" [name]="'val' + a + '-' + v" maxlength="100" placeholder="Value, for example Red" [attr.aria-label]="'Value ' + (v + 1) + ' of attribute ' + (a + 1)" (ngModelChange)="onValueRenamed()" />
+                  <input type="text" [(ngModel)]="value.colorSquaresRgb" [name]="'col' + a + '-' + v" maxlength="7" placeholder="#RRGGBB (optional)" aria-label="Colour" />
+                  <input type="number" [(ngModel)]="value.priceAdjustment" [name]="'adj' + a + '-' + v" step="0.01" aria-label="Price adjustment" title="Price adjustment" />
+                  <button type="button" class="btn btn-danger btn-small" (click)="removeValue(a, v)" [attr.aria-label]="'Remove value ' + (v + 1)">×</button>
+                </div>
+              }
+              <div class="actions">
+                <button type="button" class="btn btn-secondary btn-small" (click)="addValue(a)" [disabled]="attr.values.length >= maxValues">+ Value</button>
+              </div>
+            </fieldset>
+          }
+          <div class="actions">
+            <button type="button" class="btn btn-secondary" (click)="addAttribute()" [disabled]="attrs.length >= maxAttributes">+ Attribute</button>
+            <button type="button" class="btn btn-secondary" (click)="generateCombinations()" [disabled]="!canGenerate()">Generate all combinations</button>
+          </div>
+
+          @if (attrs.length > 0) {
+            @if (combos.length === 0) {
+              <p class="muted">No combinations yet. Generate them or save with none to clear the variants.</p>
+            } @else {
+              <div class="table-scroll">
+                <table class="data-table">
+                  <thead><tr><th>Combination</th><th>SKU</th><th>Stock</th><th>Price</th><th></th></tr></thead>
+                  <tbody>
+                    @for (combo of combos; track $index; let c = $index) {
+                      <tr>
+                        <td>{{ comboLabel(combo) }}</td>
+                        <td><input type="text" [(ngModel)]="combo.sku" [name]="'sku' + c" maxlength="100" [attr.aria-label]="'SKU of combination ' + (c + 1)" /></td>
+                        <td><input type="number" [(ngModel)]="combo.stockQuantity" [name]="'stock' + c" min="0" [attr.aria-label]="'Stock of combination ' + (c + 1)" /></td>
+                        <td><input type="number" [(ngModel)]="combo.overriddenPrice" [name]="'price' + c" min="0" step="0.01" placeholder="product price" [attr.aria-label]="'Price of combination ' + (c + 1)" /></td>
+                        <td><button type="button" class="btn btn-danger btn-small" (click)="removeCombo(c)">Remove</button></td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              <p class="muted">Total stock: {{ totalStock() }}. Leave the price empty to use the product price plus the value adjustments.</p>
+            }
+          }
+          <div class="actions">
+            <button type="button" class="btn" (click)="saveVariants()" [disabled]="busy.variants">{{ busy.variants ? 'Saving…' : 'Save variants' }}</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Specifications -->
+      <div class="panel">
+        <div class="panel-header"><h2>Specifications</h2></div>
+        <div class="panel-body">
+          @if (messages.specs) { <p class="banner banner-ok" role="status">{{ messages.specs }}</p> }
+          @if (errors.specs) { <p class="banner" role="alert">{{ errors.specs }}</p> }
+          @if (catalog.specAttributes.length === 0) { <p class="muted">The platform has not defined specifications yet.</p> }
+          @for (spec of catalog.specAttributes; track spec.id) {
+            <fieldset class="block">
+              <legend>{{ spec.name }}@if (spec.groupName) { <span class="muted"> · {{ spec.groupName }}</span> }</legend>
+              @for (o of spec.options; track o.id) {
+                <label class="check-label"><input type="checkbox" [checked]="specIds.includes(o.id)" (change)="toggleSpec(o.id)" [name]="'spec' + o.id" /> {{ o.name }}</label>
+              }
+              @if (spec.options.length === 0) { <span class="muted">No values defined.</span> }
+            </fieldset>
+          }
+          <div class="actions">
+            <button type="button" class="btn" (click)="saveSpecs()" [disabled]="busy.specs">{{ busy.specs ? 'Saving…' : 'Save specifications' }}</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      <div class="panel">
+        <div class="panel-header"><h2>Tags</h2></div>
+        <div class="panel-body">
+          @if (messages.tags) { <p class="banner banner-ok" role="status">{{ messages.tags }}</p> }
+          @if (errors.tags) { <p class="banner" role="alert">{{ errors.tags }}</p> }
+          <label class="form">Tags
+            <input type="text" name="tags" [(ngModel)]="tagText" placeholder="gift, summer, cotton" />
+            <span class="hint">Separate with commas. Up to {{ maxTags }}; they are saved in lower case.</span>
+          </label>
+          <div class="actions">
+            <button type="button" class="btn" (click)="saveTags()" [disabled]="busy.tags">{{ busy.tags ? 'Saving…' : 'Save tags' }}</button>
+          </div>
+        </div>
+      </div>
+    }
+  `,
+  styles: [`
+    .block { border: 1px solid var(--line); border-radius: 6px; padding: .6rem .9rem; display: grid; gap: .6rem; }
+    .block legend { font-size: .8rem; padding: 0 .3rem; }
+    .value-row { display: grid; grid-template-columns: 2fr 1.2fr 1fr auto; gap: .5rem; align-items: center; }
+    a.btn { text-decoration: none; display: inline-block; }
+    .sub { font-size: .85rem; margin: .5rem 0 0; }
+    .tier-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: .75rem; align-items: end; }
+  `]
+})
+export class VendorProductDetailsPage implements OnInit {
+  private readonly api = inject(VendorProductApiService);
+  private readonly auth = inject(AuthFacade);
+  private readonly route = inject(ActivatedRoute);
+  readonly currency = inject(CurrencyService);
+
+  readonly maxAttributes = MAX_ATTRIBUTES;
+  readonly maxValues = MAX_VALUES;
+  readonly maxTags = MAX_TAGS;
+
+  vendorId = 0;
+  productId = 0;
+  product: VendorProduct | null = null;
+  catalog: OptionCatalog = { attributes: [], specAttributes: [] };
+  loading = true;
+  loadError = '';
+
+  attrs: VariantAttributeInput[] = [];
+  combos: VariantCombinationInput[] = [];
+  specIds: number[] = [];
+  tagText = '';
+
+  busy: Record<Section, boolean> = { variants: false, specs: false, tags: false, inventory: false, pricing: false };
+  errors: Record<Section, string> = { variants: '', specs: '', tags: '', inventory: '', pricing: '' };
+  messages: Record<Section, string> = { variants: '', specs: '', tags: '', inventory: '', pricing: '' };
+
+  readonly maxTiers = MAX_TIERS;
+  pricingForm: { specialPrice: number | null; start: string; end: string; tiers: TierRow[] } = { specialPrice: null, start: '', end: '', tiers: [] };
+  pricingFieldErrors: Record<string, string[]> = {};
+
+  readonly reasons = REASONS;
+  inventory: InventoryOverview | null = null;
+  movements: StockMovement[] = [];
+  inventoryFieldErrors: Record<string, string[]> = {};
+  adjustForm: { combinationId: number | null; delta: number | null; reason: StockReason; note: string } = { combinationId: null, delta: null, reason: 'restock', note: '' };
+  settingsForm = { trackInventory: true, lowStockThreshold: 5 };
+
+  ngOnInit() { this.load(); }
+
+  load() {
+    this.productId = Number(this.route.snapshot.paramMap.get('id'));
+    this.loading = true;
+    this.loadError = '';
+    this.auth.loadSession().subscribe({
+      next: session => {
+        if (!session.vendorId || !this.productId) { this.loading = false; this.loadError = 'Your account does not belong to a shop.'; return; }
+        this.vendorId = session.vendorId;
+        this.loadAll();
+      },
+      error: () => { this.loading = false; this.loadError = 'Unable to load your account.'; }
+    });
+  }
+
+  private loadAll() {
+    const fail = (err: { status?: number }) => {
+      this.loading = false;
+      this.loadError = err.status === 404 ? 'Product not found in your shop.' : 'Unable to load the product details.';
+    };
+    this.api.get(this.vendorId, this.productId).subscribe({
+      next: product => {
+        this.product = product;
+        this.applyPricing(product.specialPrice, product.specialPriceStartUtc, product.specialPriceEndUtc, product.tierPrices ?? []);
+        this.api.getOptions(this.vendorId).subscribe({
+          next: catalog => {
+            this.catalog = catalog;
+            this.api.getVariants(this.vendorId, this.productId).subscribe({
+              next: variants => {
+                this.applyVariants(variants);
+                this.api.getSpecs(this.vendorId, this.productId).subscribe({
+                  next: specs => {
+                    this.specIds = [...specs.optionIds];
+                    this.api.getTags(this.vendorId, this.productId).subscribe({
+                      next: tags => { this.tagText = tags.tagNames.join(', '); this.loadInventory(fail); },
+                      error: fail
+                    });
+                  },
+                  error: fail
+                });
+              },
+              error: fail
+            });
+          },
+          error: fail
+        });
+      },
+      error: fail
+    });
+  }
+
+  // ---- Pricing ----
+
+  private applyPricing(special: number | null, start: string | null, end: string | null, tiers: { quantity: number; price: number }[]) {
+    this.pricingForm = {
+      specialPrice: special,
+      start: toLocalInput(start),
+      end: toLocalInput(end),
+      tiers: tiers.map(t => ({ quantity: t.quantity, price: t.price }))
+    };
+  }
+
+  addTier() {
+    if (this.pricingForm.tiers.length >= MAX_TIERS) return;
+    const last = this.pricingForm.tiers[this.pricingForm.tiers.length - 1];
+    this.pricingForm.tiers = [...this.pricingForm.tiers, { quantity: last?.quantity ? last.quantity * 2 : 5, price: null }];
+  }
+
+  removeTier(index: number) { this.pricingForm.tiers = this.pricingForm.tiers.filter((_, i) => i !== index); }
+
+  /** An empty number input gives null or an empty string; both mean no special price. */
+  hasSpecial(): boolean {
+    const value = this.pricingForm.specialPrice;
+    return value !== null && (value as unknown) !== '';
+  }
+
+  pricingFieldError(field: string) { return this.pricingFieldErrors[field]?.[0] ?? ''; }
+
+  savePricing() {
+    this.clear('pricing');
+    this.pricingFieldErrors = {};
+    const special = this.pricingForm.specialPrice === null || (this.pricingForm.specialPrice as unknown) === '' ? null : Number(this.pricingForm.specialPrice);
+    const tiers = this.pricingForm.tiers.filter(t => t.quantity !== null && t.price !== null)
+      .map(t => ({ quantity: Number(t.quantity), price: Number(t.price) }));
+    this.busy.pricing = true;
+    this.api.setPricing(this.vendorId, this.productId, {
+      specialPrice: special,
+      specialPriceStartUtc: special === null ? null : fromLocalInput(this.pricingForm.start),
+      specialPriceEndUtc: special === null ? null : fromLocalInput(this.pricingForm.end),
+      tierPrices: tiers
+    }).subscribe({
+      next: saved => {
+        this.busy.pricing = false;
+        this.applyPricing(saved.specialPrice, saved.specialPriceStartUtc, saved.specialPriceEndUtc, saved.tierPrices);
+        this.messages.pricing = 'Pricing saved.';
+      },
+      error: err => {
+        this.busy.pricing = false;
+        this.pricingFieldErrors = err?.fieldErrors ?? {};
+        this.errors.pricing = Object.keys(this.pricingFieldErrors).length ? '' : this.writeError(err, 'Unable to save the pricing.');
+      }
+    });
+  }
+
+  // ---- Inventory ----
+
+  private loadInventory(fail: (err: { status?: number }) => void) {
+    this.api.getInventory(this.vendorId, this.productId).subscribe({
+      next: inventory => {
+        this.applyInventory(inventory);
+        this.api.getStockMovements(this.vendorId, this.productId).subscribe({
+          next: page => { this.movements = page.items; this.loading = false; },
+          error: fail
+        });
+      },
+      error: fail
+    });
+  }
+
+  private applyInventory(inventory: InventoryOverview) {
+    this.inventory = inventory;
+    this.settingsForm = { trackInventory: inventory.trackInventory, lowStockThreshold: inventory.lowStockThreshold };
+    if (inventory.combinations.length > 0 && !inventory.combinations.some(c => c.id === this.adjustForm.combinationId)) this.adjustForm.combinationId = null;
+  }
+
+  private refreshMovements() {
+    this.api.getStockMovements(this.vendorId, this.productId).subscribe({ next: page => { this.movements = page.items; }, error: () => undefined });
+  }
+
+  /** Reads "{mappingId: valueId}" of a combination and names it after the values, for example "Red / S". */
+  combinationName(combinationId: number): string {
+    const combo = this.inventory?.combinations.find(c => c.id === combinationId);
+    if (!combo) return `#${combinationId}`;
+    try {
+      const key = JSON.parse(combo.attributesJson) as Record<string, number>;
+      const names = Object.values(key).map(valueId => this.valueNames.get(valueId) ?? '?');
+      return names.length ? names.join(' / ') : combo.sku ?? `#${combinationId}`;
+    } catch { return combo.sku ?? `#${combinationId}`; }
+  }
+
+  private valueNames = new Map<number, string>();
+
+  adjust() {
+    if (!this.inventory || !this.adjustForm.delta) return;
+    this.clear('inventory');
+    this.busy.inventory = true;
+    this.api.adjustStock(this.vendorId, this.productId, {
+      combinationId: this.inventory.combinations.length > 0 ? this.adjustForm.combinationId : null,
+      delta: Number(this.adjustForm.delta),
+      reason: this.adjustForm.reason,
+      note: this.adjustForm.note.trim() || null
+    }).subscribe({
+      next: inventory => {
+        this.busy.inventory = false;
+        this.applyInventory(inventory);
+        this.adjustForm = { ...this.adjustForm, delta: null, note: '' };
+        this.messages.inventory = 'Stock updated.';
+        this.refreshMovements();
+      },
+      error: err => { this.busy.inventory = false; this.inventoryFieldErrors = err?.fieldErrors ?? {}; this.errors.inventory = this.writeError(err, 'Unable to change the stock.'); }
+    });
+  }
+
+  saveInventorySettings() {
+    this.clear('inventory');
+    this.busy.inventory = true;
+    this.api.setInventorySettings(this.vendorId, this.productId, {
+      trackInventory: this.settingsForm.trackInventory,
+      lowStockThreshold: Number(this.settingsForm.lowStockThreshold) || 0
+    }).subscribe({
+      next: inventory => { this.busy.inventory = false; this.applyInventory(inventory); this.messages.inventory = 'Inventory settings saved.'; },
+      error: err => { this.busy.inventory = false; this.inventoryFieldErrors = err?.fieldErrors ?? {}; this.errors.inventory = this.writeError(err, 'Unable to save the settings.'); }
+    });
+  }
+
+  fieldError(field: string) { return this.inventoryFieldErrors[field]?.[0] ?? ''; }
+
+  // ---- Variants ----
+
+  addAttribute() {
+    if (this.attrs.length >= MAX_ATTRIBUTES) return;
+    this.attrs = [...this.attrs, { productAttributeId: 0, isRequired: true, values: [{ name: '', colorSquaresRgb: null, priceAdjustment: 0 }] }];
+    this.combos = [];
+  }
+
+  removeAttribute(index: number) {
+    this.attrs = this.attrs.filter((_, i) => i !== index);
+    // Combinations are tied to the attribute list, so they are rebuilt.
+    this.combos = [];
+  }
+
+  addValue(attrIndex: number) {
+    const attr = this.attrs[attrIndex];
+    if (attr.values.length < MAX_VALUES) attr.values = [...attr.values, { name: '', colorSquaresRgb: null, priceAdjustment: 0 }];
+  }
+
+  removeValue(attrIndex: number, valueIndex: number) {
+    const attr = this.attrs[attrIndex];
+    attr.values = attr.values.filter((_, i) => i !== valueIndex);
+    // Drop combinations that used the value and shift the indexes after it.
+    this.combos = this.combos
+      .filter(c => c.valueIndexes[attrIndex] !== valueIndex)
+      .map(c => ({ ...c, valueIndexes: c.valueIndexes.map((v, a) => (a === attrIndex && v > valueIndex ? v - 1 : v)) }));
+  }
+
+  onAttributeChanged() { /* values stay; only the saved attribute id changes */ }
+  onValueRenamed() { /* labels are computed from the current names */ }
+
+  canGenerate() {
+    return this.attrs.length > 0 && this.attrs.every(a => a.productAttributeId > 0 && a.values.length > 0 && a.values.every(v => v.name.trim()));
+  }
+
+  /** Builds every combination of the current values; existing rows keep their SKU, stock and price. */
+  generateCombinations() {
+    if (!this.canGenerate()) return;
+    let rows: number[][] = [[]];
+    for (const attr of this.attrs) rows = rows.flatMap(row => attr.values.map((_, i) => [...row, i]));
+    if (rows.length > MAX_COMBINATIONS) {
+      this.errors.variants = `That would make ${rows.length} combinations; the limit is ${MAX_COMBINATIONS}. Remove some values.`;
+      return;
+    }
+    this.errors.variants = '';
+    const existing = new Map(this.combos.map(c => [c.valueIndexes.join(','), c]));
+    this.combos = rows.map(indexes => existing.get(indexes.join(',')) ?? { valueIndexes: indexes, sku: null, stockQuantity: 0, overriddenPrice: null });
+  }
+
+  removeCombo(index: number) { this.combos = this.combos.filter((_, i) => i !== index); }
+
+  comboLabel(combo: VariantCombinationInput) {
+    return combo.valueIndexes.map((v, a) => this.attrs[a]?.values[v]?.name || '?').join(' / ');
+  }
+
+  totalStock() { return this.combos.reduce((sum, c) => sum + (Number(c.stockQuantity) || 0), 0); }
+
+  saveVariants() {
+    this.clear('variants');
+    const body: SaveVariantsRequest = {
+      attributes: this.attrs.map(a => ({
+        productAttributeId: a.productAttributeId,
+        isRequired: a.isRequired,
+        values: a.values.map(v => ({ name: v.name, colorSquaresRgb: v.colorSquaresRgb?.trim() || null, priceAdjustment: Number(v.priceAdjustment) || 0 }))
+      })),
+      combinations: this.combos.map(c => ({
+        valueIndexes: c.valueIndexes,
+        sku: c.sku?.trim() || null,
+        stockQuantity: Number(c.stockQuantity) || 0,
+        overriddenPrice: c.overriddenPrice === null || c.overriddenPrice === undefined || (c.overriddenPrice as unknown) === '' ? null : Number(c.overriddenPrice)
+      }))
+    };
+    this.busy.variants = true;
+    this.api.setVariants(this.vendorId, this.productId, body).subscribe({
+      next: saved => {
+        this.busy.variants = false;
+        this.applyVariants(saved);
+        this.messages.variants = 'Variants saved. The product stock was updated.';
+        this.api.getInventory(this.vendorId, this.productId).subscribe({ next: inv => { this.applyInventory(inv); this.refreshMovements(); }, error: () => undefined });
+      },
+      error: err => { this.busy.variants = false; this.errors.variants = this.writeError(err, 'Unable to save the variants.'); }
+    });
+  }
+
+  /** Turns the saved structure back into the editable one: each combination key maps a mapping id to a value id. */
+  private applyVariants(variants: VariantsResponse) {
+    const mappings = [...variants.mappings].sort((a, b) => a.displayOrder - b.displayOrder);
+    this.valueNames = new Map(mappings.flatMap(m => m.values.map(v => [v.id, v.name] as [number, string])));
+    this.attrs = mappings.map(m => ({
+      productAttributeId: m.attribute.id,
+      isRequired: m.isRequired,
+      values: [...m.values].sort((a, b) => a.displayOrder - b.displayOrder)
+        .map(v => ({ name: v.name, colorSquaresRgb: v.colorSquaresRgb, priceAdjustment: v.priceAdjustment }))
+    }));
+    this.combos = variants.combinations.flatMap(c => {
+      let key: Record<string, number>;
+      try { key = JSON.parse(c.attributesJson) as Record<string, number>; } catch { return []; }
+      const indexes = mappings.map(m => [...m.values].sort((a, b) => a.displayOrder - b.displayOrder).findIndex(v => v.id === key[String(m.id)]));
+      // A combination that does not match the structure (made elsewhere) cannot be shown here.
+      return indexes.some(i => i < 0) ? [] : [{ valueIndexes: indexes, sku: c.sku, stockQuantity: c.stockQuantity, overriddenPrice: c.overriddenPrice }];
+    });
+  }
+
+  // ---- Specifications ----
+
+  toggleSpec(id: number) {
+    this.specIds = this.specIds.includes(id) ? this.specIds.filter(x => x !== id) : [...this.specIds, id];
+  }
+
+  saveSpecs() {
+    this.clear('specs');
+    this.busy.specs = true;
+    this.api.setSpecs(this.vendorId, this.productId, this.specIds).subscribe({
+      next: saved => { this.busy.specs = false; this.specIds = [...saved.optionIds]; this.messages.specs = 'Specifications saved.'; },
+      error: err => { this.busy.specs = false; this.errors.specs = this.writeError(err, 'Unable to save the specifications.'); }
+    });
+  }
+
+  // ---- Tags ----
+
+  saveTags() {
+    this.clear('tags');
+    const names = this.tagText.split(',').map(t => t.trim()).filter(Boolean);
+    this.busy.tags = true;
+    this.api.setTags(this.vendorId, this.productId, names).subscribe({
+      next: saved => { this.busy.tags = false; this.tagText = saved.tagNames.join(', '); this.messages.tags = 'Tags saved.'; },
+      error: err => { this.busy.tags = false; this.errors.tags = this.writeError(err, 'Unable to save the tags.'); }
+    });
+  }
+
+  private clear(section: Section) {
+    this.errors[section] = '';
+    this.messages[section] = '';
+    if (section === 'inventory') this.inventoryFieldErrors = {};
+  }
+
+  // A 403 on a write means the shop is switched off.
+  private writeError(err: { status?: number; message?: string; fieldErrors?: Record<string, string[]> }, fallback: string) {
+    return err.status === 403
+      ? 'Your shop is inactive, so products cannot be changed right now.'
+      : vendorErrorMessage(err, fallback);
+  }
+}

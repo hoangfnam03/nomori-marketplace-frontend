@@ -10,17 +10,19 @@ import { ProductCardModel } from '../../models/product-card.model';
   template: `
     <article class="product-card" *transloco="let t">
       <a class="product-image" [routerLink]="['/storefront/products', product().id]" [attr.aria-label]="t('storefront.card.view', { name: product().name })">
-        @if (product().badge) { <span class="badge">{{ product().badge }}</span> }
+        @if (product().outOfStock) { <span class="badge badge-out">{{ t('storefront.productDetail.outOfStock') }}</span> }
+        @else if (product().badge) { <span class="badge">{{ t(product().badge!) }}</span> }
         <img [src]="product().imageUrl" [alt]="product().name" loading="lazy" />
       </a>
       <div class="product-info">
         <div class="category">{{ product().category }}</div>
+        @if (product().shopName) { <a class="shop" [routerLink]="['/storefront/vendors', product().shopId]">{{ product().shopName }}</a> }
         <h3><a [routerLink]="['/storefront/products', product().id]">{{ product().name }}</a></h3>
         @if (product().rating) {
           <div class="rating" [attr.aria-label]="t('storefront.card.rating', { rating: product().rating })">{{ '★'.repeat(product().rating ?? 0) }}<span>{{ t('storefront.card.reviews', { count: product().reviewCount ?? 0 }) }}</span></div>
         }
         <div class="price-row"><strong>{{ product().price }}</strong>@if (product().compareAtPrice) { <del>{{ product().compareAtPrice }}</del> }</div>
-        <button type="button" (click)="addToCart.emit(product())">{{ t('storefront.card.addToCart') }}</button>
+        <button type="button" [disabled]="product().outOfStock" (click)="addToCart.emit(product())">{{ t('storefront.card.addToCart') }}</button>
       </div>
     </article>
   `,
@@ -32,6 +34,8 @@ import { ProductCardModel } from '../../models/product-card.model';
     .product-image:hover img { transform: scale(1.04); }
     .badge { position: absolute; top: .75rem; left: .75rem; z-index: 1; padding: .4rem .55rem; background: var(--green); color: var(--paper); font: 500 .65rem/1 var(--mono-font); letter-spacing: .08em; text-transform: uppercase; }
     .product-info { display: flex; flex: 1; flex-direction: column; padding: 1rem; }
+    .shop { display: block; margin-top: .4rem; color: var(--muted); font-size: .75rem; text-decoration: none; }
+    .shop:hover { color: var(--green); text-decoration: underline; }
     .category { color: var(--green); font: 500 .65rem/1 var(--mono-font); letter-spacing: .1em; text-transform: uppercase; }
     h3 { margin: .7rem 0 .55rem; font: 700 1.1rem/1.15 var(--display-font); }
     h3 a { color: var(--ink); text-decoration: none; }
@@ -42,7 +46,9 @@ import { ProductCardModel } from '../../models/product-card.model';
     .price-row strong { font-size: 1.1rem; }
     del { color: var(--muted); font-size: .8rem; }
     button { width: 100%; margin-top: 1rem; border: 1px solid var(--ink); padding: .7rem; background: transparent; color: var(--ink); font: 700 .78rem var(--display-font); cursor: pointer; }
-    button:hover { background: var(--ink); color: var(--paper); }
+    button:hover:not(:disabled) { background: var(--ink); color: var(--paper); }
+    button:disabled { opacity: .45; cursor: not-allowed; }
+    .badge-out { background: #8d3128; }
   `]
 })
 export class ProductCardComponent {

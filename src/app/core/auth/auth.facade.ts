@@ -9,7 +9,7 @@ import { AuthFormError, AuthSession } from './auth.models';
 export class AuthFacade {
   private readonly authApi = inject(AuthApiService);
   private readonly platformId = inject(PLATFORM_ID);
-  private readonly anonymousSession: AuthSession = { isAuthenticated: false, customerId: null, email: null, emailVerified: null, emailOtpEnabled: null };
+  private readonly anonymousSession: AuthSession = { isAuthenticated: false, customerId: null, email: null, emailVerified: null, emailOtpEnabled: null, vendorId: null };
   private readonly sessionState = signal<AuthSession | null>(null);
   private readonly loadingState = signal(false);
   private readonly errorState = signal<string | null>(null);

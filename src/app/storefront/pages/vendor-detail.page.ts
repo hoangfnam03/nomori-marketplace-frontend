@@ -2,8 +2,12 @@ import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
+import { MediaApiService } from '../../core/media/media-api.service';
+import { CurrencyService } from '../../core/money/currency.service';
+import { CatalogApiService } from '../../core/catalog/catalog-api.service';
+import { ProductResponse } from '../../core/catalog/catalog.models';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
-import { VendorPublicResponse } from '../../core/vendors/vendor.models';
+import { VendorResponse } from '../../core/vendors/vendor.models';
 
 @Component({
   standalone: true,
@@ -26,7 +30,11 @@ import { VendorPublicResponse } from '../../core/vendors/vendor.models';
 
       <div class="vendor-layout">
         <aside class="vendor-aside">
-          <div class="vendor-avatar" aria-hidden="true">{{ initial(vendor.name) }}</div>
+          @if (logoUrl(vendor.pictureId); as logo) {
+            <img class="vendor-avatar" [src]="logo" [alt]="vendor.name + ' logo'" />
+          } @else {
+            <div class="vendor-avatar" aria-hidden="true">{{ initial(vendor.name) }}</div>
+          }
         </aside>
 
         <div class="vendor-body">
@@ -39,6 +47,23 @@ import { VendorPublicResponse } from '../../core/vendors/vendor.models';
               <p>{{ vendor.description }}</p>
             </div>
           }
+
+          <div class="vendor-products">
+            <h2>Products</h2>
+            @if (productsLoading) {
+              <p class="muted">Loading products…</p>
+            } @else if (productsError) {
+              <p class="state-error" role="alert">{{ productsError }}</p>
+            } @else if (products.length === 0) {
+              <p class="muted">This shop has no products yet.</p>
+            } @else {
+              <ul class="product-list" role="list">
+                @for (p of products; track p.id) {
+                  <li><a [routerLink]="['/storefront/products', p.id]">{{ p.name }}</a><span>{{ price(p.price) }}</span></li>
+                }
+              </ul>
+            }
+          </div>
         </div>
       </div>
     }
@@ -46,6 +71,13 @@ import { VendorPublicResponse } from '../../core/vendors/vendor.models';
   `,
   styles: [`
     :host { display: block; }
+    .vendor-products { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+    .vendor-products h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
+    .product-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .4rem; }
+    .product-list li { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--line); padding: .4rem 0; }
+    .product-list a { color: var(--ink); text-decoration: none; }
+    .product-list a:hover { color: var(--green); }
+    .muted { color: var(--muted); }
 
     .state { padding: 3rem 2rem; color: var(--muted); }
     .state-error { color: #d32f2f; }
@@ -62,6 +94,7 @@ import { VendorPublicResponse } from '../../core/vendors/vendor.models';
     .vendor-aside { flex-shrink: 0; }
 
     .vendor-avatar {
+      object-fit: cover;
       width: 96px;
       height: 96px;
       border-radius: 50%;
@@ -113,23 +146,42 @@ import { VendorPublicResponse } from '../../core/vendors/vendor.models';
 export class VendorDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(VendorApiService);
+  private readonly catalog = inject(CatalogApiService);
+  private readonly media = inject(MediaApiService);
+  private readonly currency = inject(CurrencyService);
 
-  vendor: VendorPublicResponse | null = null;
+  vendor: VendorResponse | null = null;
   loading = false;
   error = '';
+  products: ProductResponse[] = [];
+  productsLoading = false;
+  productsError = '';
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     if (!id) { this.error = 'storefront.vendorDetail.invalid'; return; }
     this.loading = true;
     this.api.getVendor(id).subscribe({
-      next: v => { this.vendor = v; this.loading = false; },
+      next: v => { this.vendor = v; this.loading = false; this.loadProducts(v.id); },
       error: err => {
         this.loading = false;
         this.error = err?.status === 404 ? 'storefront.vendorDetail.notFound' : 'storefront.vendorDetail.loadError';
       }
     });
   }
+
+  price(value: number) { return this.currency.format(value); }
+
+  private loadProducts(vendorId: number) {
+    this.productsLoading = true;
+    this.productsError = '';
+    this.catalog.getProducts({ vendorId, pageSize: 24 }).subscribe({
+      next: r => { this.products = r.items; this.productsLoading = false; },
+      error: () => { this.productsLoading = false; this.productsError = 'Unable to load products.'; }
+    });
+  }
+
+  logoUrl(pictureId: number) { return this.media.url(pictureId); }
 
   initial(name: string) { return name.charAt(0).toUpperCase(); }
 }

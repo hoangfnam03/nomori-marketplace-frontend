@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { API_BASE_URL } from '../config/api-config';
 
-export interface CustomerAddress { id: number; firstName: string; lastName: string; company?: string | null; address1: string; address2?: string | null; city: string; stateProvince?: string | null; countryCode: string; zipPostalCode?: string | null; phoneNumber: string; isDefault: boolean; }
+export interface CustomerAddress { id: number; firstName: string; lastName: string; company?: string | null; address1: string; address2?: string | null; city: string; stateProvince?: string | null; stateProvinceId?: number | null; countryCode: string; zipPostalCode?: string | null; phoneNumber: string; isDefault: boolean; }
 export interface CustomerAttributeDefinition { systemName: string; name: string; dataType: string; isRequired: boolean; displayOrder: number; }
 export interface CustomerAttributes { definitions: CustomerAttributeDefinition[]; values: Record<string, string>; }
 

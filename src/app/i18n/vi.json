@@ -62,7 +62,11 @@
     "footer": {
       "brand": "Nomori Marketplace",
       "workspace": "Bản nền tảng"
-    }
+    },
+    "cart": "Giỏ hàng",
+    "cartItems": "sản phẩm trong giỏ",
+    "currencies": "Tiền tệ",
+    "countries": "Quốc gia"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -93,6 +97,17 @@
       "limit_reached": "Shop đã đủ 20 thành viên.",
       "already_active": "Thành viên này đã kích hoạt tài khoản.",
       "last_member": "Shop phải còn ít nhất một thành viên."
+    },
+    "category": {
+      "has_children": "Danh mục này vẫn còn danh mục con. Hãy chuyển hoặc xóa chúng trước.",
+      "in_use": "Vẫn còn sản phẩm dùng danh mục này. Hãy gỡ danh mục khỏi các sản phẩm đó trước."
+    },
+    "manufacturer": {
+      "in_use": "Vẫn còn sản phẩm dùng nhà sản xuất này. Hãy gỡ khỏi các sản phẩm đó trước."
+    },
+    "product": {
+      "already_hidden": "Sản phẩm này đã bị ẩn.",
+      "not_hidden": "Sản phẩm này không bị ẩn."
     }
   },
   "vendorStatus": {
@@ -195,7 +210,12 @@
       "heading": "Đặt lại mật khẩu",
       "success": "Đã đặt lại mật khẩu. Bạn có thể đăng nhập bằng mật khẩu mới.",
       "submit": "Đặt lại mật khẩu",
-      "submitting": "Đang đặt lại..."
+      "submitting": "Đang đặt lại...",
+      "setupTitle": "Chào mừng bạn.",
+      "setupLede": "Chọn mật khẩu để kích hoạt tài khoản shop của bạn.",
+      "setupHeading": "Đặt mật khẩu",
+      "setupSuccess": "Đã đặt mật khẩu. Bạn có thể đăng nhập ngay.",
+      "setupSubmit": "Đặt mật khẩu"
     },
     "verify": {
       "eyebrow": "Tài khoản / Email",
@@ -264,7 +284,13 @@
       "phone": "Số điện thoại",
       "address": "Địa chỉ",
       "city": "Thành phố",
-      "countryCode": "Mã quốc gia"
+      "countryCode": "Mã quốc gia",
+      "companyOptional": "Công ty (không bắt buộc)",
+      "address2Optional": "Địa chỉ dòng 2 (không bắt buộc)",
+      "country": "Quốc gia",
+      "stateProvince": "Tỉnh / bang",
+      "stateProvinceOptional": "Tỉnh / bang (không bắt buộc)",
+      "postalCode": "Mã bưu chính"
     },
     "gender": {
       "none": "Không muốn nêu",
@@ -324,8 +350,10 @@
       "errors": {
         "saveAddress": "Không lưu được địa chỉ.",
         "savePreferences": "Không lưu được tùy chọn.",
-        "emailChange": "Không gửi được yêu cầu đổi email."
-      }
+        "emailChange": "Không gửi được yêu cầu đổi email.",
+        "loadCountries": "Không tải được danh sách quốc gia."
+      },
+      "choose": "Chọn…"
     }
   },
   "storefront": {
@@ -336,13 +364,15 @@
     "search": {
       "label": "Tìm sản phẩm",
       "placeholder": "Tìm trên Nomori",
-      "submit": "Tìm"
+      "submit": "Tìm",
+      "suggestions": "Gợi ý"
     },
     "card": {
       "view": "Xem {{name}}",
       "rating": "{{rating}} trên 5 sao",
       "reviews": "{{count}} đánh giá",
-      "addToCart": "Thêm vào giỏ"
+      "addToCart": "Thêm vào giỏ",
+      "sale": "Giảm giá"
     },
     "home": {
       "breadcrumb": "Bộ sưu tập nổi bật",
@@ -378,7 +408,31 @@
       "loading": "Đang tải sản phẩm...",
       "emptyTitle": "Không tìm thấy sản phẩm",
       "emptyMessage": "Hãy thử đổi bộ lọc hoặc từ khóa tìm kiếm.",
-      "loadError": "Không tải được sản phẩm."
+      "loadError": "Không tải được sản phẩm.",
+      "resultsFor": "Kết quả cho “{{search}}”",
+      "price": "Giá",
+      "min": "Từ",
+      "max": "Đến",
+      "minPrice": "Giá thấp nhất",
+      "maxPrice": "Giá cao nhất",
+      "apply": "Áp dụng",
+      "priceRange": "Từ {{min}} đến {{max}}",
+      "inStockOnly": "Chỉ hàng còn sẵn",
+      "tags": "Tag",
+      "sortRelevance": "Phù hợp nhất",
+      "sortNameAsc": "Tên: A đến Z",
+      "activeFilters": "Bộ lọc đang dùng",
+      "removeFilter": "Bỏ bộ lọc {{label}}",
+      "clearAll": "Xóa tất cả",
+      "clearAllFilters": "Xóa mọi bộ lọc",
+      "invalidFilters": "Bộ lọc không hợp lệ. Hãy kiểm tra từ khóa và khoảng giá.",
+      "priceNegative": "Giá không được âm.",
+      "priceOrder": "Giá thấp nhất không được lớn hơn giá cao nhất.",
+      "chipCategory": "Danh mục: {{name}}",
+      "chipPrice": "Giá: {{min}} – {{max}}",
+      "chipInStock": "Còn hàng",
+      "chipBrand": "Thương hiệu: {{name}}",
+      "chipTag": "Tag: {{name}}"
     },
     "productDetail": {
       "loading": "Đang tải sản phẩm...",
@@ -388,14 +442,33 @@
       "brand": "Thương hiệu",
       "specifications": "Thông số kỹ thuật",
       "notFound": "Không tìm thấy sản phẩm.",
-      "loadError": "Không tải được sản phẩm."
+      "loadError": "Không tải được sản phẩm.",
+      "showPicture": "Xem ảnh {{index}}",
+      "soldBy": "Bán bởi",
+      "tierPrices": "Giá theo số lượng",
+      "tierCaption": "Mua nhiều, giá tốt hơn",
+      "tierUnits": "Từ {{count}} sản phẩm",
+      "tierEach": "{{price}} mỗi sản phẩm",
+      "chooseToSee": "Chọn {{options}} để xem giá và tình trạng hàng.",
+      "inStockShort": "Còn hàng",
+      "sku": "SKU {{sku}}",
+      "quantity": "Số lượng",
+      "lineTotal": "Tổng {{total}}",
+      "adding": "Đang thêm…",
+      "chooseFirst": "Hãy chọn {{options}} trước.",
+      "chooseOptions": "Hãy chọn tùy chọn sản phẩm trước.",
+      "related": "Sản phẩm liên quan",
+      "quantityRange": "Nhập số lượng từ 1 đến 10.000.",
+      "quoteInvalid": "Lựa chọn hoặc số lượng không hợp lệ.",
+      "quoteError": "Không lấy được giá. Hãy thử lại."
     },
     "vendors": {
       "eyebrow": "Marketplace",
       "title": "Shop",
       "lede": "Khám phá các shop trên Nomori Marketplace.",
       "loading": "Đang tải danh sách shop...",
-      "empty": "Hiện chưa có shop nào."
+      "empty": "Hiện chưa có shop nào.",
+      "logoAlt": "Logo của {{name}}"
     },
     "vendorDetail": {
       "loading": "Đang tải shop...",
@@ -403,6 +476,9 @@
       "invalid": "Shop không hợp lệ.",
       "notFound": "Không tìm thấy shop.",
       "loadError": "Không tải được shop."
+    },
+    "cart": {
+      "added": "Đã thêm {{name}} vào giỏ hàng."
     }
   },
   "admin": {
@@ -473,7 +549,28 @@
       "adminComment": "Ghi chú nội bộ",
       "empty": "Không tìm thấy shop nào.",
       "nameEmailRequired": "Vui lòng nhập tên và email.",
-      "confirmDelete": "Xóa shop \"{{name}}\"?"
+      "confirmDelete": "Xóa shop \"{{name}}\"?",
+      "ledeBefore": "Shop được tạo khi duyệt một",
+      "ledeLink": "đơn đăng ký vendor",
+      "ledeAfter": ". Thành viên tự quản lý tài khoản shop trong vendor portal.",
+      "members": "Thành viên",
+      "membersOf": "Thành viên của {{name}}",
+      "confirmDeleteLabel": "Xác nhận xóa",
+      "deleteWarning": "Mọi thành viên sẽ mất quyền người bán và bị đăng xuất. Tài khoản của họ vẫn còn, thành tài khoản khách hàng bình thường.",
+      "deleting": "Đang xóa…",
+      "deleteVendor": "Xóa shop",
+      "logo": "Logo shop",
+      "loadingMembers": "Đang tải thành viên…",
+      "account": "Tài khoản",
+      "lastSignIn": "Đăng nhập lần cuối",
+      "confirmRemove": "Xác nhận gỡ",
+      "remove": "Gỡ",
+      "lastMemberNote": "Không gỡ được thành viên cuối cùng. Muốn đóng shop thì xóa shop.",
+      "errors": {
+        "load": "Không tải được danh sách shop.",
+        "loadMembers": "Không tải được danh sách thành viên.",
+        "removeMember": "Không gỡ được thành viên."
+      }
     },
     "specs": {
       "eyebrow": "Quản trị / Catalog",
@@ -546,8 +643,44 @@
         "loadProduct": "Không tải được sản phẩm.",
         "deleteProduct": "Không xóa được sản phẩm.",
         "loadManufacturers": "Không tải được nhà sản xuất.",
-        "deleteManufacturer": "Không xóa được nhà sản xuất."
-      }
+        "deleteManufacturer": "Không xóa được nhà sản xuất.",
+        "loadCategoryList": "Không tải được danh sách danh mục.",
+        "hide": "Không ẩn được sản phẩm.",
+        "unhide": "Không bỏ ẩn được sản phẩm.",
+        "transfer": "Chuyển sản phẩm thất bại."
+      },
+      "parentCategory": "Danh mục cha",
+      "topLevel": "Không có (cấp cao nhất)",
+      "categoryImage": "Ảnh danh mục",
+      "manufacturerImage": "Ảnh nhà sản xuất",
+      "restrictSellers": "Hạn chế người bán",
+      "restrictSellersHint": "người bán không thêm sản phẩm vào đây được",
+      "unpublishedLower": "chưa xuất bản",
+      "filterProducts": "Lọc sản phẩm",
+      "filterAll": "Tất cả sản phẩm",
+      "filterReview": "Chờ xem lại",
+      "status": {
+        "draft": "Nháp",
+        "live": "Đang bán",
+        "stopped": "Ngừng bán",
+        "hiddenByAdmin": "Bị admin ẩn"
+      },
+      "shop": "Shop",
+      "platformShop": "Nomori Official (sàn)",
+      "transferTo": "Chuyển sang…",
+      "transfer": "Chuyển",
+      "confirmTransfer": "Chuyển sản phẩm này sang \"{{name}}\"?",
+      "selectedShop": "shop đã chọn",
+      "upTo10": "tối đa 10",
+      "onSale": "Đang bán",
+      "onSaleHint": "không bao giờ thay đổi sản phẩm đang bị ẩn",
+      "reviewRequested": "Yêu cầu xem lại",
+      "shopValue": "shop: {{name}}",
+      "hide": "Ẩn",
+      "unhide": "Bỏ ẩn",
+      "hiddenReason": "Đã ẩn: {{reason}}",
+      "hideReasonLabel": "Lý do (gửi email cho shop)",
+      "hideProduct": "Ẩn sản phẩm"
     }
   }
 }
