@@ -75,7 +75,8 @@
     "cart": "Cart",
     "cartItems": "items in cart",
     "currencies": "Currencies",
-    "countries": "Countries"
+    "countries": "Countries",
+    "payments": "Payments"
   },
   "language": {
     "label": "Language",
@@ -148,6 +149,13 @@
     },
     "shipping": {
       "rate_limit": "This shop already has 50 shipping rates. Remove one to add another."
+    },
+    "payment": {
+      "method_unavailable": "This payment method is not available. Its provider is not installed or the method is off.",
+      "idempotency_conflict": "This request was already used with different details.",
+      "invalid_state": "The payment is no longer in a state that allows this. It has been refreshed.",
+      "refund_exceeds": "You cannot refund more than what is left of the payment.",
+      "provider_failed": "The payment provider refused the operation. Nothing was changed."
     }
   },
   "vendorStatus": {
@@ -851,6 +859,51 @@
         "loadStates": "Unable to load the states.",
         "saveState": "Unable to save the state.",
         "deleteState": "Unable to delete the state."
+      }
+    },
+    "payments": {
+      "eyebrow": "Admin / Payments",
+      "title": "Payments",
+      "lede": "Choose which payment methods customers are offered, and capture, void or refund payments. Amounts are in the primary currency.",
+      "methods": "Payment methods",
+      "kind": "Type",
+      "offline": "Offline",
+      "gateway": "Gateway",
+      "enabled": "Offered to customers",
+      "on": "On",
+      "off": "Off",
+      "notRegistered": "No provider is installed for this method, so it is never offered.",
+      "methodSaved": "Payment method saved.",
+      "payments": "Payments",
+      "allStatuses": "All statuses",
+      "empty": "No payments yet.",
+      "reference": "For",
+      "method": "Method",
+      "amount": "Amount",
+      "refunded": "Refunded",
+      "updated": "Updated",
+      "capture": "Capture",
+      "void": "Void",
+      "refund": "Refund",
+      "refundConfirm": "Refund",
+      "refundAmount": "Amount to refund",
+      "pageOf": "Page {{page}} of {{total}}",
+      "next": "Next",
+      "status": {
+        "pending": "Pending",
+        "authorized": "Authorized",
+        "paid": "Paid",
+        "partially_refunded": "Partly refunded",
+        "refunded": "Refunded",
+        "voided": "Voided",
+        "failed": "Failed"
+      },
+      "errors": {
+        "loadMethods": "Unable to load payment methods.",
+        "saveMethod": "Unable to save the payment method.",
+        "load": "Unable to load payments.",
+        "action": "Unable to change the payment.",
+        "refundRange": "Enter an amount above 0 and up to {{max}}."
       }
     }
   },
