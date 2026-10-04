@@ -34,7 +34,7 @@ import { OrderStatusBadgeComponent } from '../order-status-badge/order-status-ba
               @if (line.variantLabel) { <span class="muted">{{ line.variantLabel }}</span> }
               @if (line.sku) { <span class="muted sku">{{ line.sku }}</span> }
             </span>
-            <span class="qty">{{ line.quantity }} × {{ money(line.unitPrice) }}</span>
+            <span class="qty">{{ line.quantity }} × {{ money(line.unitPrice) }}@if (line.taxRate > 0) { <span class="muted"> · {{ t('orders.taxLine', { rate: line.taxRate, amount: money(line.taxAmount) }) }}</span> }</span>
             <strong>{{ money(line.lineTotal) }}</strong>
           </li>
         }
@@ -49,6 +49,9 @@ import { OrderStatusBadgeComponent } from '../order-status-badge/order-status-ba
           </div>
         }
         <div><dt>{{ t('orders.shipping') }} ({{ order.shippingMethodName }})</dt><dd>{{ money(order.shippingFee) }}</dd></div>
+        @if (order.taxAmount > 0) {
+          <div><dt>{{ t('orders.tax') }}</dt><dd>{{ money(order.taxAmount) }}</dd></div>
+        }
         <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ money(order.total) }}</dd></div>
       </dl>
 

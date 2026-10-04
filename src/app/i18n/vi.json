@@ -78,7 +78,8 @@
     "countries": "Quốc gia",
     "payments": "Thanh toán",
     "orders": "Đơn hàng",
-    "discounts": "Khuyến mãi"
+    "discounts": "Khuyến mãi",
+    "tax": "Thuế"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -173,6 +174,14 @@
       "code_exists": "Mã này đã được khuyến mãi khác dùng. Hãy chọn mã khác.",
       "limit": "Đã đạt giới hạn số khuyến mãi. Hãy xóa bớt khuyến mãi không cần.",
       "in_use": "Khuyến mãi này đã được dùng nên không xóa được. Hãy tắt nó đi."
+    },
+    "tax": {
+      "category_exists": "Đã có nhóm thuế với tên này.",
+      "category_limit": "Đã đạt giới hạn số nhóm thuế.",
+      "category_in_use": "Nhóm này còn thuế suất hoặc sản phẩm nên không xóa được. Hãy gỡ chúng trước.",
+      "default_category": "Không xóa được nhóm mặc định: sản phẩm chưa có nhóm sẽ dùng nhóm này.",
+      "rate_exists": "Nhóm này đã có thuế suất cho nơi này. Hãy sửa thuế suất đó.",
+      "rate_limit": "Đã đạt giới hạn số thuế suất của nhóm này."
     }
   },
   "vendorStatus": {
@@ -624,7 +633,7 @@
       "noPaymentMethods": "Hiện chưa có phương thức thanh toán nào.",
       "noteHeading": "Ghi chú cho shop (không bắt buộc)",
       "notePlaceholder": "Ví dụ: để trước cửa",
-      "currencyNote": "Số tiền tính bằng {{code}}. Chưa bao gồm thuế.",
+      "currencyNote": "Số tiền tính bằng {{code}}.",
       "terms": "Tôi đồng ý với điều khoản và điều kiện của sàn.",
       "place": "Đặt hàng",
       "placing": "Đang đặt hàng…",
@@ -663,7 +672,8 @@
           "customer_limit_reached": "Bạn đã dùng mã này đủ số lần cho phép.",
           "nothing_to_discount": "Mã này không giảm được gì cho giỏ hàng của bạn."
         }
-      }
+      },
+      "taxNote": "Giá chưa gồm thuế. Thuế tính theo địa chỉ giao hàng của bạn."
     }
   },
   "admin": {
@@ -990,6 +1000,46 @@
       "open": "Mở",
       "hide": "Ẩn",
       "customerId": "Khách hàng"
+    },
+    "tax": {
+      "eyebrow": "Quản trị / Thuế",
+      "title": "Thuế",
+      "lede": "Giá chưa gồm thuế. Thuế được cộng khi thanh toán theo địa chỉ giao hàng: thuế suất của nhóm thuế mỗi sản phẩm, theo tỉnh/bang nếu có, nếu không thì theo quốc gia. Không có thuế suất nghĩa là không thuế.",
+      "categories": "Nhóm thuế",
+      "default": "Mặc định",
+      "rates": "Thuế suất",
+      "confirmDelete": "Xác nhận xóa",
+      "newCategory": "Nhóm mới",
+      "editCategory": "Sửa nhóm",
+      "ratesOf": "Thuế suất của {{name}}",
+      "noRates": "Chưa có thuế suất. Sản phẩm của nhóm này chưa bị tính thuế cho tới khi bạn thêm.",
+      "place": "Nơi áp dụng",
+      "percentage": "Thuế suất",
+      "published": "Bật",
+      "hidden": "Tắt",
+      "publishedLabel": "Bật (dùng khi thanh toán)",
+      "newRate": "Thuế suất mới",
+      "editRate": "Sửa thuế suất",
+      "country": "Quốc gia",
+      "chooseCountry": "Chọn quốc gia",
+      "state": "Tỉnh/bang",
+      "wholeCountry": "Toàn quốc gia",
+      "productHeading": "Nhóm thuế của sản phẩm",
+      "productHint": "Sản phẩm thuộc nhóm mặc định cho tới khi bạn gán nhóm khác. Chỉ quản trị viên làm được.",
+      "productId": "Mã sản phẩm",
+      "lookup": "Tra cứu",
+      "category": "Nhóm thuế",
+      "useDefault": "Nhóm mặc định",
+      "defaultAssigned": "mặc định, chưa gán",
+      "saved": "Đã lưu.",
+      "errors": {
+        "load": "Không tải được cài đặt thuế.",
+        "save": "Không lưu được.",
+        "delete": "Không xóa được.",
+        "nameRequired": "Hãy nhập tên.",
+        "rateRequired": "Hãy chọn quốc gia và nhập thuế suất.",
+        "product": "Không tìm thấy sản phẩm này."
+      }
     }
   },
   "currency": {
@@ -1406,7 +1456,9 @@
     "fundedBy": {
       "platform": "do sàn chịu",
       "shop": "do shop chịu"
-    }
+    },
+    "tax": "Thuế",
+    "taxLine": "thuế {{rate}}% = {{amount}}"
   },
   "discounts": {
     "list": "Mã giảm giá",

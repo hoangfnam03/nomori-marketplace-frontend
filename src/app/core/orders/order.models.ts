@@ -53,6 +53,9 @@ export interface OrderLine {
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  /** The percentage charged on this line when it was ordered. */
+  taxRate: number;
+  taxAmount: number;
 }
 
 export interface OrderHistoryEntry {
@@ -92,6 +95,8 @@ export interface ShopOrderDetail {
   /** What the discount took off this shop order; who paid for it is in discountFunding. */
   discountAmount: number;
   discountFunding: 'platform' | 'shop' | null;
+  /** The tax on this shop order's lines. */
+  taxAmount: number;
   total: number;
   shippingMethodName: string;
   carrier: string | null;
@@ -115,6 +120,7 @@ export interface OrderDetail {
   shippingTotal: number;
   discountTotal: number;
   discountCode: string | null;
+  taxTotal: number;
   total: number;
   status: OverallOrderStatus;
   paymentMethod: string;

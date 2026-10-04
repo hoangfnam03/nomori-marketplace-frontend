@@ -180,9 +180,11 @@ function newKey(): string {
               <div class="discount"><dt>{{ t('orders.discount') }}</dt><dd>−{{ money(discount.amount) }}</dd></div>
             }
             <div><dt>{{ t('orders.shipping') }}</dt><dd>{{ preview.shippingTotal === null ? '—' : money(preview.shippingTotal) }}</dd></div>
+            <div><dt>{{ t('orders.tax') }}</dt><dd>{{ preview.tax === null ? '—' : money(preview.tax.total) }}</dd></div>
             <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ preview.total === null ? '—' : money(preview.total) }}</dd></div>
           </dl>
           <p class="muted note">{{ t('storefront.checkout.currencyNote', { code: preview.cart.currencyCode }) }}</p>
+          <p class="muted note">{{ t('storefront.checkout.taxNote') }}</p>
 
           <label class="terms">
             <input type="checkbox" name="terms" [(ngModel)]="acceptedTerms" />

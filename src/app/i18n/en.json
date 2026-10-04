@@ -78,7 +78,8 @@
     "countries": "Countries",
     "payments": "Payments",
     "orders": "Orders",
-    "discounts": "Discounts"
+    "discounts": "Discounts",
+    "tax": "Tax"
   },
   "language": {
     "label": "Language",
@@ -173,6 +174,14 @@
       "code_exists": "This code is already used by another discount. Choose a different one.",
       "limit": "The limit of discounts for this scope is reached. Delete one you do not need.",
       "in_use": "This discount has been used, so it cannot be deleted. Switch it off instead."
+    },
+    "tax": {
+      "category_exists": "A tax category with this name already exists.",
+      "category_limit": "The limit of tax categories is reached.",
+      "category_in_use": "This category has rates or products, so it cannot be deleted. Remove them first.",
+      "default_category": "The default category cannot be deleted: products without a category use it.",
+      "rate_exists": "This category already has a rate for this place. Edit that one instead.",
+      "rate_limit": "The limit of rates for this category is reached."
     }
   },
   "vendorStatus": {
@@ -624,7 +633,7 @@
       "noPaymentMethods": "No payment method is available right now.",
       "noteHeading": "Note for the shops (optional)",
       "notePlaceholder": "For example: leave at the door",
-      "currencyNote": "Amounts are in {{code}}. Taxes are not included yet.",
+      "currencyNote": "Amounts are in {{code}}.",
       "terms": "I accept the terms and conditions of the marketplace.",
       "place": "Place order",
       "placing": "Placing order…",
@@ -663,7 +672,8 @@
           "customer_limit_reached": "You have already used this code the allowed number of times.",
           "nothing_to_discount": "This code gives no discount on your cart."
         }
-      }
+      },
+      "taxNote": "Prices are before tax. The tax follows your delivery address."
     }
   },
   "admin": {
@@ -990,6 +1000,46 @@
       "open": "Open",
       "hide": "Hide",
       "customerId": "Customer"
+    },
+    "tax": {
+      "eyebrow": "Admin / Tax",
+      "title": "Tax",
+      "lede": "Prices are before tax. Tax is added at checkout from the delivery address: the rate of the category of each product, for the state if there is a rate for it, otherwise for the country. No rate means no tax.",
+      "categories": "Tax categories",
+      "default": "Default",
+      "rates": "Rates",
+      "confirmDelete": "Confirm delete",
+      "newCategory": "New category",
+      "editCategory": "Edit category",
+      "ratesOf": "Rates of {{name}}",
+      "noRates": "No rates yet. Products of this category are not taxed until you add one.",
+      "place": "Where",
+      "percentage": "Rate",
+      "published": "On",
+      "hidden": "Off",
+      "publishedLabel": "On (used at checkout)",
+      "newRate": "New rate",
+      "editRate": "Edit rate",
+      "country": "Country",
+      "chooseCountry": "Choose a country",
+      "state": "State",
+      "wholeCountry": "Whole country",
+      "productHeading": "Tax category of a product",
+      "productHint": "Products are in the default category until you assign another one. Only administrators can do this.",
+      "productId": "Product id",
+      "lookup": "Look up",
+      "category": "Tax category",
+      "useDefault": "Default category",
+      "defaultAssigned": "default, not assigned",
+      "saved": "Saved.",
+      "errors": {
+        "load": "Unable to load tax settings.",
+        "save": "Unable to save.",
+        "delete": "Unable to delete.",
+        "nameRequired": "Enter a name.",
+        "rateRequired": "Choose a country and enter a rate.",
+        "product": "Unable to find this product."
+      }
     }
   },
   "currency": {
@@ -1406,7 +1456,9 @@
     "fundedBy": {
       "platform": "paid by the platform",
       "shop": "paid by the shop"
-    }
+    },
+    "tax": "Tax",
+    "taxLine": "tax {{rate}}% = {{amount}}"
   },
   "discounts": {
     "list": "Discount codes",

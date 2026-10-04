@@ -47,6 +47,12 @@ export interface CheckoutDiscount {
   split: Record<number, number>;
 }
 
+/** The tax of the cart for the chosen address: in all, and per shop (vendor id to tax). Prices are before tax. */
+export interface CheckoutTax {
+  total: number;
+  perShop: Record<number, number>;
+}
+
 /** The cart as priced now, the options for the address and the totals. Every number is the server's. */
 export interface CheckoutPreview {
   cart: CartView;
@@ -63,6 +69,8 @@ export interface CheckoutPreview {
   discount: CheckoutDiscount | null;
   /** Why the typed code gives nothing; null when it works or none was typed. */
   couponReason: CouponReason | null;
+  /** Null until there is an address: the tax follows the delivery address. */
+  tax: CheckoutTax | null;
 }
 
 export interface PlaceOrderRequest extends CheckoutChoices {
@@ -78,6 +86,7 @@ export interface PlacedOrder {
   subtotal: number;
   shippingTotal: number;
   discountTotal: number;
+  taxTotal: number;
   total: number;
   paymentMethod: string;
   paymentStatus: string | null;

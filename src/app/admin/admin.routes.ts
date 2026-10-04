@@ -34,6 +34,11 @@ export const adminRoutes: Routes = [
     loadComponent: () => import('./pages/admin-countries.page').then(page => page.AdminCountriesPage)
   },
   {
+    path: 'tax',
+    canActivate: [permissionGuard(permissionCodes.settingsManage)],
+    loadComponent: () => import('./pages/admin-tax.page').then(page => page.AdminTaxPage)
+  },
+  {
     path: 'discounts',
     canActivate: [permissionGuard(permissionCodes.discountsManage)],
     loadComponent: () => import('./pages/admin-discounts.page').then(page => page.AdminDiscountsPage)
