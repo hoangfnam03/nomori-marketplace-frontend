@@ -20,6 +20,11 @@ export const storefrontRoutes: Routes = [
     loadComponent: () => import('./pages/cart.page').then(page => page.CartPage)
   },
   {
+    path: 'checkout',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/checkout.page').then(page => page.CheckoutPage)
+  },
+  {
     path: 'vendors',
     loadComponent: () => import('./pages/vendor-list.page').then(page => page.VendorListPage)
   },

@@ -27,6 +27,9 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
         <p class="state state-error" role="alert">{{ loadError }}</p>
         <button type="button" class="secondary" (click)="load()">{{ t('common.actions.retry') }}</button>
       } @else if (order) {
+        @if (placed) {
+          <p class="banner banner-ok" role="status">{{ t('orders.customer.placed') }}</p>
+        }
         <div class="head">
           <div>
             <div class="eyebrow">{{ t('orders.customer.order') }}</div>
@@ -92,6 +95,7 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
     .recipient { border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
     .recipient p { margin: 0 0 .5rem; line-height: 1.5; }
     .banner { margin: 0 0 1rem; padding: .8rem 1rem; border-left: 3px solid #b74e3c; background: #f8e9e4; color: #7d3026; font-size: .9rem; }
+    .banner-ok { border-color: var(--green); background: #e5f0e9; color: #205e4a; }
     .totals { margin: 1.5rem 0 0; display: grid; gap: .3rem; max-width: 320px; margin-left: auto; }
     .totals div { display: flex; justify-content: space-between; }
     .totals dt { color: var(--muted); }
@@ -121,8 +125,11 @@ export class OrderDetailPage implements OnInit {
   busy = false;
   cancelling: ShopOrderDetail | null = null;
   reason = '';
+  /** True right after checkout: the page says the order was placed. */
+  placed = false;
 
   ngOnInit() {
+    this.placed = this.route.snapshot.queryParamMap.get('placed') === '1';
     this.currency.load();
     this.load();
   }

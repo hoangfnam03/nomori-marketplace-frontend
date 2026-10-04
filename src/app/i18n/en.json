@@ -161,6 +161,11 @@
     "order": {
       "invalid_transition": "This order changed in the meantime, so that step is no longer possible. It has been refreshed.",
       "placement_conflict": "This order request was already used with different details."
+    },
+    "checkout": {
+      "cart_not_ready": "Something in your cart can no longer be bought as it is. Check your cart.",
+      "prices_changed": "Some prices changed. Check your cart and accept the new prices first.",
+      "payment_failed": "The payment was refused, so no order was placed and nothing was charged. You can try again or choose another method."
     }
   },
   "vendorStatus": {
@@ -558,7 +563,6 @@
       "currencyNote": "Shipping and taxes are added at checkout. Prices are in {{code}}; you always pay in {{code}}.",
       "fixLines": "Fix or remove the lines marked above to continue.",
       "checkout": "Checkout",
-      "checkoutSoon": "Checkout is the next step of the marketplace and is not available yet.",
       "clear": "Clear cart",
       "errors": {
         "load": "Unable to load your cart."
@@ -595,6 +599,43 @@
           "load": "Unable to load countries.",
           "estimate": "Unable to estimate shipping. Try again."
         }
+      }
+    },
+    "checkout": {
+      "eyebrow": "Storefront / Checkout",
+      "title": "Checkout.",
+      "backToCart": "Back to cart",
+      "address": "Delivery address",
+      "noAddress": "You have no saved address yet.",
+      "addAddress": "Add an address",
+      "manageAddresses": "Manage addresses",
+      "shipping": "Shipping",
+      "chooseAddressFirst": "Choose an address to see how each shop can ship.",
+      "shopCannotShip": "This shop does not ship to this address.",
+      "payment": "Payment",
+      "offlineHint": "pay when it arrives",
+      "noPaymentMethods": "No payment method is available right now.",
+      "noteHeading": "Note for the shops (optional)",
+      "notePlaceholder": "For example: leave at the door",
+      "currencyNote": "Amounts are in {{code}}. Taxes are not included yet.",
+      "terms": "I accept the terms and conditions of the marketplace.",
+      "place": "Place order",
+      "placing": "Placing order…",
+      "problems": {
+        "cartEmpty": "Your cart is empty.",
+        "cartIssues": "Some lines of your cart cannot be bought as they are.",
+        "pricesChanged": "Some prices changed since you added them. Accept the new prices in your cart first.",
+        "addressRequired": "Choose an address to deliver to.",
+        "addressInvalid": "We cannot ship to this address. Choose another one.",
+        "shippingUnavailable": "A shop in your cart does not ship to this address.",
+        "shippingNotChosen": "Choose a shipping option for every shop.",
+        "shippingInvalid": "A chosen shipping option is not available for this address.",
+        "paymentRequired": "Choose a payment method.",
+        "paymentInvalid": "This payment method is not available."
+      },
+      "errors": {
+        "load": "Unable to load checkout.",
+        "place": "Unable to place the order. Try again."
       }
     }
   },
@@ -1324,7 +1365,8 @@
       "order": "Order",
       "view": "View order",
       "emptyTitle": "No orders yet",
-      "emptyMessage": "Orders you place show up here, one part for each shop."
+      "emptyMessage": "Orders you place show up here, one part for each shop.",
+      "placed": "Thank you! Your order was placed. Each shop prepares its own part."
     },
     "errors": {
       "load": "Unable to load orders.",
