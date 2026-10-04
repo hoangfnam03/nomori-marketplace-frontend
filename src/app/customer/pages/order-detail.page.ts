@@ -76,6 +76,9 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
         <dl class="totals">
           <div><dt>{{ t('orders.subtotal') }}</dt><dd>{{ money(order.subtotal) }}</dd></div>
+          @if (order.discountTotal > 0) {
+            <div class="discount"><dt>{{ t('orders.discount') }} ({{ order.discountCode }})</dt><dd>−{{ money(order.discountTotal) }}</dd></div>
+          }
           <div><dt>{{ t('orders.shipping') }}</dt><dd>{{ money(order.shippingTotal) }}</dd></div>
           <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ money(order.total) }}</dd></div>
         </dl>
@@ -100,6 +103,7 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
     .totals div { display: flex; justify-content: space-between; }
     .totals dt { color: var(--muted); }
     .totals dd { margin: 0; }
+    .discount dd { color: #205e4a; }
     .grand { font-weight: 700; border-top: 1px solid var(--line); padding-top: .4rem; }
     .reason { display: grid; gap: .5rem; width: 100%; }
     .reason textarea { border: 1px solid var(--line-strong); padding: .5rem; background: transparent; color: var(--ink); font: inherit; }

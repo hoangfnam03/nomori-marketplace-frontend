@@ -4,6 +4,7 @@ export const permissionCodes = {
   settingsManage: 'settings.manage',
   paymentsManage: 'payments.manage',
   ordersManage: 'orders.manage',
+  discountsManage: 'discounts.manage',
   vendorManage: 'vendor.manage',
   vendorPortal: 'vendor.portal'
 } as const;
