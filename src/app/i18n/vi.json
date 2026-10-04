@@ -75,7 +75,8 @@
     "cart": "Giỏ hàng",
     "cartItems": "sản phẩm trong giỏ",
     "currencies": "Tiền tệ",
-    "countries": "Quốc gia"
+    "countries": "Quốc gia",
+    "payments": "Thanh toán"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -148,6 +149,13 @@
     },
     "shipping": {
       "rate_limit": "Shop đã có 50 mức phí vận chuyển. Hãy xóa bớt một mức để thêm mới."
+    },
+    "payment": {
+      "method_unavailable": "Phương thức thanh toán này không dùng được. Chưa có nhà cung cấp hoặc phương thức đang tắt.",
+      "idempotency_conflict": "Yêu cầu này đã được dùng với nội dung khác.",
+      "invalid_state": "Khoản thanh toán không còn ở trạng thái cho phép thao tác này. Danh sách đã được làm mới.",
+      "refund_exceeds": "Không thể hoàn nhiều hơn số tiền còn lại của khoản thanh toán.",
+      "provider_failed": "Nhà cung cấp thanh toán từ chối thao tác. Chưa có gì thay đổi."
     }
   },
   "vendorStatus": {
@@ -851,6 +859,51 @@
         "loadStates": "Không tải được danh sách tỉnh/bang.",
         "saveState": "Không lưu được tỉnh/bang.",
         "deleteState": "Không xóa được tỉnh/bang."
+      }
+    },
+    "payments": {
+      "eyebrow": "Quản trị / Thanh toán",
+      "title": "Thanh toán",
+      "lede": "Chọn phương thức thanh toán dành cho khách, và ghi nhận, hủy hoặc hoàn tiền cho các khoản thanh toán. Số tiền tính bằng tiền tệ chính.",
+      "methods": "Phương thức thanh toán",
+      "kind": "Loại",
+      "offline": "Ngoại tuyến",
+      "gateway": "Cổng thanh toán",
+      "enabled": "Hiển thị cho khách",
+      "on": "Bật",
+      "off": "Tắt",
+      "notRegistered": "Chưa cài nhà cung cấp cho phương thức này nên sẽ không bao giờ được hiển thị.",
+      "methodSaved": "Đã lưu phương thức thanh toán.",
+      "payments": "Các khoản thanh toán",
+      "allStatuses": "Mọi trạng thái",
+      "empty": "Chưa có khoản thanh toán nào.",
+      "reference": "Cho",
+      "method": "Phương thức",
+      "amount": "Số tiền",
+      "refunded": "Đã hoàn",
+      "updated": "Cập nhật",
+      "capture": "Ghi nhận thu",
+      "void": "Hủy",
+      "refund": "Hoàn tiền",
+      "refundConfirm": "Hoàn tiền",
+      "refundAmount": "Số tiền hoàn",
+      "pageOf": "Trang {{page}} / {{total}}",
+      "next": "Sau",
+      "status": {
+        "pending": "Chờ xử lý",
+        "authorized": "Đã cấp phép",
+        "paid": "Đã thanh toán",
+        "partially_refunded": "Hoàn một phần",
+        "refunded": "Đã hoàn tiền",
+        "voided": "Đã hủy",
+        "failed": "Thất bại"
+      },
+      "errors": {
+        "loadMethods": "Không tải được phương thức thanh toán.",
+        "saveMethod": "Không lưu được phương thức thanh toán.",
+        "load": "Không tải được các khoản thanh toán.",
+        "action": "Không thay đổi được khoản thanh toán.",
+        "refundRange": "Nhập số tiền lớn hơn 0 và tối đa {{max}}."
       }
     }
   },

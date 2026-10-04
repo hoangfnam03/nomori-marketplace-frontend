@@ -27,6 +27,9 @@
         <a routerLink="/admin/attributes" routerLinkActive="active">{{ t('nav.attributes') }}</a>
         <a routerLink="/admin/spec-attributes" routerLinkActive="active">{{ t('nav.specAttributes') }}</a>
       }
+      @if (can(codes.paymentsManage)) {
+        <a routerLink="/admin/payments" routerLinkActive="active">{{ t('nav.payments') }}</a>
+      }
       @if (can(codes.settingsManage)) {
         <a routerLink="/admin/currencies" routerLinkActive="active">{{ t('nav.currencies') }}</a>
         <a routerLink="/admin/countries" routerLinkActive="active">{{ t('nav.countries') }}</a>
