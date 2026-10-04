@@ -48,6 +48,7 @@ import { DATE_FORMAT, formatDateTime } from '../../shared/utils/datetime';
           <div class="actions">
             <a class="btn" routerLink="/vendor/settings">{{ t('vendor.portal.editShop') }}</a>
             <a class="btn" routerLink="/vendor/products">{{ t('vendor.portal.manageProducts') }}</a>
+            <a class="btn" routerLink="/vendor/orders">{{ t('vendor.portal.manageOrders') }}</a>
             <a class="btn" routerLink="/vendor/shipping">{{ t('vendor.portal.manageShipping') }}</a>
             <a class="btn" routerLink="/vendor/members">{{ t('vendor.portal.manageMembers') }}</a>
             <a class="btn btn-secondary" [routerLink]="['/storefront/vendors', vendor.id]">{{ t('vendor.portal.viewPublic') }}</a>
