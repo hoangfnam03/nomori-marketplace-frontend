@@ -145,6 +145,9 @@
     "vendor": {
       "platform_shop": "Không thể xóa hoặc tắt shop của sàn.",
       "inactive": "Shop đang bị tắt nên thành viên chưa sửa được. Hãy liên hệ quản trị viên."
+    },
+    "shipping": {
+      "rate_limit": "Shop đã có 50 mức phí vận chuyển. Hãy xóa bớt một mức để thêm mới."
     }
   },
   "vendorStatus": {
@@ -555,6 +558,30 @@
         "priceChanged": "Giá đã thay đổi",
         "onlyInStock": "Chỉ còn {{count}} sản phẩm. Hãy giảm số lượng.",
         "priceChangedFrom": "Giá đã đổi từ {{from}} thành {{to}} mỗi sản phẩm."
+      },
+      "shipping": {
+        "title": "Ước tính phí vận chuyển",
+        "loading": "Đang tải…",
+        "deliverTo": "Giao tới",
+        "otherCountry": "Quốc gia khác…",
+        "country": "Quốc gia",
+        "chooseCountry": "Chọn quốc gia",
+        "state": "Tỉnh/bang",
+        "chooseState": "Chọn tỉnh/bang",
+        "estimate": "Ước tính",
+        "estimating": "Đang ước tính…",
+        "noAddress": "Bạn chưa có địa chỉ đã lưu. Hãy chọn quốc gia hoặc thêm địa chỉ trong tài khoản.",
+        "free": "Miễn phí",
+        "cannotShip": "Shop này không giao tới nơi này.",
+        "total": "Vận chuyển",
+        "totalNote": "Là mức rẻ nhất của từng shop. Bạn chọn khi thanh toán.",
+        "someCannotShip": "Một số shop không giao tới nơi này nên bạn không thể thanh toán giỏ hàng này ở đó.",
+        "daysOne": "{{days}} ngày",
+        "daysRange": "{{min}} đến {{max}} ngày",
+        "errors": {
+          "load": "Không tải được danh sách quốc gia.",
+          "estimate": "Không ước tính được phí vận chuyển. Hãy thử lại."
+        }
       }
     }
   },
@@ -866,7 +893,8 @@
         "loadShop": "Không tải được shop của bạn.",
         "loadAccount": "Không tải được tài khoản của bạn."
       },
-      "editShop": "Cài đặt shop"
+      "editShop": "Cài đặt shop",
+      "manageShipping": "Phí vận chuyển"
     },
     "members": {
       "eyebrow": "Kênh người bán / Thành viên",
@@ -1053,6 +1081,48 @@
       "saved": "Đã lưu thông tin shop.",
       "required": "Ô này là bắt buộc.",
       "locked": "Shop đang bị quản trị viên tắt nên chưa sửa được thông tin. Hãy liên hệ quản trị viên."
+    },
+    "shipping": {
+      "eyebrow": "Cổng người bán",
+      "title": "Phí vận chuyển",
+      "lede": "Chọn nơi shop giao hàng và mức phí. Khách không thể thanh toán sản phẩm của shop tới nơi chưa có mức phí.",
+      "rates": "Mức phí",
+      "add": "Thêm mức phí",
+      "addHeading": "Mức phí vận chuyển mới",
+      "editHeading": "Sửa mức phí vận chuyển",
+      "loading": "Đang tải phí vận chuyển…",
+      "empty": "Chưa có mức phí nào. Hãy thêm một mức để khách có thể mua hàng của shop.",
+      "name": "Tên",
+      "destination": "Nơi giao",
+      "fee": "Phí",
+      "freeOver": "Miễn phí từ",
+      "delivery": "Thời gian giao",
+      "status": "Trạng thái",
+      "actionsColumn": "Thao tác",
+      "published": "Đang bật",
+      "hidden": "Đang ẩn",
+      "publishedLabel": "Đang bật (khách có thể chọn mức này)",
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "confirmDelete": "Xác nhận xóa",
+      "country": "Quốc gia",
+      "chooseCountry": "Chọn quốc gia",
+      "state": "Tỉnh/bang",
+      "wholeCountry": "Toàn quốc gia",
+      "freeOverHint": "Miễn phí vận chuyển khi tạm tính của shop đạt mức này. Để trống nếu không bao giờ miễn phí.",
+      "minDays": "Giao nhanh nhất (ngày)",
+      "maxDays": "Giao chậm nhất (ngày)",
+      "daysOne": "{{days}} ngày",
+      "daysRange": "{{min}} đến {{max}} ngày",
+      "save": "Lưu mức phí",
+      "saving": "Đang lưu…",
+      "saved": "Đã lưu mức phí vận chuyển.",
+      "errors": {
+        "required": "Nhập tên, chọn quốc gia và nhập phí.",
+        "load": "Không tải được phí vận chuyển.",
+        "save": "Không lưu được mức phí vận chuyển.",
+        "delete": "Không xóa được mức phí vận chuyển."
+      }
     }
   },
   "adminVendorApplications": {
