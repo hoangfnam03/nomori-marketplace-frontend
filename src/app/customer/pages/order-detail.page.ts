@@ -80,6 +80,9 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
             <div class="discount"><dt>{{ t('orders.discount') }} ({{ order.discountCode }})</dt><dd>−{{ money(order.discountTotal) }}</dd></div>
           }
           <div><dt>{{ t('orders.shipping') }}</dt><dd>{{ money(order.shippingTotal) }}</dd></div>
+          @if (order.taxTotal > 0) {
+            <div><dt>{{ t('orders.tax') }}</dt><dd>{{ money(order.taxTotal) }}</dd></div>
+          }
           <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ money(order.total) }}</dd></div>
         </dl>
       }

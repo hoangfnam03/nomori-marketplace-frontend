@@ -12,7 +12,8 @@ const codes = new Set([
   'payment.method_unavailable', 'payment.idempotency_conflict', 'payment.invalid_state', 'payment.refund_exceeds', 'payment.provider_failed',
   'order.invalid_transition', 'order.placement_conflict',
   'checkout.cart_not_ready', 'checkout.prices_changed', 'checkout.payment_failed', 'checkout.coupon_unavailable',
-  'discount.code_exists', 'discount.limit', 'discount.in_use'
+  'discount.code_exists', 'discount.limit', 'discount.in_use',
+  'tax.category_exists', 'tax.category_limit', 'tax.category_in_use', 'tax.default_category', 'tax.rate_exists', 'tax.rate_limit'
 ]);
 
 export interface ApiError {
