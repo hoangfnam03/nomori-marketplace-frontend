@@ -111,8 +111,11 @@ const ISSUE_KEY: Record<CartIssue, string> = {
           @if (!view.canCheckout) {
             <p class="issue" role="status">{{ t('storefront.cart.fixLines') }}</p>
           }
-          <button type="button" class="primary" disabled>{{ t('storefront.cart.checkout') }}</button>
-          <p class="muted note">{{ t('storefront.cart.checkoutSoon') }}</p>
+          @if (view.canCheckout) {
+            <a class="primary" routerLink="/storefront/checkout">{{ t('storefront.cart.checkout') }}</a>
+          } @else {
+            <button type="button" class="primary" disabled>{{ t('storefront.cart.checkout') }}</button>
+          }
           <button type="button" class="link" (click)="clear()" [disabled]="busy">{{ t('storefront.cart.clear') }}</button>
         </aside>
         <app-shipping-estimate [cartKey]="cartKey()" />
@@ -162,6 +165,7 @@ const ISSUE_KEY: Record<CartIssue, string> = {
     .note { margin: .75rem 0; line-height: 1.5; }
     .primary { width: 100%; border: 1px solid var(--ink); padding: .9rem; background: var(--ink); color: var(--paper); font: 700 .95rem inherit; cursor: pointer; }
     .primary:disabled { opacity: .4; cursor: not-allowed; }
+    a.primary { display: block; box-sizing: border-box; text-align: center; text-decoration: none; }
     .secondary { border: 1px solid var(--ink); padding: .45rem .9rem; background: transparent; color: var(--ink); font: 700 .8rem inherit; cursor: pointer; }
     .link { border: 0; padding: 0; background: transparent; color: var(--muted); text-decoration: underline; font: inherit; font-size: .8rem; cursor: pointer; }
     .link:hover { color: #8d3128; }

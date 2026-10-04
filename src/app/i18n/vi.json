@@ -161,6 +161,11 @@
     "order": {
       "invalid_transition": "Đơn hàng đã thay đổi trong lúc đó nên không thể thực hiện bước này. Đã làm mới.",
       "placement_conflict": "Yêu cầu đặt hàng này đã được dùng với nội dung khác."
+    },
+    "checkout": {
+      "cart_not_ready": "Có thứ trong giỏ hàng không còn mua được như hiện tại. Hãy kiểm tra giỏ hàng.",
+      "prices_changed": "Một số giá đã thay đổi. Hãy kiểm tra giỏ hàng và chấp nhận giá mới trước.",
+      "payment_failed": "Thanh toán bị từ chối nên chưa có đơn nào được đặt và không bị trừ tiền. Bạn có thể thử lại hoặc chọn phương thức khác."
     }
   },
   "vendorStatus": {
@@ -558,7 +563,6 @@
       "currencyNote": "Phí vận chuyển và thuế được cộng khi thanh toán. Giá tính bằng {{code}} và bạn luôn thanh toán bằng {{code}}.",
       "fixLines": "Hãy sửa hoặc bỏ các dòng được đánh dấu ở trên để tiếp tục.",
       "checkout": "Thanh toán",
-      "checkoutSoon": "Thanh toán là bước tiếp theo của sàn và chưa có ở thời điểm này.",
       "clear": "Xóa giỏ hàng",
       "errors": {
         "load": "Không tải được giỏ hàng."
@@ -595,6 +599,43 @@
           "load": "Không tải được danh sách quốc gia.",
           "estimate": "Không ước tính được phí vận chuyển. Hãy thử lại."
         }
+      }
+    },
+    "checkout": {
+      "eyebrow": "Cửa hàng / Thanh toán",
+      "title": "Thanh toán.",
+      "backToCart": "Về giỏ hàng",
+      "address": "Địa chỉ giao hàng",
+      "noAddress": "Bạn chưa có địa chỉ đã lưu.",
+      "addAddress": "Thêm địa chỉ",
+      "manageAddresses": "Quản lý địa chỉ",
+      "shipping": "Vận chuyển",
+      "chooseAddressFirst": "Hãy chọn địa chỉ để xem từng shop giao hàng thế nào.",
+      "shopCannotShip": "Shop này không giao tới địa chỉ này.",
+      "payment": "Thanh toán",
+      "offlineHint": "trả tiền khi nhận hàng",
+      "noPaymentMethods": "Hiện chưa có phương thức thanh toán nào.",
+      "noteHeading": "Ghi chú cho shop (không bắt buộc)",
+      "notePlaceholder": "Ví dụ: để trước cửa",
+      "currencyNote": "Số tiền tính bằng {{code}}. Chưa bao gồm thuế.",
+      "terms": "Tôi đồng ý với điều khoản và điều kiện của sàn.",
+      "place": "Đặt hàng",
+      "placing": "Đang đặt hàng…",
+      "problems": {
+        "cartEmpty": "Giỏ hàng của bạn đang trống.",
+        "cartIssues": "Một số dòng trong giỏ hàng không mua được như hiện tại.",
+        "pricesChanged": "Một số giá đã thay đổi từ lúc bạn thêm vào. Hãy chấp nhận giá mới trong giỏ hàng trước.",
+        "addressRequired": "Hãy chọn địa chỉ giao hàng.",
+        "addressInvalid": "Chúng tôi không giao tới địa chỉ này. Hãy chọn địa chỉ khác.",
+        "shippingUnavailable": "Một shop trong giỏ hàng không giao tới địa chỉ này.",
+        "shippingNotChosen": "Hãy chọn cách vận chuyển cho từng shop.",
+        "shippingInvalid": "Cách vận chuyển đã chọn không dùng được cho địa chỉ này.",
+        "paymentRequired": "Hãy chọn phương thức thanh toán.",
+        "paymentInvalid": "Phương thức thanh toán này không dùng được."
+      },
+      "errors": {
+        "load": "Không tải được trang thanh toán.",
+        "place": "Không đặt được đơn hàng. Hãy thử lại."
       }
     }
   },
@@ -1324,7 +1365,8 @@
       "order": "Đơn hàng",
       "view": "Xem đơn",
       "emptyTitle": "Chưa có đơn hàng",
-      "emptyMessage": "Đơn bạn đặt sẽ hiện ở đây, mỗi shop một phần."
+      "emptyMessage": "Đơn bạn đặt sẽ hiện ở đây, mỗi shop một phần.",
+      "placed": "Cảm ơn bạn! Đơn hàng đã được đặt. Mỗi shop sẽ chuẩn bị phần đơn của mình."
     },
     "errors": {
       "load": "Không tải được đơn hàng.",
