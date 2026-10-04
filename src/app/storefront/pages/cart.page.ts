@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
+import { ShippingEstimateComponent } from '../../shared/components/shipping-estimate/shipping-estimate.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { CartApiService } from '../../core/cart/cart-api.service';
 import { CartService } from '../../core/cart/cart.service';
@@ -22,7 +23,7 @@ const ISSUE_KEY: Record<CartIssue, string> = {
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, EmptyStateComponent, FormsModule, RouterLink, TranslocoDirective],
+  imports: [BreadcrumbComponent, EmptyStateComponent, FormsModule, RouterLink, ShippingEstimateComponent, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
     <div class="page-heading">
@@ -99,6 +100,7 @@ const ISSUE_KEY: Record<CartIssue, string> = {
           }
         </div>
 
+        <div class="side">
         <aside class="summary" [attr.aria-label]="t('storefront.cart.summaryLabel')">
           <h2>{{ t('storefront.cart.summary') }}</h2>
           <dl>
@@ -113,6 +115,8 @@ const ISSUE_KEY: Record<CartIssue, string> = {
           <p class="muted note">{{ t('storefront.cart.checkoutSoon') }}</p>
           <button type="button" class="link" (click)="clear()" [disabled]="busy">{{ t('storefront.cart.clear') }}</button>
         </aside>
+        <app-shipping-estimate [cartKey]="cartKey()" />
+        </div>
       </div>
     }
     </ng-container>
@@ -148,7 +152,8 @@ const ISSUE_KEY: Record<CartIssue, string> = {
     .line-qty input { width: 5rem; border: 1px solid var(--line-strong); padding: .4rem .5rem; background: transparent; color: var(--ink); font: inherit; }
     .line-price { display: grid; gap: .15rem; justify-items: end; text-align: right; min-width: 7rem; }
     .tag { font: 700 .62rem var(--mono-font); letter-spacing: .08em; text-transform: uppercase; color: var(--green); }
-    .summary { border: 1px solid var(--line-strong); padding: 1.25rem; position: sticky; top: 1rem; }
+    .side { position: sticky; top: 1rem; }
+    .summary { border: 1px solid var(--line-strong); padding: 1.25rem; }
     .summary h2 { margin: 0 0 1rem; font: 700 1.1rem var(--display-font); }
     dl { margin: 0 0 1rem; display: grid; gap: .5rem; }
     dl div { display: flex; justify-content: space-between; }
@@ -161,7 +166,7 @@ const ISSUE_KEY: Record<CartIssue, string> = {
     .link { border: 0; padding: 0; background: transparent; color: var(--muted); text-decoration: underline; font: inherit; font-size: .8rem; cursor: pointer; }
     .link:hover { color: #8d3128; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
-    @media (max-width: 900px) { .cart-layout { grid-template-columns: 1fr; } .summary { position: static; } }
+    @media (max-width: 900px) { .cart-layout { grid-template-columns: 1fr; } .side { position: static; } }
     @media (max-width: 600px) { .line { grid-template-columns: 56px minmax(0, 1fr); } .thumb { width: 56px; height: 56px; } .line-qty, .line-price { grid-column: 2; justify-items: start; text-align: left; } }
   `]
 })
@@ -199,6 +204,9 @@ export class CartPage implements OnInit {
 
   /** A line that cannot be priced (the product or its option is gone) shows no amounts. */
   isUnpriced(line: CartLine) { return line.issues.includes('unavailable') || line.issues.includes('variant_unavailable'); }
+
+  /** Changes with every quantity and subtotal, so an estimate that is on screen is refreshed. */
+  cartKey() { return this.view ? `${this.view.itemCount}:${this.view.subtotal}:${this.view.groups.length}` : ''; }
 
   hasPriceChange() { return !!this.view?.groups.some(g => g.lines.some(l => l.issues.includes('price_changed'))); }
 

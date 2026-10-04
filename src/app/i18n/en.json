@@ -145,6 +145,9 @@
     "vendor": {
       "platform_shop": "The platform shop cannot be deleted or deactivated.",
       "inactive": "This shop is switched off, so members cannot change it. Contact an administrator."
+    },
+    "shipping": {
+      "rate_limit": "This shop already has 50 shipping rates. Remove one to add another."
     }
   },
   "vendorStatus": {
@@ -555,6 +558,30 @@
         "priceChanged": "Price changed",
         "onlyInStock": "Only {{count}} in stock. Lower the quantity.",
         "priceChangedFrom": "Price changed from {{from}} to {{to}} each."
+      },
+      "shipping": {
+        "title": "Estimate shipping",
+        "loading": "Loading…",
+        "deliverTo": "Deliver to",
+        "otherCountry": "Another country…",
+        "country": "Country",
+        "chooseCountry": "Choose a country",
+        "state": "State",
+        "chooseState": "Choose a state",
+        "estimate": "Estimate",
+        "estimating": "Estimating…",
+        "noAddress": "You have no saved address. Choose a country, or add an address in your account.",
+        "free": "Free",
+        "cannotShip": "This shop does not ship to this place.",
+        "total": "Shipping",
+        "totalNote": "Cheapest option of every shop. You choose at checkout.",
+        "someCannotShip": "Some shops do not ship to this place, so you cannot check out this cart there.",
+        "daysOne": "{{days}} days",
+        "daysRange": "{{min}} to {{max}} days",
+        "errors": {
+          "load": "Unable to load countries.",
+          "estimate": "Unable to estimate shipping. Try again."
+        }
       }
     }
   },
@@ -866,7 +893,8 @@
         "loadShop": "Unable to load your shop.",
         "loadAccount": "Unable to load your account."
       },
-      "editShop": "Shop settings"
+      "editShop": "Shop settings",
+      "manageShipping": "Shipping rates"
     },
     "members": {
       "eyebrow": "Vendor portal / Members",
@@ -1053,6 +1081,48 @@
       "saved": "Shop details saved.",
       "required": "This field is required.",
       "locked": "An administrator has switched this shop off, so its details cannot be changed. Contact an administrator."
+    },
+    "shipping": {
+      "eyebrow": "Vendor portal",
+      "title": "Shipping rates",
+      "lede": "Choose where your shop ships and what it charges. Customers cannot check out your products to a place without a rate.",
+      "rates": "Rates",
+      "add": "Add rate",
+      "addHeading": "New shipping rate",
+      "editHeading": "Edit shipping rate",
+      "loading": "Loading shipping rates…",
+      "empty": "No shipping rates yet. Add one so customers can buy from your shop.",
+      "name": "Name",
+      "destination": "Destination",
+      "fee": "Fee",
+      "freeOver": "Free over",
+      "delivery": "Delivery",
+      "status": "Status",
+      "actionsColumn": "Actions",
+      "published": "Published",
+      "hidden": "Hidden",
+      "publishedLabel": "Published (customers can choose this rate)",
+      "edit": "Edit",
+      "delete": "Delete",
+      "confirmDelete": "Confirm delete",
+      "country": "Country",
+      "chooseCountry": "Choose a country",
+      "state": "State",
+      "wholeCountry": "Whole country",
+      "freeOverHint": "Shipping is free when this shop's subtotal reaches this amount. Leave empty for never.",
+      "minDays": "Fastest delivery (days)",
+      "maxDays": "Slowest delivery (days)",
+      "daysOne": "{{days}} days",
+      "daysRange": "{{min}} to {{max}} days",
+      "save": "Save rate",
+      "saving": "Saving…",
+      "saved": "Shipping rate saved.",
+      "errors": {
+        "required": "Enter a name, choose a country and enter a fee.",
+        "load": "Unable to load shipping rates.",
+        "save": "Unable to save the shipping rate.",
+        "delete": "Unable to delete the shipping rate."
+      }
     }
   },
   "adminVendorApplications": {
