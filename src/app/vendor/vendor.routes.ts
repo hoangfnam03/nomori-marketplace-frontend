@@ -24,6 +24,16 @@ export const vendorRoutes: Routes = [
     loadComponent: () => import('./pages/vendor-settings.page').then(page => page.VendorSettingsPage)
   },
   {
+    path: 'orders',
+    canActivate: [permissionGuard(permissionCodes.vendorPortal)],
+    loadComponent: () => import('./pages/vendor-orders.page').then(page => page.VendorOrdersPage)
+  },
+  {
+    path: 'orders/:id',
+    canActivate: [permissionGuard(permissionCodes.vendorPortal)],
+    loadComponent: () => import('./pages/vendor-order-detail.page').then(page => page.VendorOrderDetailPage)
+  },
+  {
     path: 'shipping',
     canActivate: [permissionGuard(permissionCodes.vendorPortal)],
     loadComponent: () => import('./pages/vendor-shipping.page').then(page => page.VendorShippingPage)

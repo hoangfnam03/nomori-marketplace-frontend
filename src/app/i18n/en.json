@@ -76,7 +76,8 @@
     "cartItems": "items in cart",
     "currencies": "Currencies",
     "countries": "Countries",
-    "payments": "Payments"
+    "payments": "Payments",
+    "orders": "Orders"
   },
   "language": {
     "label": "Language",
@@ -156,6 +157,10 @@
       "invalid_state": "The payment is no longer in a state that allows this. It has been refreshed.",
       "refund_exceeds": "You cannot refund more than what is left of the payment.",
       "provider_failed": "The payment provider refused the operation. Nothing was changed."
+    },
+    "order": {
+      "invalid_transition": "This order changed in the meantime, so that step is no longer possible. It has been refreshed.",
+      "placement_conflict": "This order request was already used with different details."
     }
   },
   "vendorStatus": {
@@ -905,6 +910,18 @@
         "action": "Unable to change the payment.",
         "refundRange": "Enter an amount above 0 and up to {{max}}."
       }
+    },
+    "orders": {
+      "eyebrow": "Admin / Orders",
+      "title": "Orders",
+      "lede": "Every order of the platform. You can cancel a shop order until it is completed; the reason is shown to the shop and the customer.",
+      "shopId": "Shop id",
+      "searchPlaceholder": "Order number or name",
+      "empty": "No orders match.",
+      "shops": "Shops",
+      "open": "Open",
+      "hide": "Hide",
+      "customerId": "Customer"
     }
   },
   "currency": {
@@ -947,7 +964,8 @@
         "loadAccount": "Unable to load your account."
       },
       "editShop": "Shop settings",
-      "manageShipping": "Shipping rates"
+      "manageShipping": "Shipping rates",
+      "manageOrders": "Orders"
     },
     "members": {
       "eyebrow": "Vendor portal / Members",
@@ -1176,6 +1194,30 @@
         "save": "Unable to save the shipping rate.",
         "delete": "Unable to delete the shipping rate."
       }
+    },
+    "orders": {
+      "eyebrow": "Vendor portal",
+      "title": "Orders",
+      "lede": "Orders for your shop. You only see your own part of an order.",
+      "tabs": "Order status",
+      "all": "All",
+      "searchPlaceholder": "Order number, name or phone",
+      "from": "From",
+      "to": "To",
+      "filter": "Filter",
+      "empty": "No orders match.",
+      "number": "Order",
+      "date": "Placed",
+      "recipient": "Recipient",
+      "itemCount": "Items",
+      "payment": "Payment",
+      "orderRef": "Order",
+      "confirm": "Confirm order",
+      "ship": "Hand to carrier",
+      "editTracking": "Edit tracking",
+      "deliver": "Mark as delivered",
+      "carrier": "Carrier",
+      "trackingNumber": "Tracking number"
     }
   },
   "adminVendorApplications": {
@@ -1242,6 +1284,53 @@
       "sendEmail": "Unable to send the email. Try again later.",
       "save": "Unable to save the application.",
       "cancel": "Unable to cancel the application."
+    }
+  },
+  "orders": {
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "processing": "Processing"
+    },
+    "actor": {
+      "customer": "Customer",
+      "shop": "Shop",
+      "platform": "Platform",
+      "admin": "Platform",
+      "system": "System"
+    },
+    "subtotal": "Subtotal",
+    "shipping": "Shipping",
+    "total": "Total",
+    "tracking": "Tracking",
+    "cancelReason": "Cancelled because",
+    "history": "History",
+    "recipient": "Deliver to",
+    "note": "Note",
+    "reason": "Reason",
+    "cancelShopOrder": "Cancel this order",
+    "confirmCancel": "Cancel order",
+    "confirmReceipt": "I received it",
+    "items": "{{count}} items",
+    "pageOf": "Page {{page}} of {{total}}",
+    "next": "Next",
+    "customer": {
+      "eyebrow": "Account / Orders",
+      "title": "Your orders.",
+      "order": "Order",
+      "view": "View order",
+      "emptyTitle": "No orders yet",
+      "emptyMessage": "Orders you place show up here, one part for each shop."
+    },
+    "errors": {
+      "load": "Unable to load orders.",
+      "loadOne": "Unable to load this order.",
+      "action": "Unable to change the order.",
+      "reasonRequired": "Give a reason."
     }
   }
 }

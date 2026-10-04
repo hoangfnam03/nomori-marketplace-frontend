@@ -76,7 +76,8 @@
     "cartItems": "sản phẩm trong giỏ",
     "currencies": "Tiền tệ",
     "countries": "Quốc gia",
-    "payments": "Thanh toán"
+    "payments": "Thanh toán",
+    "orders": "Đơn hàng"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -156,6 +157,10 @@
       "invalid_state": "Khoản thanh toán không còn ở trạng thái cho phép thao tác này. Danh sách đã được làm mới.",
       "refund_exceeds": "Không thể hoàn nhiều hơn số tiền còn lại của khoản thanh toán.",
       "provider_failed": "Nhà cung cấp thanh toán từ chối thao tác. Chưa có gì thay đổi."
+    },
+    "order": {
+      "invalid_transition": "Đơn hàng đã thay đổi trong lúc đó nên không thể thực hiện bước này. Đã làm mới.",
+      "placement_conflict": "Yêu cầu đặt hàng này đã được dùng với nội dung khác."
     }
   },
   "vendorStatus": {
@@ -905,6 +910,18 @@
         "action": "Không thay đổi được khoản thanh toán.",
         "refundRange": "Nhập số tiền lớn hơn 0 và tối đa {{max}}."
       }
+    },
+    "orders": {
+      "eyebrow": "Quản trị / Đơn hàng",
+      "title": "Đơn hàng",
+      "lede": "Mọi đơn hàng của sàn. Có thể hủy đơn con cho tới khi hoàn tất; lý do hiển thị cho shop và khách.",
+      "shopId": "Mã shop",
+      "searchPlaceholder": "Mã đơn hoặc tên",
+      "empty": "Không có đơn nào phù hợp.",
+      "shops": "Shop",
+      "open": "Mở",
+      "hide": "Ẩn",
+      "customerId": "Khách hàng"
     }
   },
   "currency": {
@@ -947,7 +964,8 @@
         "loadAccount": "Không tải được tài khoản của bạn."
       },
       "editShop": "Cài đặt shop",
-      "manageShipping": "Phí vận chuyển"
+      "manageShipping": "Phí vận chuyển",
+      "manageOrders": "Đơn hàng"
     },
     "members": {
       "eyebrow": "Kênh người bán / Thành viên",
@@ -1176,6 +1194,30 @@
         "save": "Không lưu được mức phí vận chuyển.",
         "delete": "Không xóa được mức phí vận chuyển."
       }
+    },
+    "orders": {
+      "eyebrow": "Cổng người bán",
+      "title": "Đơn hàng",
+      "lede": "Đơn hàng của shop. Bạn chỉ thấy phần đơn thuộc shop mình.",
+      "tabs": "Trạng thái đơn",
+      "all": "Tất cả",
+      "searchPlaceholder": "Mã đơn, tên hoặc số điện thoại",
+      "from": "Từ",
+      "to": "Đến",
+      "filter": "Lọc",
+      "empty": "Không có đơn nào phù hợp.",
+      "number": "Mã đơn",
+      "date": "Ngày đặt",
+      "recipient": "Người nhận",
+      "itemCount": "Số sản phẩm",
+      "payment": "Thanh toán",
+      "orderRef": "Đơn hàng",
+      "confirm": "Xác nhận đơn",
+      "ship": "Giao cho vận chuyển",
+      "editTracking": "Sửa vận đơn",
+      "deliver": "Đã giao thành công",
+      "carrier": "Đơn vị vận chuyển",
+      "trackingNumber": "Mã vận đơn"
     }
   },
   "adminVendorApplications": {
@@ -1242,6 +1284,53 @@
       "sendEmail": "Không gửi được email. Hãy thử lại sau.",
       "save": "Không lưu được đơn đăng ký.",
       "cancel": "Không hủy được đơn đăng ký."
+    }
+  },
+  "orders": {
+    "status": {
+      "pending": "Chờ xác nhận",
+      "confirmed": "Đã xác nhận",
+      "shipped": "Đang giao",
+      "delivered": "Đã giao",
+      "completed": "Hoàn tất",
+      "cancelled": "Đã hủy",
+      "processing": "Đang xử lý"
+    },
+    "actor": {
+      "customer": "Khách hàng",
+      "shop": "Shop",
+      "platform": "Sàn",
+      "admin": "Sàn",
+      "system": "Hệ thống"
+    },
+    "subtotal": "Tạm tính",
+    "shipping": "Vận chuyển",
+    "total": "Tổng cộng",
+    "tracking": "Vận đơn",
+    "cancelReason": "Lý do hủy",
+    "history": "Lịch sử",
+    "recipient": "Giao tới",
+    "note": "Ghi chú",
+    "reason": "Lý do",
+    "cancelShopOrder": "Hủy đơn này",
+    "confirmCancel": "Hủy đơn",
+    "confirmReceipt": "Tôi đã nhận hàng",
+    "items": "{{count}} sản phẩm",
+    "pageOf": "Trang {{page}} / {{total}}",
+    "next": "Sau",
+    "customer": {
+      "eyebrow": "Tài khoản / Đơn hàng",
+      "title": "Đơn hàng của bạn.",
+      "order": "Đơn hàng",
+      "view": "Xem đơn",
+      "emptyTitle": "Chưa có đơn hàng",
+      "emptyMessage": "Đơn bạn đặt sẽ hiện ở đây, mỗi shop một phần."
+    },
+    "errors": {
+      "load": "Không tải được đơn hàng.",
+      "loadOne": "Không tải được đơn hàng này.",
+      "action": "Không thay đổi được đơn hàng.",
+      "reasonRequired": "Hãy nhập lý do."
     }
   }
 }

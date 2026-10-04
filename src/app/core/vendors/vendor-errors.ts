@@ -9,7 +9,8 @@ const codes = new Set([
   'inventory.reservation_expired', 'inventory.active_reservations', 'currency.primary_locked', 'currency.primary_required',
   'currency.code_exists', 'cart.own_product', 'cart.line_limit', 'country.code_exists', 'country.in_use', 'state.code_exists',
   'state.in_use', 'vendor.platform_shop', 'vendor.inactive', 'shipping.rate_limit',
-  'payment.method_unavailable', 'payment.idempotency_conflict', 'payment.invalid_state', 'payment.refund_exceeds', 'payment.provider_failed'
+  'payment.method_unavailable', 'payment.idempotency_conflict', 'payment.invalid_state', 'payment.refund_exceeds', 'payment.provider_failed',
+  'order.invalid_transition', 'order.placement_conflict'
 ]);
 
 export interface ApiError {
