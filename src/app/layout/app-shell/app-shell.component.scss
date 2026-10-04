@@ -149,8 +149,7 @@
 }
 
 .account-panel > a,
-.account-panel > button,
-.account-panel > .disabled {
+.account-panel > button {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -172,16 +171,6 @@
 .account-panel > button:focus-visible {
   background: color-mix(in srgb, var(--green) 8%, transparent);
   color: var(--green);
-}
-
-.account-panel > .disabled {
-  color: var(--muted);
-  cursor: default;
-}
-
-.account-panel .soon {
-  font: 700 0.62rem var(--mono-font);
-  text-transform: uppercase;
 }
 
 .account-panel hr {

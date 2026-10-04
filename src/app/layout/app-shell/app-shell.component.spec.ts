@@ -108,11 +108,10 @@ describe('AppShellComponent navigation', () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it('marks orders as coming soon instead of linking to a missing page', async () => {
+  it('links to account, profile and orders from the account menu', async () => {
     const links = await render({ ...guest, isAuthenticated: true, customerId: 5, email: 'buyer@test' }, 'forbidden');
 
-    expect(links.menu).toEqual(['/auth/account', '/customer/profile']);
-    expect(links.element.querySelector('.account-panel [aria-disabled="true"]')?.textContent).toContain('Đơn mua');
+    expect(links.menu).toEqual(['/auth/account', '/customer/profile', '/customer/orders']);
   });
 
   it('shows the name instead of the email when the profile has one', async () => {

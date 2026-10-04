@@ -65,7 +65,6 @@
       "guest": "Guest session",
       "account": "Account",
       "orders": "My orders",
-      "comingSoon": "Soon",
       "menu": "Account menu"
     },
     "footer": {
@@ -145,6 +144,16 @@
     "vendor": {
       "platform_shop": "The platform shop cannot be deleted or deactivated.",
       "inactive": "This shop is switched off, so members cannot change it. Contact an administrator."
+    },
+    "order": {
+      "total_changed": "The total just changed. Check it, then place the order again.",
+      "items_unavailable": "Some items just went out of stock or stopped being sold. Check your order.",
+      "cart_item_not_found": "Some items are no longer in your cart (perhaps ordered in another tab).",
+      "address_invalid": "The delivery address is not valid. Choose another one."
+    },
+    "store_order": {
+      "invalid_transition": "This cannot be done to the order in its current status.",
+      "concurrent_update": "Someone else just updated this order. Reload the page."
     }
   },
   "vendorStatus": {
@@ -390,7 +399,8 @@
         "saveAddress": "Unable to save address.",
         "savePreferences": "Unable to save preferences.",
         "emailChange": "Unable to request email change.",
-        "loadCountries": "Unable to load the country list."
+        "loadCountries": "Unable to load the country list.",
+        "requiredFields": "Please fill in the required fields."
       },
       "choose": "Choose…"
     }
@@ -537,12 +547,8 @@
       "quantityPrice": "Quantity price",
       "summaryLabel": "Order summary",
       "summary": "Summary",
-      "items": "Items",
       "subtotal": "Subtotal",
       "currencyNote": "Shipping and taxes are added at checkout. Prices are in {{code}}; you always pay in {{code}}.",
-      "fixLines": "Fix or remove the lines marked above to continue.",
-      "checkout": "Checkout",
-      "checkoutSoon": "Checkout is the next step of the marketplace and is not available yet.",
       "clear": "Clear cart",
       "errors": {
         "load": "Unable to load your cart."
@@ -555,7 +561,13 @@
         "priceChanged": "Price changed",
         "onlyInStock": "Only {{count}} in stock. Lower the quantity.",
         "priceChangedFrom": "Price changed from {{from}} to {{to}} each."
-      }
+      },
+      "selectAll": "Select all ({{count}})",
+      "selectShop": "Select every item from {{name}}",
+      "selectLine": "Select {{name}}",
+      "selectedItems": "Selected",
+      "fixSelected": "Some selected items cannot be bought. Unselect or remove them to continue.",
+      "buy": "Check out ({{count}})"
     }
   },
   "admin": {
@@ -866,7 +878,8 @@
         "loadShop": "Unable to load your shop.",
         "loadAccount": "Unable to load your account."
       },
-      "editShop": "Shop settings"
+      "editShop": "Shop settings",
+      "manageOrders": "Manage orders"
     },
     "members": {
       "eyebrow": "Vendor portal / Members",
@@ -1053,6 +1066,62 @@
       "saved": "Shop details saved.",
       "required": "This field is required.",
       "locked": "An administrator has switched this shop off, so its details cannot be changed. Contact an administrator."
+    },
+    "orders": {
+      "title": "Orders",
+      "lede": "Confirm, ship and follow your shop's orders.",
+      "status": {
+        "pending": "To confirm",
+        "confirmed": "To ship",
+        "shipped": "Shipping",
+        "delivered": "Delivered",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "searchPlaceholder": "Order number, recipient name or phone",
+      "from": "From",
+      "to": "To",
+      "select": "Select",
+      "selectOrder": "Select order {{number}}",
+      "selected": "{{count}} orders selected",
+      "confirmSelected": "Confirm selected orders",
+      "confirmedCount": "{{count}} orders confirmed.",
+      "skippedCount": "{{count}} were no longer waiting for confirmation and were skipped.",
+      "empty": "No orders.",
+      "number": "Order",
+      "placed": "Placed",
+      "recipient": "Recipient",
+      "items": "Items",
+      "deadline": "Confirm by",
+      "cod": "COD",
+      "backToList": "All orders",
+      "confirmBy": "Confirm before {{date}}, or the order is cancelled automatically.",
+      "confirm": "Confirm order",
+      "ship": "Hand to carrier",
+      "shipTitle": "Shipment details",
+      "carrier": "Carrier",
+      "otherCarrier": "Other",
+      "carrierName": "Carrier name",
+      "trackingNumber": "Tracking number",
+      "handToCarrier": "Handed to carrier",
+      "editShipment": "Edit tracking number",
+      "markDelivered": "Mark as delivered",
+      "cancelOrder": "Cancel order",
+      "cancelTitle": "Why is the shop cancelling this order?",
+      "cancelNote": "More details (required for Other reason)",
+      "cancelHint": "The customer gets an email with the reason. The stock of the items is put back.",
+      "customerNote": "Customer note: {{note}}",
+      "confirmedNotice": "Order confirmed.",
+      "shippedNotice": "Now shipping. The customer got an email with the tracking number.",
+      "shipmentSavedNotice": "Shipment details saved.",
+      "deliveredNotice": "Marked as delivered.",
+      "cancelledNotice": "Order cancelled and stock put back.",
+      "actor": {
+        "customer": "The customer",
+        "vendor": "The shop",
+        "admin": "Nomori",
+        "system": "The system"
+      }
     }
   },
   "adminVendorApplications": {
@@ -1119,6 +1188,151 @@
       "sendEmail": "Unable to send the email. Try again later.",
       "save": "Unable to save the application.",
       "cancel": "Unable to cancel the application."
+    }
+  },
+  "checkout": {
+    "eyebrow": "Checkout",
+    "title": "Checkout",
+    "loading": "Loading your order…",
+    "backToCart": "Back to cart",
+    "address": "Delivery address",
+    "noAddress": "You have no address yet. Add one to place the order.",
+    "default": "Default",
+    "addAddress": "Add a new address",
+    "lineUnavailable": "This item cannot be bought right now.",
+    "noteToShop": "Note to the shop",
+    "notePlaceholder": "Optional, up to 500 characters",
+    "shipping": "Shipping",
+    "free": "Free",
+    "shopTotal": "Shop total",
+    "payment": "Payment method",
+    "cod": "Cash on delivery (COD)",
+    "itemsTotal": "Items",
+    "shippingTotal": "Shipping",
+    "total": "Total",
+    "place": "Place order",
+    "placing": "Placing order…",
+    "chooseAddress": "Choose or add a delivery address to place the order.",
+    "totalChanged": "A price or shipping fee just changed. Check the new total, then place the order again.",
+    "blocked": {
+      "missing": "Some items are no longer in your cart.",
+      "ownShop": "You cannot buy products from your own shop.",
+      "tooManyShops": "An order can include at most 10 shops.",
+      "unavailable": "Some items are out of stock or no longer sold."
+    },
+    "errors": {
+      "load": "Could not load checkout.",
+      "place": "Could not place the order. Please try again.",
+      "addresses": "Could not load your address book."
+    },
+    "success": {
+      "title": "Order placed",
+      "lede": "Thank you. Order {{number}} is waiting for the shops to confirm.",
+      "orderNumber": "Order number",
+      "shops": "Shops",
+      "split": "The order is split into {{count}} parts; each shop ships its own.",
+      "viewOrder": "View order",
+      "viewOrders": "View my orders",
+      "continue": "Continue shopping"
+    }
+  },
+  "orders": {
+    "eyebrow": "Account",
+    "title": "My orders",
+    "tabsLabel": "Filter by status",
+    "tab": {
+      "all": "All",
+      "pending": "To confirm",
+      "confirmed": "To ship",
+      "shipped": "Shipping",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "searchLabel": "Search orders",
+    "searchPlaceholder": "Search by order number, shop or product",
+    "searchButton": "Search",
+    "loading": "Loading orders…",
+    "loadMore": "Load more",
+    "empty": "You have no orders yet.",
+    "noResults": "No orders match your search.",
+    "shopNow": "Start shopping",
+    "status": {
+      "pending": "To confirm",
+      "confirmed": "To ship",
+      "shipped": "Shipping",
+      "delivered": "Delivered",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "overall": {
+      "processing": "Processing",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
+    "payment": {
+      "pending": "Pay on delivery",
+      "paid": "Paid",
+      "voided": "Not charged (order cancelled)",
+      "refunded": "Refunded"
+    },
+    "actor": {
+      "customer": "You",
+      "vendor": "The shop",
+      "admin": "Nomori",
+      "system": "The system"
+    },
+    "event": {
+      "pending": "{{actor}} placed the order",
+      "confirmed": "{{actor}} confirmed the order",
+      "shipped": "{{actor}} handed it to the carrier",
+      "completed": "Order completed",
+      "cancelled": "{{actor}} cancelled the order",
+      "trackingUpdated": "{{actor}} updated the tracking number",
+      "deliveredBy": {
+        "customer": "{{actor}} confirmed receipt",
+        "vendor": "{{actor}} marked the order as delivered",
+        "admin": "{{actor}} marked the order as delivered",
+        "system": "Marked as delivered automatically (not confirmed in time)"
+      },
+      "autoCancelled": "The order was cancelled automatically"
+    },
+    "orderNumber": "Order {{number}}",
+    "placedOn": "Placed on {{date}}",
+    "tracking": "Carrier: {{carrier}} · Tracking number {{number}}",
+    "yourNote": "Your note: {{note}}",
+    "total": "Total",
+    "history": "Order history",
+    "viewDetails": "View details",
+    "backToList": "My orders",
+    "cancel": "Cancel order",
+    "cancelAll": "Cancel whole order",
+    "cancelTitle": "Why do you want to cancel?",
+    "cancelAllTitle": "Cancel every part of this order. Why do you want to cancel?",
+    "cancelReason": {
+      "change_address": "I want to change the delivery address",
+      "change_items": "I want to change items or quantities",
+      "changed_mind": "I changed my mind",
+      "better_price": "I found a better price",
+      "other": "Other reason",
+      "out_of_stock": "Out of stock",
+      "cannot_contact": "Could not reach the customer",
+      "wrong_price": "Wrong price",
+      "not_confirmed_in_time": "The shop did not confirm in time",
+      "admin": "Cancelled by Nomori"
+    },
+    "cancelNotePlaceholder": "Tell the shop why (up to 500 characters)",
+    "confirmCancel": "Cancel order",
+    "confirmCancelAll": "Cancel whole order",
+    "keepOrder": "Keep order",
+    "cancelledBy": "Cancelled by {{actor}}",
+    "received": "Order received",
+    "reorder": "Buy again",
+    "reorderPartial": "Added to your cart. Could not add: {{names}}.",
+    "reorderNone": "Nothing could be added: {{names}}.",
+    "changedMeanwhile": "The order was just updated. Its new status is shown below.",
+    "errors": {
+      "load": "Could not load orders.",
+      "action": "That did not work. Please try again."
     }
   }
 }

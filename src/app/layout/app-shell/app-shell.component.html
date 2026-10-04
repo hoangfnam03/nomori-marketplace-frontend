@@ -53,9 +53,7 @@
               <div id="account-menu-panel" class="account-panel" role="menu" [attr.aria-label]="t('nav.account.menu')">
                 <a role="menuitem" routerLink="/auth/account" (click)="closeMenu()">{{ t('nav.account.account') }}</a>
                 <a role="menuitem" routerLink="/customer/profile" (click)="closeMenu()">{{ t('nav.account.profile') }}</a>
-                <span role="menuitem" aria-disabled="true" class="disabled">
-                  {{ t('nav.account.orders') }} <span class="soon">{{ t('nav.account.comingSoon') }}</span>
-                </span>
+                <a role="menuitem" routerLink="/customer/orders" (click)="closeMenu()">{{ t('nav.account.orders') }}</a>
                 <hr aria-hidden="true" />
                 <button role="menuitem" type="button" (click)="logout()">{{ t('nav.account.signOut') }}</button>
               </div>

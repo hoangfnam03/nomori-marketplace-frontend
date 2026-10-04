@@ -15,6 +15,10 @@ export const routes: Routes = [
 				loadChildren: () => import('./storefront/storefront.routes').then(route => route.storefrontRoutes)
 			},
 			{
+				path: 'checkout',
+				loadChildren: () => import('./checkout/checkout.routes').then(route => route.checkoutRoutes)
+			},
+			{
 				path: 'customer',
 				loadChildren: () => import('./customer/customer.routes').then(route => route.customerRoutes)
 			},

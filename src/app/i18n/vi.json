@@ -65,7 +65,6 @@
       "guest": "Khách",
       "account": "Tài khoản",
       "orders": "Đơn mua",
-      "comingSoon": "Sắp có",
       "menu": "Menu tài khoản"
     },
     "footer": {
@@ -145,6 +144,16 @@
     "vendor": {
       "platform_shop": "Không thể xóa hoặc tắt shop của sàn.",
       "inactive": "Shop đang bị tắt nên thành viên chưa sửa được. Hãy liên hệ quản trị viên."
+    },
+    "order": {
+      "total_changed": "Tổng tiền vừa thay đổi. Hãy xem lại rồi đặt hàng lần nữa.",
+      "items_unavailable": "Có sản phẩm vừa hết hàng hoặc ngừng bán. Hãy xem lại đơn hàng.",
+      "cart_item_not_found": "Một số sản phẩm không còn trong giỏ hàng (có thể đã được đặt ở một tab khác).",
+      "address_invalid": "Địa chỉ nhận hàng không hợp lệ. Hãy chọn địa chỉ khác."
+    },
+    "store_order": {
+      "invalid_transition": "Không thể thực hiện thao tác này với đơn ở trạng thái hiện tại.",
+      "concurrent_update": "Đơn vừa được người khác cập nhật. Hãy tải lại trang."
     }
   },
   "vendorStatus": {
@@ -390,7 +399,8 @@
         "saveAddress": "Không lưu được địa chỉ.",
         "savePreferences": "Không lưu được tùy chọn.",
         "emailChange": "Không gửi được yêu cầu đổi email.",
-        "loadCountries": "Không tải được danh sách quốc gia."
+        "loadCountries": "Không tải được danh sách quốc gia.",
+        "requiredFields": "Vui lòng điền các ô bắt buộc."
       },
       "choose": "Chọn…"
     }
@@ -537,12 +547,8 @@
       "quantityPrice": "Giá theo số lượng",
       "summaryLabel": "Tóm tắt đơn hàng",
       "summary": "Tóm tắt",
-      "items": "Số sản phẩm",
       "subtotal": "Tạm tính",
       "currencyNote": "Phí vận chuyển và thuế được cộng khi thanh toán. Giá tính bằng {{code}} và bạn luôn thanh toán bằng {{code}}.",
-      "fixLines": "Hãy sửa hoặc bỏ các dòng được đánh dấu ở trên để tiếp tục.",
-      "checkout": "Thanh toán",
-      "checkoutSoon": "Thanh toán là bước tiếp theo của sàn và chưa có ở thời điểm này.",
       "clear": "Xóa giỏ hàng",
       "errors": {
         "load": "Không tải được giỏ hàng."
@@ -555,7 +561,13 @@
         "priceChanged": "Giá đã thay đổi",
         "onlyInStock": "Chỉ còn {{count}} sản phẩm. Hãy giảm số lượng.",
         "priceChangedFrom": "Giá đã đổi từ {{from}} thành {{to}} mỗi sản phẩm."
-      }
+      },
+      "selectAll": "Chọn tất cả ({{count}})",
+      "selectShop": "Chọn mọi sản phẩm của {{name}}",
+      "selectLine": "Chọn {{name}}",
+      "selectedItems": "Đã chọn",
+      "fixSelected": "Có sản phẩm đã chọn không mua được. Bỏ chọn hoặc xóa chúng để tiếp tục.",
+      "buy": "Mua hàng ({{count}})"
     }
   },
   "admin": {
@@ -866,7 +878,8 @@
         "loadShop": "Không tải được shop của bạn.",
         "loadAccount": "Không tải được tài khoản của bạn."
       },
-      "editShop": "Cài đặt shop"
+      "editShop": "Cài đặt shop",
+      "manageOrders": "Quản lý đơn hàng"
     },
     "members": {
       "eyebrow": "Kênh người bán / Thành viên",
@@ -1053,6 +1066,62 @@
       "saved": "Đã lưu thông tin shop.",
       "required": "Ô này là bắt buộc.",
       "locked": "Shop đang bị quản trị viên tắt nên chưa sửa được thông tin. Hãy liên hệ quản trị viên."
+    },
+    "orders": {
+      "title": "Đơn hàng",
+      "lede": "Xác nhận, giao hàng và theo dõi đơn của shop.",
+      "status": {
+        "pending": "Chờ xác nhận",
+        "confirmed": "Chờ giao",
+        "shipped": "Đang giao",
+        "delivered": "Đã giao",
+        "completed": "Hoàn tất",
+        "cancelled": "Đã hủy"
+      },
+      "searchPlaceholder": "Mã đơn, tên hoặc số điện thoại người nhận",
+      "from": "Từ ngày",
+      "to": "Đến ngày",
+      "select": "Chọn",
+      "selectOrder": "Chọn đơn {{number}}",
+      "selected": "Đã chọn {{count}} đơn",
+      "confirmSelected": "Xác nhận các đơn đã chọn",
+      "confirmedCount": "Đã xác nhận {{count}} đơn.",
+      "skippedCount": "{{count}} đơn không còn chờ xác nhận nên được bỏ qua.",
+      "empty": "Không có đơn hàng nào.",
+      "number": "Mã đơn",
+      "placed": "Ngày đặt",
+      "recipient": "Người nhận",
+      "items": "Sản phẩm",
+      "deadline": "Hạn xác nhận",
+      "cod": "COD",
+      "backToList": "Danh sách đơn hàng",
+      "confirmBy": "Cần xác nhận trước {{date}}, nếu không đơn sẽ tự hủy.",
+      "confirm": "Xác nhận đơn",
+      "ship": "Giao cho vận chuyển",
+      "shipTitle": "Thông tin vận chuyển",
+      "carrier": "Đơn vị vận chuyển",
+      "otherCarrier": "Khác",
+      "carrierName": "Tên đơn vị vận chuyển",
+      "trackingNumber": "Mã vận đơn",
+      "handToCarrier": "Đã giao cho vận chuyển",
+      "editShipment": "Sửa mã vận đơn",
+      "markDelivered": "Đã giao thành công",
+      "cancelOrder": "Hủy đơn",
+      "cancelTitle": "Vì sao shop hủy đơn này?",
+      "cancelNote": "Mô tả thêm (bắt buộc khi chọn Lý do khác)",
+      "cancelHint": "Khách sẽ nhận email kèm lý do. Tồn kho của các sản phẩm được hoàn lại.",
+      "customerNote": "Lời nhắn của khách: {{note}}",
+      "confirmedNotice": "Đã xác nhận đơn.",
+      "shippedNotice": "Đã chuyển sang Đang giao. Khách nhận email kèm mã vận đơn.",
+      "shipmentSavedNotice": "Đã lưu thông tin vận chuyển.",
+      "deliveredNotice": "Đã chuyển sang Đã giao.",
+      "cancelledNotice": "Đã hủy đơn và hoàn tồn kho.",
+      "actor": {
+        "customer": "Khách hàng",
+        "vendor": "Shop",
+        "admin": "Nomori",
+        "system": "Hệ thống"
+      }
     }
   },
   "adminVendorApplications": {
@@ -1119,6 +1188,151 @@
       "sendEmail": "Không gửi được email. Hãy thử lại sau.",
       "save": "Không lưu được đơn đăng ký.",
       "cancel": "Không hủy được đơn đăng ký."
+    }
+  },
+  "checkout": {
+    "eyebrow": "Thanh toán",
+    "title": "Thanh toán",
+    "loading": "Đang tải đơn hàng…",
+    "backToCart": "Quay lại giỏ hàng",
+    "address": "Địa chỉ nhận hàng",
+    "noAddress": "Bạn chưa có địa chỉ nào. Thêm một địa chỉ để đặt hàng.",
+    "default": "Mặc định",
+    "addAddress": "Thêm địa chỉ mới",
+    "lineUnavailable": "Sản phẩm này hiện không mua được.",
+    "noteToShop": "Lời nhắn cho shop",
+    "notePlaceholder": "Không bắt buộc, tối đa 500 ký tự",
+    "shipping": "Phí vận chuyển",
+    "free": "Miễn phí",
+    "shopTotal": "Tổng của shop",
+    "payment": "Phương thức thanh toán",
+    "cod": "Thanh toán khi nhận hàng (COD)",
+    "itemsTotal": "Tổng tiền hàng",
+    "shippingTotal": "Tổng phí vận chuyển",
+    "total": "Tổng thanh toán",
+    "place": "Đặt hàng",
+    "placing": "Đang đặt hàng…",
+    "chooseAddress": "Chọn hoặc thêm địa chỉ nhận hàng để đặt hàng.",
+    "totalChanged": "Giá hoặc phí vận chuyển vừa thay đổi. Hãy xem lại tổng tiền mới rồi bấm Đặt hàng lần nữa.",
+    "blocked": {
+      "missing": "Một số sản phẩm không còn trong giỏ hàng.",
+      "ownShop": "Bạn không thể mua sản phẩm của shop mình.",
+      "tooManyShops": "Mỗi đơn chỉ được tối đa 10 shop.",
+      "unavailable": "Một số sản phẩm đã hết hàng hoặc ngừng bán."
+    },
+    "errors": {
+      "load": "Không tải được thông tin thanh toán.",
+      "place": "Không đặt được hàng. Hãy thử lại.",
+      "addresses": "Không tải được sổ địa chỉ."
+    },
+    "success": {
+      "title": "Đặt hàng thành công",
+      "lede": "Cảm ơn bạn. Đơn {{number}} đang chờ shop xác nhận.",
+      "orderNumber": "Mã đơn hàng",
+      "shops": "Số shop",
+      "split": "Đơn được chia thành {{count}} phần, mỗi shop giao riêng.",
+      "viewOrder": "Xem đơn hàng",
+      "viewOrders": "Xem Đơn mua",
+      "continue": "Tiếp tục mua sắm"
+    }
+  },
+  "orders": {
+    "eyebrow": "Tài khoản",
+    "title": "Đơn mua",
+    "tabsLabel": "Lọc theo trạng thái",
+    "tab": {
+      "all": "Tất cả",
+      "pending": "Chờ xác nhận",
+      "confirmed": "Chờ lấy hàng",
+      "shipped": "Đang giao",
+      "delivered": "Đã giao",
+      "cancelled": "Đã hủy"
+    },
+    "searchLabel": "Tìm đơn hàng",
+    "searchPlaceholder": "Tìm theo mã đơn, tên shop hoặc tên sản phẩm",
+    "searchButton": "Tìm",
+    "loading": "Đang tải đơn hàng…",
+    "loadMore": "Xem thêm",
+    "empty": "Bạn chưa có đơn hàng nào.",
+    "noResults": "Không tìm thấy đơn hàng phù hợp.",
+    "shopNow": "Mua sắm ngay",
+    "status": {
+      "pending": "Chờ xác nhận",
+      "confirmed": "Chờ lấy hàng",
+      "shipped": "Đang giao",
+      "delivered": "Đã giao",
+      "completed": "Hoàn thành",
+      "cancelled": "Đã hủy"
+    },
+    "overall": {
+      "processing": "Đang xử lý",
+      "delivered": "Đã giao",
+      "cancelled": "Đã hủy"
+    },
+    "payment": {
+      "pending": "Thanh toán khi nhận hàng",
+      "paid": "Đã thanh toán",
+      "voided": "Không thu tiền (đơn đã hủy)",
+      "refunded": "Đã hoàn tiền"
+    },
+    "actor": {
+      "customer": "Bạn",
+      "vendor": "Shop",
+      "admin": "Nomori",
+      "system": "Hệ thống"
+    },
+    "event": {
+      "pending": "{{actor}} đã đặt hàng",
+      "confirmed": "{{actor}} đã xác nhận đơn",
+      "shipped": "{{actor}} đã giao cho đơn vị vận chuyển",
+      "completed": "Đơn hoàn thành",
+      "cancelled": "{{actor}} đã hủy đơn",
+      "trackingUpdated": "{{actor}} đã cập nhật mã vận đơn",
+      "deliveredBy": {
+        "customer": "{{actor}} xác nhận đã nhận hàng",
+        "vendor": "{{actor}} xác nhận đã giao thành công",
+        "admin": "{{actor}} chuyển đơn sang Đã giao",
+        "system": "Tự động chuyển sang Đã giao (khách không xác nhận trong thời hạn)"
+      },
+      "autoCancelled": "Đơn tự động hủy"
+    },
+    "orderNumber": "Đơn {{number}}",
+    "placedOn": "Đặt lúc {{date}}",
+    "tracking": "Vận chuyển: {{carrier}} · Mã vận đơn {{number}}",
+    "yourNote": "Lời nhắn của bạn: {{note}}",
+    "total": "Thành tiền",
+    "history": "Lịch sử đơn hàng",
+    "viewDetails": "Xem chi tiết",
+    "backToList": "Đơn mua",
+    "cancel": "Hủy đơn",
+    "cancelAll": "Hủy cả đơn",
+    "cancelTitle": "Vì sao bạn muốn hủy đơn này?",
+    "cancelAllTitle": "Hủy mọi phần của đơn hàng. Vì sao bạn muốn hủy?",
+    "cancelReason": {
+      "change_address": "Muốn đổi địa chỉ giao hàng",
+      "change_items": "Muốn đổi sản phẩm hoặc số lượng",
+      "changed_mind": "Đổi ý, không mua nữa",
+      "better_price": "Tìm được giá tốt hơn",
+      "other": "Lý do khác",
+      "out_of_stock": "Hết hàng",
+      "cannot_contact": "Không liên lạc được khách",
+      "wrong_price": "Sai giá",
+      "not_confirmed_in_time": "Shop không xác nhận kịp",
+      "admin": "Nomori hủy đơn"
+    },
+    "cancelNotePlaceholder": "Cho shop biết lý do (tối đa 500 ký tự)",
+    "confirmCancel": "Xác nhận hủy",
+    "confirmCancelAll": "Hủy cả đơn",
+    "keepOrder": "Giữ đơn",
+    "cancelledBy": "{{actor}} đã hủy",
+    "received": "Đã nhận hàng",
+    "reorder": "Mua lại",
+    "reorderPartial": "Đã thêm vào giỏ. Không thêm được: {{names}}.",
+    "reorderNone": "Không thêm được sản phẩm nào: {{names}}.",
+    "changedMeanwhile": "Đơn vừa được cập nhật. Trạng thái mới đã hiện bên dưới.",
+    "errors": {
+      "load": "Không tải được đơn hàng.",
+      "action": "Không thực hiện được. Hãy thử lại."
     }
   }
 }

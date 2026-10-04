@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -50,15 +50,25 @@ const ISSUE_KEY: Record<CartIssue, string> = {
 
       <div class="cart-layout">
         <div class="groups">
+          <label class="select-all">
+            <input type="checkbox" [checked]="allSelected()" [indeterminate]="someSelected() && !allSelected()" (change)="toggleAll()" [disabled]="busy" />
+            {{ t('storefront.cart.selectAll', { count: lineCount() }) }}
+          </label>
           @for (group of view.groups; track group.vendorId) {
             <section class="group" [attr.aria-label]="t('storefront.cart.itemsFrom', { name: group.vendorName ?? t('admin.catalog.shop') })">
               <header class="group-head">
-                <h2>{{ t('storefront.productDetail.soldBy') }} <a [routerLink]="['/storefront/vendors', group.vendorId]">{{ group.vendorName ?? t('admin.catalog.shop') }}</a></h2>
+                <h2>
+                  <input type="checkbox" [checked]="groupSelected(group)" (change)="toggleGroup(group)" [disabled]="busy"
+                    [attr.aria-label]="t('storefront.cart.selectShop', { name: group.vendorName ?? t('admin.catalog.shop') })" />
+                  {{ t('storefront.productDetail.soldBy') }} <a [routerLink]="['/storefront/vendors', group.vendorId]">{{ group.vendorName ?? t('admin.catalog.shop') }}</a>
+                </h2>
                 <span class="muted">{{ t('storefront.cart.subtotalValue', { amount: money(group.subtotal) }) }}</span>
               </header>
 
               @for (line of group.lines; track line.id) {
                 <article class="line" [class.blocked]="isBlocked(line)">
+                  <input type="checkbox" class="pick" [checked]="selected.has(line.id)" (change)="toggleLine(line)" [disabled]="busy"
+                    [attr.aria-label]="t('storefront.cart.selectLine', { name: line.name })" />
                   <a class="thumb" [routerLink]="['/storefront/products', line.productId]" [attr.aria-label]="t('storefront.card.view', { name: line.name })">
                     @if (pictureUrl(line); as url) { <img [src]="url" alt="" loading="lazy" /> } @else { <span class="thumb-empty" aria-hidden="true"></span> }
                   </a>
@@ -102,15 +112,16 @@ const ISSUE_KEY: Record<CartIssue, string> = {
         <aside class="summary" [attr.aria-label]="t('storefront.cart.summaryLabel')">
           <h2>{{ t('storefront.cart.summary') }}</h2>
           <dl>
-            <div><dt>{{ t('storefront.cart.items') }}</dt><dd>{{ view.itemCount }}</dd></div>
-            <div><dt>{{ t('storefront.cart.subtotal') }}</dt><dd>{{ money(view.subtotal) }}</dd></div>
+            <div><dt>{{ t('storefront.cart.selectedItems') }}</dt><dd>{{ selectedUnits() }}</dd></div>
+            <div><dt>{{ t('storefront.cart.subtotal') }}</dt><dd>{{ money(selectedSubtotal()) }}</dd></div>
           </dl>
           <p class="muted note">{{ t('storefront.cart.currencyNote', { code: view.currencyCode }) }}</p>
-          @if (!view.canCheckout) {
-            <p class="issue" role="status">{{ t('storefront.cart.fixLines') }}</p>
+          @if (selectedBlocked()) {
+            <p class="issue" role="status">{{ t('storefront.cart.fixSelected') }}</p>
           }
-          <button type="button" class="primary" disabled>{{ t('storefront.cart.checkout') }}</button>
-          <p class="muted note">{{ t('storefront.cart.checkoutSoon') }}</p>
+          <button type="button" class="primary" (click)="checkout()" [disabled]="!canCheckout()">
+            {{ t('storefront.cart.buy', { count: selected.size }) }}
+          </button>
           <button type="button" class="link" (click)="clear()" [disabled]="busy">{{ t('storefront.cart.clear') }}</button>
         </aside>
       </div>
@@ -130,9 +141,12 @@ const ISSUE_KEY: Record<CartIssue, string> = {
     .cart-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 3rem; align-items: start; padding-bottom: 4rem; }
     .group { border: 1px solid var(--line); margin-bottom: 1.5rem; }
     .group-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .8rem 1rem; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.4); }
-    .group-head h2 { margin: 0; font: 700 1rem var(--display-font); }
+    .group-head h2 { display: flex; align-items: center; gap: .5rem; margin: 0; font: 700 1rem var(--display-font); }
+    .select-all { display: flex; align-items: center; gap: .5rem; margin-bottom: .75rem; font-size: .85rem; color: var(--muted); }
+    input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--green); }
+    .pick { margin-top: .35rem; }
     .group-head a { color: var(--green); }
-    .line { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto auto; gap: 1rem; align-items: start; padding: 1rem; border-bottom: 1px solid var(--line); }
+    .line { display: grid; grid-template-columns: auto 72px minmax(0, 1fr) auto auto; gap: 1rem; align-items: start; padding: 1rem; border-bottom: 1px solid var(--line); }
     .line:last-child { border-bottom: 0; }
     .line.blocked { background: #faf3f1; }
     .thumb { display: block; width: 72px; height: 72px; background: #e4e8df; }
@@ -162,7 +176,7 @@ const ISSUE_KEY: Record<CartIssue, string> = {
     .link:hover { color: #8d3128; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
     @media (max-width: 900px) { .cart-layout { grid-template-columns: 1fr; } .summary { position: static; } }
-    @media (max-width: 600px) { .line { grid-template-columns: 56px minmax(0, 1fr); } .thumb { width: 56px; height: 56px; } .line-qty, .line-price { grid-column: 2; justify-items: start; text-align: left; } }
+    @media (max-width: 600px) { .line { grid-template-columns: auto 56px minmax(0, 1fr); } .thumb { width: 56px; height: 56px; } .line-qty, .line-price { grid-column: 3; justify-items: start; text-align: left; } }
   `]
 })
 export class CartPage implements OnInit {
@@ -171,8 +185,12 @@ export class CartPage implements OnInit {
   private readonly currency = inject(CurrencyService);
   private readonly media = inject(MediaApiService);
   private readonly transloco = inject(TranslocoService);
+  private readonly router = inject(Router);
 
   view: CartView | null = null;
+  /** Lines to buy now. Everything is selected at first; lines left unselected stay in the cart after the order. */
+  selected = new Set<number>();
+  private selectionStarted = false;
   loading = true;
   loadError = '';
   actionError = '';
@@ -226,6 +244,48 @@ export class CartPage implements OnInit {
 
   clear() { this.run(this.api.clear()); }
 
+  // ---- Selection ----
+
+  lineCount() { return this.lines().length; }
+
+  allSelected() { return this.lineCount() > 0 && this.lines().every(l => this.selected.has(l.id)); }
+
+  someSelected() { return this.selected.size > 0; }
+
+  groupSelected(group: CartView['groups'][number]) { return group.lines.every(l => this.selected.has(l.id)); }
+
+  toggleAll() { this.setSelected(this.lines(), !this.allSelected()); }
+
+  toggleGroup(group: CartView['groups'][number]) { this.setSelected(group.lines, !this.groupSelected(group)); }
+
+  toggleLine(line: CartLine) { this.setSelected([line], !this.selected.has(line.id)); }
+
+  selectedLines() { return this.lines().filter(l => this.selected.has(l.id)); }
+
+  selectedUnits() { return this.selectedLines().reduce((sum, l) => sum + l.quantity, 0); }
+
+  selectedSubtotal() { return this.selectedLines().reduce((sum, l) => sum + l.lineTotal, 0); }
+
+  selectedBlocked() { return this.selectedLines().some(l => this.isBlocked(l)); }
+
+  canCheckout() { return !this.busy && this.selected.size > 0 && !this.selectedBlocked(); }
+
+  /** Checkout reads the chosen lines from the address bar, so a refresh keeps the same selection. */
+  checkout() {
+    if (!this.canCheckout()) return;
+    this.router.navigate(['/checkout'], { queryParams: { items: this.selectedLines().map(l => l.id).join(',') } });
+  }
+
+  private lines() { return this.view?.groups.flatMap(g => g.lines) ?? []; }
+
+  private setSelected(lines: CartLine[], on: boolean) {
+    const next = new Set(this.selected);
+    for (const line of lines) {
+      if (on) next.add(line.id); else next.delete(line.id);
+    }
+    this.selected = next;
+  }
+
   private run(request: ReturnType<CartApiService['get']>, lineId?: number, input?: HTMLInputElement, previous?: number) {
     this.busy = true;
     this.actionError = '';
@@ -247,5 +307,9 @@ export class CartPage implements OnInit {
     this.view = view;
     this.lineErrors = {};
     this.cart.publish(view);
+    const ids = view.groups.flatMap(g => g.lines.map(l => l.id));
+    // First load selects everything; later reloads keep the customer's choice and drop lines that left the cart.
+    this.selected = this.selectionStarted ? new Set(ids.filter(id => this.selected.has(id))) : new Set(ids);
+    this.selectionStarted = true;
   }
 }
