@@ -42,6 +42,12 @@ import { OrderStatusBadgeComponent } from '../order-status-badge/order-status-ba
 
       <dl class="totals">
         <div><dt>{{ t('orders.subtotal') }}</dt><dd>{{ money(order.subtotal) }}</dd></div>
+        @if (order.discountAmount > 0) {
+          <div class="discount">
+            <dt>{{ t('orders.discount') }}@if (order.discountFunding) { <span class="muted"> · {{ t('orders.fundedBy.' + order.discountFunding) }}</span> }</dt>
+            <dd>−{{ money(order.discountAmount) }}</dd>
+          </div>
+        }
         <div><dt>{{ t('orders.shipping') }} ({{ order.shippingMethodName }})</dt><dd>{{ money(order.shippingFee) }}</dd></div>
         <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ money(order.total) }}</dd></div>
       </dl>
@@ -86,6 +92,7 @@ import { OrderStatusBadgeComponent } from '../order-status-badge/order-status-ba
     .totals div { display: flex; justify-content: space-between; }
     .totals dt { color: var(--muted); }
     .totals dd { margin: 0; }
+    .discount dd { color: #205e4a; }
     .grand { font-weight: 700; border-top: 1px solid var(--line); padding-top: .4rem; }
     .tracking, .cancel { margin: 0; font-size: .85rem; }
     .cancel { color: #8d3128; }

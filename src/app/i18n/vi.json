@@ -77,7 +77,8 @@
     "currencies": "Tiền tệ",
     "countries": "Quốc gia",
     "payments": "Thanh toán",
-    "orders": "Đơn hàng"
+    "orders": "Đơn hàng",
+    "discounts": "Khuyến mãi"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -165,7 +166,13 @@
     "checkout": {
       "cart_not_ready": "Có thứ trong giỏ hàng không còn mua được như hiện tại. Hãy kiểm tra giỏ hàng.",
       "prices_changed": "Một số giá đã thay đổi. Hãy kiểm tra giỏ hàng và chấp nhận giá mới trước.",
-      "payment_failed": "Thanh toán bị từ chối nên chưa có đơn nào được đặt và không bị trừ tiền. Bạn có thể thử lại hoặc chọn phương thức khác."
+      "payment_failed": "Thanh toán bị từ chối nên chưa có đơn nào được đặt và không bị trừ tiền. Bạn có thể thử lại hoặc chọn phương thức khác.",
+      "coupon_unavailable": "Mã vừa hết lượt dùng ngay trước khi đặt hàng nên chưa có đơn nào. Hãy bỏ mã hoặc thử mã khác."
+    },
+    "discount": {
+      "code_exists": "Mã này đã được khuyến mãi khác dùng. Hãy chọn mã khác.",
+      "limit": "Đã đạt giới hạn số khuyến mãi. Hãy xóa bớt khuyến mãi không cần.",
+      "in_use": "Khuyến mãi này đã được dùng nên không xóa được. Hãy tắt nó đi."
     }
   },
   "vendorStatus": {
@@ -631,11 +638,31 @@
         "shippingNotChosen": "Hãy chọn cách vận chuyển cho từng shop.",
         "shippingInvalid": "Cách vận chuyển đã chọn không dùng được cho địa chỉ này.",
         "paymentRequired": "Hãy chọn phương thức thanh toán.",
-        "paymentInvalid": "Phương thức thanh toán này không dùng được."
+        "paymentInvalid": "Phương thức thanh toán này không dùng được.",
+        "couponInvalid": "Không dùng được mã giảm giá."
       },
       "errors": {
         "load": "Không tải được trang thanh toán.",
         "place": "Không đặt được đơn hàng. Hãy thử lại."
+      },
+      "coupon": {
+        "label": "Mã giảm giá",
+        "placeholder": "Nhập mã",
+        "apply": "Áp dụng",
+        "remove": "Bỏ mã",
+        "applied": "Đã áp dụng mã {{code}}",
+        "platform": "do sàn tài trợ",
+        "shop": "do shop tài trợ",
+        "reasons": {
+          "not_found": "Mã này không tồn tại hoặc không áp dụng cho giỏ hàng của bạn.",
+          "disabled": "Mã này đang tắt.",
+          "not_started": "Mã này chưa có hiệu lực.",
+          "expired": "Mã này đã hết hạn.",
+          "min_subtotal": "Giỏ hàng chưa đạt mức tối thiểu của mã này.",
+          "limit_reached": "Mã này đã hết lượt dùng.",
+          "customer_limit_reached": "Bạn đã dùng mã này đủ số lần cho phép.",
+          "nothing_to_discount": "Mã này không giảm được gì cho giỏ hàng của bạn."
+        }
       }
     }
   },
@@ -1006,7 +1033,8 @@
       },
       "editShop": "Cài đặt shop",
       "manageShipping": "Phí vận chuyển",
-      "manageOrders": "Đơn hàng"
+      "manageOrders": "Đơn hàng",
+      "manageDiscounts": "Khuyến mãi"
     },
     "members": {
       "eyebrow": "Kênh người bán / Thành viên",
@@ -1373,6 +1401,58 @@
       "loadOne": "Không tải được đơn hàng này.",
       "action": "Không thay đổi được đơn hàng.",
       "reasonRequired": "Hãy nhập lý do."
+    },
+    "discount": "Giảm giá",
+    "fundedBy": {
+      "platform": "do sàn chịu",
+      "shop": "do shop chịu"
+    }
+  },
+  "discounts": {
+    "list": "Mã giảm giá",
+    "add": "Khuyến mãi mới",
+    "addHeading": "Khuyến mãi mới",
+    "editHeading": "Sửa khuyến mãi",
+    "emptyShop": "Chưa có khuyến mãi nào. Mã tạo ở đây giảm giá cho sản phẩm của chính shop và shop chịu chi phí.",
+    "emptyPlatform": "Chưa có khuyến mãi của sàn. Mã tạo ở đây áp dụng cho cả giỏ hàng và sàn chịu chi phí.",
+    "code": "Mã",
+    "discount": "Giảm",
+    "validity": "Hiệu lực (giờ địa phương)",
+    "uses": "Lượt dùng",
+    "enabled": "Bật",
+    "disabled": "Tắt",
+    "upTo": "tối đa {{amount}}",
+    "minimum": "tối thiểu {{amount}}",
+    "perCustomerShort": "{{count}} lần mỗi khách",
+    "confirmDelete": "Xác nhận xóa",
+    "fundedByShop": "Do shop tài trợ: chỉ áp dụng cho sản phẩm của shop.",
+    "fundedByPlatform": "Do sàn tài trợ: áp dụng cho cả giỏ hàng.",
+    "name": "Tên",
+    "codeHint": "Chữ, số, \"-\" và \"_\". Khách nhập khi thanh toán; không phân biệt hoa thường.",
+    "type": "Loại",
+    "typePercentage": "Phần trăm",
+    "typeFixed": "Số tiền cố định",
+    "valuePercent": "Phần trăm (%)",
+    "valueAmount": "Số tiền ({{code}})",
+    "cap": "Giảm tối đa ({{code}})",
+    "startsOn": "Bắt đầu (UTC)",
+    "endsOn": "Kết thúc (UTC)",
+    "minSubtotal": "Tổng tiền hàng tối thiểu ({{code}})",
+    "maxUses": "Tổng số lượt dùng",
+    "maxUsesPerCustomer": "Số lượt mỗi khách",
+    "utcNote": "Ngày giờ tính theo UTC. Để trống nếu không giới hạn.",
+    "enabledLabel": "Bật (khách có thể dùng mã này)",
+    "saved": "Đã lưu khuyến mãi.",
+    "vendorTitle": "Khuyến mãi",
+    "vendorLede": "Mã giảm giá do shop chịu chi phí. Chỉ áp dụng cho sản phẩm của shop.",
+    "adminEyebrow": "Quản trị / Khuyến mãi",
+    "adminTitle": "Khuyến mãi",
+    "adminLede": "Mã giảm giá của sàn. Áp dụng cho cả giỏ hàng; sàn chịu chi phí và mỗi đơn con giữ phần của mình.",
+    "errors": {
+      "load": "Không tải được khuyến mãi.",
+      "save": "Không lưu được khuyến mãi.",
+      "delete": "Không xóa được khuyến mãi.",
+      "required": "Hãy nhập tên, mã và giá trị."
     }
   }
 }

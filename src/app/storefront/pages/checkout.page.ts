@@ -23,7 +23,8 @@ const PROBLEM_KEY: Record<CheckoutProblem, string> = {
   shipping_not_chosen: 'storefront.checkout.problems.shippingNotChosen',
   shipping_invalid: 'storefront.checkout.problems.shippingInvalid',
   payment_required: 'storefront.checkout.problems.paymentRequired',
-  payment_invalid: 'storefront.checkout.problems.paymentInvalid'
+  payment_invalid: 'storefront.checkout.problems.paymentInvalid',
+  coupon_invalid: 'storefront.checkout.problems.couponInvalid'
 };
 
 /** Problems that send the customer back to the cart rather than to a field of this page. */
@@ -154,8 +155,30 @@ function newKey(): string {
               }
             </div>
           }
+          <div class="coupon">
+            <label for="coupon">{{ t('storefront.checkout.coupon.label') }}</label>
+            <div class="coupon-row">
+              <input id="coupon" type="text" name="coupon" [(ngModel)]="couponInput" maxlength="32" autocapitalize="characters"
+                [placeholder]="t('storefront.checkout.coupon.placeholder')" (keydown.enter)="applyCoupon()" />
+              @if (appliedCode) {
+                <button type="button" class="secondary" (click)="removeCoupon()" [disabled]="refreshing">{{ t('storefront.checkout.coupon.remove') }}</button>
+              } @else {
+                <button type="button" class="secondary" (click)="applyCoupon()" [disabled]="refreshing || !couponInput.trim()">{{ t('storefront.checkout.coupon.apply') }}</button>
+              }
+            </div>
+            @if (preview.couponReason; as reason) { <p class="issue" role="alert">{{ t('storefront.checkout.coupon.reasons.' + reason) }}</p> }
+            @if (fieldError('couponCode'); as e) { <p class="issue" role="alert">{{ e }}</p> }
+            @if (preview.discount; as discount) {
+              <p class="coupon-ok" role="status">{{ t('storefront.checkout.coupon.applied', { code: discount.code }) }}
+                · {{ discount.funding === 'platform' ? t('storefront.checkout.coupon.platform') : t('storefront.checkout.coupon.shop') }}</p>
+            }
+          </div>
+
           <dl>
             <div><dt>{{ t('storefront.cart.subtotal') }}</dt><dd>{{ money(preview.subtotal) }}</dd></div>
+            @if (preview.discount; as discount) {
+              <div class="discount"><dt>{{ t('orders.discount') }}</dt><dd>−{{ money(discount.amount) }}</dd></div>
+            }
             <div><dt>{{ t('orders.shipping') }}</dt><dd>{{ preview.shippingTotal === null ? '—' : money(preview.shippingTotal) }}</dd></div>
             <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ preview.total === null ? '—' : money(preview.total) }}</dd></div>
           </dl>
@@ -212,6 +235,12 @@ function newKey(): string {
     .grand { border-top: 1px solid var(--line); padding-top: .5rem; font-size: 1.05rem; }
     .note { margin: 0; line-height: 1.5; }
     .terms { display: flex; gap: .5rem; align-items: flex-start; font-size: .85rem; line-height: 1.4; }
+    .coupon { display: grid; gap: .4rem; }
+    .coupon label { font-size: .8rem; color: var(--muted); }
+    .coupon-row { display: flex; gap: .5rem; }
+    .coupon-row input { flex: 1; min-width: 0; border: 1px solid var(--line-strong); padding: .45rem .5rem; background: transparent; color: var(--ink); font: inherit; text-transform: uppercase; }
+    .coupon-ok { margin: 0; color: #205e4a; font-size: .8rem; font-weight: 600; }
+    .discount dd { color: #205e4a; }
     .problems { margin: 0; padding-left: 1.1rem; color: #8d3128; font-size: .8rem; }
     .primary { width: 100%; border: 1px solid var(--ink); padding: .9rem; background: var(--ink); color: var(--paper); font: 700 .95rem inherit; cursor: pointer; }
     .primary:disabled { opacity: .4; cursor: not-allowed; }
@@ -234,6 +263,9 @@ export class CheckoutPage implements OnInit {
   /** The customer's pick per shop (vendor id to rate id). */
   choices: Record<number, number> = {};
   paymentMethod: string | null = null;
+  /** What the customer is typing, and the code that was sent with the last request. */
+  couponInput = '';
+  appliedCode: string | null = null;
   note = '';
   acceptedTerms = false;
 
@@ -275,7 +307,7 @@ export class CheckoutPage implements OnInit {
     return CART_PROBLEMS.find(p => this.hasProblem(p)) ?? null;
   }
 
-  otherProblems(): CheckoutProblem[] { return (this.preview?.problems ?? []).filter(p => !CART_PROBLEMS.includes(p) && p !== 'address_invalid'); }
+  otherProblems(): CheckoutProblem[] { return (this.preview?.problems ?? []).filter(p => !CART_PROBLEMS.includes(p) && p !== 'address_invalid' && p !== 'coupon_invalid'); }
 
   fieldError(name: string) { return this.fieldErrors[name]?.join(' ') ?? ''; }
 
@@ -306,6 +338,22 @@ export class CheckoutPage implements OnInit {
     this.refresh();
   }
 
+  applyCoupon() {
+    const code = this.couponInput.trim().toUpperCase();
+    if (!code) return;
+    this.clearMessages();
+    this.couponInput = code;
+    this.appliedCode = code;
+    this.refresh();
+  }
+
+  removeCoupon() {
+    this.clearMessages();
+    this.appliedCode = null;
+    this.couponInput = '';
+    this.refresh();
+  }
+
   changePayment(method: string) {
     this.clearMessages();
     this.paymentMethod = method;
@@ -318,7 +366,8 @@ export class CheckoutPage implements OnInit {
     this.api.preview({
       addressId: this.addressId,
       shippingChoices: Object.entries(this.choices).map(([vendorId, rateId]) => ({ vendorId: Number(vendorId), rateId })),
-      paymentMethod: this.paymentMethod
+      paymentMethod: this.paymentMethod,
+      couponCode: this.appliedCode
     }).subscribe({
       next: preview => {
         this.refreshing = false;
@@ -345,6 +394,7 @@ export class CheckoutPage implements OnInit {
       addressId: this.addressId,
       shippingChoices: Object.entries(this.choices).map(([vendorId, rateId]) => ({ vendorId: Number(vendorId), rateId })),
       paymentMethod: this.paymentMethod,
+      couponCode: this.appliedCode,
       idempotencyKey: this.key,
       acceptedTerms: this.acceptedTerms,
       note: this.note.trim() || null

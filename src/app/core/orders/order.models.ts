@@ -34,6 +34,7 @@ export interface ShopOrderListItem {
   itemCount: number;
   total: number;
   shippingFee: number;
+  discountAmount: number;
   currencyCode: string;
   paymentMethod: string;
   recipientName: string;
@@ -88,6 +89,9 @@ export interface ShopOrderDetail {
   paymentMethod: string;
   subtotal: number;
   shippingFee: number;
+  /** What the discount took off this shop order; who paid for it is in discountFunding. */
+  discountAmount: number;
+  discountFunding: 'platform' | 'shop' | null;
   total: number;
   shippingMethodName: string;
   carrier: string | null;
@@ -109,6 +113,8 @@ export interface OrderDetail {
   currencyCode: string;
   subtotal: number;
   shippingTotal: number;
+  discountTotal: number;
+  discountCode: string | null;
   total: number;
   status: OverallOrderStatus;
   paymentMethod: string;

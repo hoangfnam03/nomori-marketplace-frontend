@@ -77,7 +77,8 @@
     "currencies": "Currencies",
     "countries": "Countries",
     "payments": "Payments",
-    "orders": "Orders"
+    "orders": "Orders",
+    "discounts": "Discounts"
   },
   "language": {
     "label": "Language",
@@ -165,7 +166,13 @@
     "checkout": {
       "cart_not_ready": "Something in your cart can no longer be bought as it is. Check your cart.",
       "prices_changed": "Some prices changed. Check your cart and accept the new prices first.",
-      "payment_failed": "The payment was refused, so no order was placed and nothing was charged. You can try again or choose another method."
+      "payment_failed": "The payment was refused, so no order was placed and nothing was charged. You can try again or choose another method.",
+      "coupon_unavailable": "The code ran out just before your order was placed, so nothing was ordered. Remove it or try another code."
+    },
+    "discount": {
+      "code_exists": "This code is already used by another discount. Choose a different one.",
+      "limit": "The limit of discounts for this scope is reached. Delete one you do not need.",
+      "in_use": "This discount has been used, so it cannot be deleted. Switch it off instead."
     }
   },
   "vendorStatus": {
@@ -631,11 +638,31 @@
         "shippingNotChosen": "Choose a shipping option for every shop.",
         "shippingInvalid": "A chosen shipping option is not available for this address.",
         "paymentRequired": "Choose a payment method.",
-        "paymentInvalid": "This payment method is not available."
+        "paymentInvalid": "This payment method is not available.",
+        "couponInvalid": "The discount code cannot be used."
       },
       "errors": {
         "load": "Unable to load checkout.",
         "place": "Unable to place the order. Try again."
+      },
+      "coupon": {
+        "label": "Discount code",
+        "placeholder": "Enter a code",
+        "apply": "Apply",
+        "remove": "Remove",
+        "applied": "Code {{code}} applied",
+        "platform": "funded by the marketplace",
+        "shop": "funded by the shop",
+        "reasons": {
+          "not_found": "This code does not exist or does not apply to your cart.",
+          "disabled": "This code is not active.",
+          "not_started": "This code is not valid yet.",
+          "expired": "This code has expired.",
+          "min_subtotal": "Your cart is below the minimum amount for this code.",
+          "limit_reached": "This code has been used up.",
+          "customer_limit_reached": "You have already used this code the allowed number of times.",
+          "nothing_to_discount": "This code gives no discount on your cart."
+        }
       }
     }
   },
@@ -1006,7 +1033,8 @@
       },
       "editShop": "Shop settings",
       "manageShipping": "Shipping rates",
-      "manageOrders": "Orders"
+      "manageOrders": "Orders",
+      "manageDiscounts": "Discounts"
     },
     "members": {
       "eyebrow": "Vendor portal / Members",
@@ -1373,6 +1401,58 @@
       "loadOne": "Unable to load this order.",
       "action": "Unable to change the order.",
       "reasonRequired": "Give a reason."
+    },
+    "discount": "Discount",
+    "fundedBy": {
+      "platform": "paid by the platform",
+      "shop": "paid by the shop"
+    }
+  },
+  "discounts": {
+    "list": "Discount codes",
+    "add": "New discount",
+    "addHeading": "New discount",
+    "editHeading": "Edit discount",
+    "emptyShop": "No discounts yet. A code you create here takes money off your own products, and you pay for it.",
+    "emptyPlatform": "No platform discounts yet. A code you create here applies to the whole cart, and the platform pays for it.",
+    "code": "Code",
+    "discount": "Discount",
+    "validity": "Valid (local time)",
+    "uses": "Uses",
+    "enabled": "On",
+    "disabled": "Off",
+    "upTo": "up to {{amount}}",
+    "minimum": "minimum {{amount}}",
+    "perCustomerShort": "{{count}} per customer",
+    "confirmDelete": "Confirm delete",
+    "fundedByShop": "Funded by your shop: it applies to your products only.",
+    "fundedByPlatform": "Funded by the platform: it applies to the whole cart.",
+    "name": "Name",
+    "codeHint": "Letters, digits, \"-\" and \"_\". Customers type it at checkout; case does not matter.",
+    "type": "Type",
+    "typePercentage": "Percentage",
+    "typeFixed": "Fixed amount",
+    "valuePercent": "Percentage (%)",
+    "valueAmount": "Amount ({{code}})",
+    "cap": "Maximum discount ({{code}})",
+    "startsOn": "Starts (UTC)",
+    "endsOn": "Ends (UTC)",
+    "minSubtotal": "Minimum items total ({{code}})",
+    "maxUses": "Total uses",
+    "maxUsesPerCustomer": "Uses per customer",
+    "utcNote": "Dates are in UTC. Leave a field empty for no limit.",
+    "enabledLabel": "On (customers can use this code)",
+    "saved": "Discount saved.",
+    "vendorTitle": "Discounts",
+    "vendorLede": "Discount codes paid by your shop. They apply to your products only.",
+    "adminEyebrow": "Admin / Discounts",
+    "adminTitle": "Discounts",
+    "adminLede": "Platform discount codes. They apply to the whole cart; the platform pays and each shop order keeps its share.",
+    "errors": {
+      "load": "Unable to load discounts.",
+      "save": "Unable to save the discount.",
+      "delete": "Unable to delete the discount.",
+      "required": "Enter a name, a code and a value."
     }
   }
 }
