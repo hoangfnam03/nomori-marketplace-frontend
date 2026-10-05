@@ -36,6 +36,8 @@ export interface CheckoutPaymentMethod {
   systemName: string;
   displayName: string;
   isOffline: boolean;
+  /** The customer pays on the gateway's own page and comes back. */
+  redirects: boolean;
 }
 
 /** What a code gives: who funds it, how much, and how it falls on each shop of the cart (vendor id to amount). */
@@ -51,6 +53,13 @@ export interface CheckoutDiscount {
 export interface CheckoutTax {
   total: number;
   perShop: Record<number, number>;
+}
+
+/** Whether an order waits for its payment, how the payment stands, and where to pay while it is pending. */
+export interface OrderPaymentInfo {
+  awaitingPayment: boolean;
+  paymentStatus: string | null;
+  redirectUrl: string | null;
 }
 
 /** The cart as priced now, the options for the address and the totals. Every number is the server's. */
@@ -92,5 +101,9 @@ export interface PlacedOrder {
   paymentStatus: string | null;
   /** True when the same key had already made this order. */
   replayed: boolean;
+  /** The order is waiting for its payment: shops cannot see it yet. */
+  awaitingPayment: boolean;
+  /** Where the customer pays, for a method that redirects. */
+  paymentRedirectUrl: string | null;
   shopOrders: { id: number; number: string; vendorId: number; shopName: string; total: number }[];
 }

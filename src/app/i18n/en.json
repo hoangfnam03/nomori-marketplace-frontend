@@ -673,7 +673,8 @@
           "nothing_to_discount": "This code gives no discount on your cart."
         }
       },
-      "taxNote": "Prices are before tax. The tax follows your delivery address."
+      "taxNote": "Prices are before tax. The tax follows your delivery address.",
+      "redirectHint": "you pay on the payment page"
     }
   },
   "admin": {
@@ -987,7 +988,8 @@
         "load": "Unable to load payments.",
         "action": "Unable to change the payment.",
         "refundRange": "Enter an amount above 0 and up to {{max}}."
-      }
+      },
+      "redirect": "Payment page"
     },
     "orders": {
       "eyebrow": "Admin / Orders",
@@ -1444,7 +1446,13 @@
       "view": "View order",
       "emptyTitle": "No orders yet",
       "emptyMessage": "Orders you place show up here, one part for each shop.",
-      "placed": "Thank you! Your order was placed. Each shop prepares its own part."
+      "placed": "Thank you! Your order was placed. Each shop prepares its own part.",
+      "awaitingPayment": "This order is waiting for your payment. Pay on the payment page; the shops start on it once the payment is confirmed.",
+      "confirming": "We are confirming your payment. This can take a moment: refresh in a few seconds, or pay again if you did not finish.",
+      "payNow": "Pay now",
+      "refresh": "Refresh",
+      "paid": "Payment received. Thank you! Each shop prepares its own part.",
+      "awaitingShort": "Awaiting payment"
     },
     "errors": {
       "load": "Unable to load orders.",
@@ -1505,6 +1513,32 @@
       "save": "Unable to save the discount.",
       "delete": "Unable to delete the discount.",
       "required": "Enter a name, a code and a value."
+    }
+  },
+  "payments": {
+    "sandbox": {
+      "tag": "Test gateway: no real money",
+      "title": "Pay for your order",
+      "notFound": "This payment page does not exist.",
+      "hint": "This is a pretend payment page, like the one a real gateway shows. Choose what happens.",
+      "pay": "Pay",
+      "fail": "Fail the payment",
+      "leave": "Back to the shop without paying",
+      "back": "Back to the shop",
+      "alreadyDone": "This payment is already {{status}}.",
+      "status": {
+        "pending": "waiting",
+        "authorized": "authorized",
+        "paid": "paid",
+        "partially_refunded": "partly refunded",
+        "refunded": "refunded",
+        "voided": "cancelled",
+        "failed": "failed"
+      },
+      "errors": {
+        "load": "Unable to load the payment.",
+        "complete": "Unable to finish the payment. Try again."
+      }
     }
   }
 }

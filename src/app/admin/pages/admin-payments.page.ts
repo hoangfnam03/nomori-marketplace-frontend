@@ -44,7 +44,7 @@ const PAGE_SIZE = 20;
                   <td><strong>{{ m.displayName }}</strong> <span class="muted">{{ m.systemName }}</span>
                     @if (!m.registered) { <div class="field-error">{{ t('admin.payments.notRegistered') }}</div> }
                   </td>
-                  <td>{{ m.isOffline ? t('admin.payments.offline') : t('admin.payments.gateway') }}</td>
+                  <td>{{ m.isOffline ? t('admin.payments.offline') : m.redirects ? t('admin.payments.redirect') : t('admin.payments.gateway') }}</td>
                   <td>
                     <label class="check-label">
                       <input type="checkbox" [(ngModel)]="m.enabled" [name]="'enabled-' + m.systemName" [disabled]="!m.registered && !m.enabled" />

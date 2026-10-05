@@ -22,6 +22,7 @@ export interface OrderSummary {
   paymentMethod: string;
   createdOnUtc: string;
   shopOrders: ShopOrderSummary[];
+  awaitingPayment: boolean;
 }
 
 /** One row of a shop's list. It has no customer id or email: a shop only needs to know where to send the parcel. */
@@ -124,6 +125,8 @@ export interface OrderDetail {
   total: number;
   status: OverallOrderStatus;
   paymentMethod: string;
+  /** The customer has not paid yet (a payment on the gateway's page). Shops cannot see the order until it is paid. */
+  awaitingPayment: boolean;
   customerNote: string | null;
   recipient: Recipient;
   createdOnUtc: string;
