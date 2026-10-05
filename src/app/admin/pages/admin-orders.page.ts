@@ -62,7 +62,7 @@ const PAGE_SIZE = 20;
                   <td>{{ o.createdOnUtc | date: 'short' }}</td>
                   <td>{{ shopNames(o) }}</td>
                   <td>{{ money(o.total) }}</td>
-                  <td><app-order-status-badge [status]="o.status" /></td>
+                  <td><app-order-status-badge [status]="o.status" />@if (o.awaitingPayment) { <div class="muted">{{ t('orders.customer.awaitingShort') }}</div> }</td>
                   <td><button type="button" class="btn btn-secondary btn-small" (click)="toggle(o)">{{ opened?.id === o.id ? t('admin.orders.hide') : t('admin.orders.open') }}</button></td>
                 </tr>
                 @if (opened?.id === o.id) {

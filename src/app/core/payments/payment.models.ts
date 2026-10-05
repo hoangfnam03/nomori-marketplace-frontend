@@ -7,6 +7,7 @@ export interface PaymentMethod {
   systemName: string;
   displayName: string;
   isOffline: boolean;
+  redirects: boolean;
   enabled: boolean;
   displayOrder: number;
   registered: boolean;
