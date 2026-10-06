@@ -79,7 +79,8 @@
     "payments": "Payments",
     "orders": "Orders",
     "discounts": "Discounts",
-    "tax": "Tax"
+    "tax": "Tax",
+    "jobs": "Jobs"
   },
   "language": {
     "label": "Language",
@@ -182,6 +183,9 @@
       "default_category": "The default category cannot be deleted: products without a category use it.",
       "rate_exists": "This category already has a rate for this place. Edit that one instead.",
       "rate_limit": "The limit of rates for this category is reached."
+    },
+    "job": {
+      "already_running": "This job is running right now. Wait until it finishes."
     }
   },
   "vendorStatus": {
@@ -990,6 +994,53 @@
         "refundRange": "Enter an amount above 0 and up to {{max}}."
       },
       "redirect": "Payment page"
+    },
+    "jobs": {
+      "eyebrow": "Admin / Jobs",
+      "title": "Background jobs",
+      "lede": "Jobs that clean up and keep the shop consistent, such as cancelling orders that were never paid. Each job runs on its own interval; only one copy of a job runs at a time.",
+      "jobs": "Jobs",
+      "job": "Job",
+      "refresh": "Refresh",
+      "empty": "No jobs are registered yet. They appear a moment after the API starts.",
+      "enabled": "Runs on schedule",
+      "on": "On",
+      "off": "Off",
+      "interval": "Every (minutes)",
+      "intervalLabel": "Interval of {{name}} in minutes",
+      "default": "Default {{minutes}}",
+      "lastRun": "Last run",
+      "nextRun": "Next run",
+      "never": "Never run",
+      "dueNow": "As soon as possible",
+      "runNow": "Run now",
+      "history": "History",
+      "historyOf": "History of {{name}}",
+      "noRuns": "This job has not run yet.",
+      "started": "Started",
+      "trigger": "Started by",
+      "processed": "Done",
+      "failed": "Failed",
+      "note": "Note",
+      "saved": "Saved.",
+      "ran": "Run finished: {{status}}, {{processed}} done, {{failed}} failed.",
+      "triggers": {
+        "schedule": "Schedule",
+        "manual": "Administrator"
+      },
+      "status": {
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "partial": "Partly done",
+        "failed": "Failed"
+      },
+      "errors": {
+        "load": "Unable to load the jobs.",
+        "save": "Unable to save the job.",
+        "run": "Unable to run the job.",
+        "runs": "Unable to load the history.",
+        "interval": "Enter a whole number of minutes from {{min}} to {{max}}."
+      }
     },
     "orders": {
       "eyebrow": "Admin / Orders",

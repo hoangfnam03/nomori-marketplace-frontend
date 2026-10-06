@@ -79,7 +79,8 @@
     "payments": "Thanh toán",
     "orders": "Đơn hàng",
     "discounts": "Khuyến mãi",
-    "tax": "Thuế"
+    "tax": "Thuế",
+    "jobs": "Tác vụ nền"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -182,6 +183,9 @@
       "default_category": "Không xóa được nhóm mặc định: sản phẩm chưa có nhóm sẽ dùng nhóm này.",
       "rate_exists": "Nhóm này đã có thuế suất cho nơi này. Hãy sửa thuế suất đó.",
       "rate_limit": "Đã đạt giới hạn số thuế suất của nhóm này."
+    },
+    "job": {
+      "already_running": "Tác vụ này đang chạy. Hãy đợi nó chạy xong."
     }
   },
   "vendorStatus": {
@@ -990,6 +994,53 @@
         "refundRange": "Nhập số tiền lớn hơn 0 và tối đa {{max}}."
       },
       "redirect": "Trang thanh toán"
+    },
+    "jobs": {
+      "eyebrow": "Quản trị / Tác vụ nền",
+      "title": "Tác vụ nền",
+      "lede": "Các tác vụ dọn dẹp và giữ dữ liệu nhất quán, ví dụ huỷ đơn không bao giờ được thanh toán. Mỗi tác vụ chạy theo chu kỳ riêng; mỗi lúc chỉ có một bản của tác vụ đang chạy.",
+      "jobs": "Tác vụ",
+      "job": "Tác vụ",
+      "refresh": "Tải lại",
+      "empty": "Chưa có tác vụ nào. Chúng sẽ xuất hiện ít phút sau khi API khởi động.",
+      "enabled": "Chạy theo lịch",
+      "on": "Bật",
+      "off": "Tắt",
+      "interval": "Mỗi (phút)",
+      "intervalLabel": "Chu kỳ của {{name}} (phút)",
+      "default": "Mặc định {{minutes}}",
+      "lastRun": "Lần chạy gần nhất",
+      "nextRun": "Lần chạy tiếp",
+      "never": "Chưa chạy",
+      "dueNow": "Sớm nhất có thể",
+      "runNow": "Chạy ngay",
+      "history": "Lịch sử",
+      "historyOf": "Lịch sử của {{name}}",
+      "noRuns": "Tác vụ này chưa chạy lần nào.",
+      "started": "Bắt đầu",
+      "trigger": "Do ai chạy",
+      "processed": "Đã xử lý",
+      "failed": "Lỗi",
+      "note": "Ghi chú",
+      "saved": "Đã lưu.",
+      "ran": "Đã chạy xong: {{status}}, xử lý {{processed}}, lỗi {{failed}}.",
+      "triggers": {
+        "schedule": "Theo lịch",
+        "manual": "Quản trị viên"
+      },
+      "status": {
+        "running": "Đang chạy",
+        "succeeded": "Thành công",
+        "partial": "Xong một phần",
+        "failed": "Thất bại"
+      },
+      "errors": {
+        "load": "Không tải được danh sách tác vụ.",
+        "save": "Không lưu được tác vụ.",
+        "run": "Không chạy được tác vụ.",
+        "runs": "Không tải được lịch sử.",
+        "interval": "Nhập số phút nguyên từ {{min}} đến {{max}}."
+      }
     },
     "orders": {
       "eyebrow": "Quản trị / Đơn hàng",
