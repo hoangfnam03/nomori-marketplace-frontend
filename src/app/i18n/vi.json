@@ -80,7 +80,8 @@
     "orders": "Đơn hàng",
     "discounts": "Khuyến mãi",
     "tax": "Thuế",
-    "jobs": "Tác vụ nền"
+    "jobs": "Tác vụ nền",
+    "emails": "Hàng đợi email"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -186,6 +187,10 @@
     },
     "job": {
       "already_running": "Tác vụ này đang chạy. Hãy đợi nó chạy xong."
+    },
+    "email": {
+      "not_retryable": "Chỉ email gửi lỗi mới được gửi lại.",
+      "busy": "Email này đang được gửi. Hãy thử lại sau giây lát."
     }
   },
   "vendorStatus": {
@@ -1040,6 +1045,38 @@
         "run": "Không chạy được tác vụ.",
         "runs": "Không tải được lịch sử.",
         "interval": "Nhập số phút nguyên từ {{min}} đến {{max}}."
+      }
+    },
+    "emails": {
+      "eyebrow": "Quản trị / Email",
+      "title": "Hàng đợi email",
+      "lede": "Các email sàn gửi cho khách, ví dụ xác nhận đơn hàng. Email được xếp hàng rồi một tác vụ nền gửi đi; gửi lỗi sẽ được thử lại vài lần trước khi đánh dấu thất bại.",
+      "queue": "Hàng đợi",
+      "filterStatus": "Lọc theo trạng thái",
+      "allStatuses": "Mọi trạng thái",
+      "searchPlaceholder": "Địa chỉ, tiêu đề hoặc loại",
+      "empty": "Không có email nào phù hợp.",
+      "created": "Xếp hàng lúc",
+      "to": "Đến",
+      "subject": "Tiêu đề",
+      "attempts": "Lần thử",
+      "nextAttempt": "Thử lại lúc {{time}}",
+      "view": "Xem",
+      "retry": "Gửi lại",
+      "retried": "Email sẽ được gửi lại trong giây lát.",
+      "deleted": "Đã xoá email.",
+      "confirmDelete": "Xoá email \"{{subject}}\"? Nếu đang chờ gửi thì sẽ không được gửi.",
+      "status": {
+        "pending": "Đang chờ",
+        "sending": "Đang gửi",
+        "sent": "Đã gửi",
+        "failed": "Thất bại"
+      },
+      "errors": {
+        "load": "Không tải được danh sách email.",
+        "view": "Không mở được email.",
+        "retry": "Không gửi lại được email.",
+        "delete": "Không xoá được email."
       }
     },
     "orders": {

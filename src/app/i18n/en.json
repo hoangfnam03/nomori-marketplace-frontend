@@ -80,7 +80,8 @@
     "orders": "Orders",
     "discounts": "Discounts",
     "tax": "Tax",
-    "jobs": "Jobs"
+    "jobs": "Jobs",
+    "emails": "Emails"
   },
   "language": {
     "label": "Language",
@@ -186,6 +187,10 @@
     },
     "job": {
       "already_running": "This job is running right now. Wait until it finishes."
+    },
+    "email": {
+      "not_retryable": "Only an email that failed can be sent again.",
+      "busy": "This email is being sent right now. Try again in a moment."
     }
   },
   "vendorStatus": {
@@ -1040,6 +1045,38 @@
         "run": "Unable to run the job.",
         "runs": "Unable to load the history.",
         "interval": "Enter a whole number of minutes from {{min}} to {{max}}."
+      }
+    },
+    "emails": {
+      "eyebrow": "Admin / Emails",
+      "title": "Email queue",
+      "lede": "Emails the shop sends to customers, such as order confirmations. They are queued first and sent by a background job; a failed send is tried again a few times before it is marked failed.",
+      "queue": "Queue",
+      "filterStatus": "Filter by status",
+      "allStatuses": "All statuses",
+      "searchPlaceholder": "Address, subject or kind",
+      "empty": "No emails match.",
+      "created": "Queued",
+      "to": "To",
+      "subject": "Subject",
+      "attempts": "Attempts",
+      "nextAttempt": "Next try {{time}}",
+      "view": "View",
+      "retry": "Send again",
+      "retried": "The email will be sent again shortly.",
+      "deleted": "Email deleted.",
+      "confirmDelete": "Delete the email \"{{subject}}\"? It will not be sent if it is still waiting.",
+      "status": {
+        "pending": "Waiting",
+        "sending": "Sending",
+        "sent": "Sent",
+        "failed": "Failed"
+      },
+      "errors": {
+        "load": "Unable to load the emails.",
+        "view": "Unable to open the email.",
+        "retry": "Unable to send the email again.",
+        "delete": "Unable to delete the email."
       }
     },
     "orders": {
