@@ -39,6 +39,9 @@
       @if (can(codes.jobsManage)) {
         <a routerLink="/admin/jobs" routerLinkActive="active">{{ t('nav.jobs') }}</a>
       }
+      @if (can(codes.emailsManage)) {
+        <a routerLink="/admin/emails" routerLinkActive="active">{{ t('nav.emails') }}</a>
+      }
       @if (can(codes.settingsManage)) {
         <a routerLink="/admin/currencies" routerLinkActive="active">{{ t('nav.currencies') }}</a>
         <a routerLink="/admin/countries" routerLinkActive="active">{{ t('nav.countries') }}</a>

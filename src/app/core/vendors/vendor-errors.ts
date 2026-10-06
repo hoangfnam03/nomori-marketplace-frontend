@@ -13,7 +13,7 @@ const codes = new Set([
   'order.invalid_transition', 'order.placement_conflict',
   'checkout.cart_not_ready', 'checkout.prices_changed', 'checkout.payment_failed', 'checkout.coupon_unavailable',
   'discount.code_exists', 'discount.limit', 'discount.in_use',
-  'job.already_running',
+  'job.already_running', 'email.not_retryable', 'email.busy',
   'tax.category_exists', 'tax.category_limit', 'tax.category_in_use', 'tax.default_category', 'tax.rate_exists', 'tax.rate_limit'
 ]);
 
