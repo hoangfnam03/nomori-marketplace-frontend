@@ -44,6 +44,12 @@ export const adminRoutes: Routes = [
     loadComponent: () => import('./pages/admin-discounts.page').then(page => page.AdminDiscountsPage)
   },
   {
+    path: 'returns',
+    canActivate: [permissionGuard(permissionCodes.ordersManage)],
+    data: { mode: 'admin' },
+    loadComponent: () => import('../shared/pages/returns-manage.page').then(page => page.ReturnsManagePage)
+  },
+  {
     path: 'orders',
     canActivate: [permissionGuard(permissionCodes.ordersManage)],
     loadComponent: () => import('./pages/admin-orders.page').then(page => page.AdminOrdersPage)

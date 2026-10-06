@@ -81,7 +81,9 @@
     "discounts": "Discounts",
     "tax": "Tax",
     "jobs": "Jobs",
-    "emails": "Emails"
+    "emails": "Emails",
+    "returns": "Returns",
+    "vendorReturns": "Returns (shop)"
   },
   "language": {
     "label": "Language",
@@ -184,6 +186,12 @@
       "default_category": "The default category cannot be deleted: products without a category use it.",
       "rate_exists": "This category already has a rate for this place. Edit that one instead.",
       "rate_limit": "The limit of rates for this category is reached."
+    },
+    "return": {
+      "not_eligible": "This order cannot be returned: it was not delivered, or the return period is over.",
+      "invalid_transition": "This return changed in the meantime, so that step is no longer possible. It has been refreshed.",
+      "quantity_exceeded": "You asked to return more of an item than you bought, counting returns that are already open.",
+      "no_refundable_payment": "No paid payment of this order can take this refund. Refund by hand and tick \"refunded outside the system\"."
     },
     "job": {
       "already_running": "This job is running right now. Wait until it finishes."
@@ -1493,6 +1501,87 @@
       "sendEmail": "Unable to send the email. Try again later.",
       "save": "Unable to save the application.",
       "cancel": "Unable to cancel the application."
+    }
+  },
+  "returns": {
+    "forOrder": "order {{number}}",
+    "item": "Item",
+    "bought": "Bought",
+    "returnQuantity": "Return",
+    "returnQuantityOf": "Quantity of {{name}} to return",
+    "reason": "Reason",
+    "chooseReason": "Choose a reason",
+    "yourNote": "Your note",
+    "customerNote": "Note from the customer",
+    "shopNote": "Note from the shop",
+    "refundAmount": "Refund",
+    "refundedOn": "refunded on {{date}}",
+    "restocked": "put back on sale",
+    "status": {
+      "requested": "Waiting for the shop",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "received": "Goods received",
+      "refunded": "Refunded",
+      "withdrawn": "Withdrawn"
+    },
+    "reasons": {
+      "damaged": "Damaged or defective",
+      "wrong_item": "Wrong item",
+      "not_as_described": "Not as described",
+      "changed_mind": "Changed my mind",
+      "other": "Other"
+    },
+    "customer": {
+      "eyebrow": "Account / Returns",
+      "title": "My returns",
+      "lede": "Items you asked to return. Shipping is not refunded.",
+      "toOrders": "Back to my orders",
+      "myReturns": "My returns",
+      "empty": "You have not asked to return anything.",
+      "newTitle": "Return items",
+      "backToOrder": "Back to the order",
+      "requestReturn": "Return items",
+      "submit": "Send return request",
+      "withdraw": "Withdraw request",
+      "withdrawn": "Request withdrawn.",
+      "sendBack": "The shop approved your request. Send the items back; you get your refund once they arrive."
+    },
+    "vendor": {
+      "eyebrow": "Seller center / Returns",
+      "lede": "Return requests from customers of your shop. Approve or reject them, and confirm when the goods came back. The platform sends the refund."
+    },
+    "admin": {
+      "eyebrow": "Admin / Returns",
+      "lede": "Every return of the platform. Decide for a shop when needed, and send the refund once the goods came back."
+    },
+    "manage": {
+      "title": "Return requests",
+      "list": "Returns",
+      "filterStatus": "Filter by status",
+      "allStatuses": "All statuses",
+      "empty": "No returns match.",
+      "note": "Note to the customer (required to reject)",
+      "restock": "Put the items back on sale",
+      "manual": "Refunded outside the system (cash, bank transfer)",
+      "approve": "Approve",
+      "reject": "Reject",
+      "receive": "Goods received",
+      "refund": "Refund",
+      "done": {
+        "approved": "Return approved.",
+        "rejected": "Return rejected.",
+        "received": "Goods marked as received.",
+        "refunded": "Refund recorded."
+      }
+    },
+    "errors": {
+      "load": "Unable to load the returns.",
+      "request": "Unable to send the return request.",
+      "withdraw": "Unable to withdraw the request.",
+      "action": "Unable to do that.",
+      "noItems": "Choose at least one item to return.",
+      "reasonRequired": "Write a reason for the customer."
     }
   },
   "orders": {

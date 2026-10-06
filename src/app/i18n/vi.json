@@ -81,7 +81,9 @@
     "discounts": "Khuyến mãi",
     "tax": "Thuế",
     "jobs": "Tác vụ nền",
-    "emails": "Hàng đợi email"
+    "emails": "Hàng đợi email",
+    "returns": "Trả hàng",
+    "vendorReturns": "Trả hàng (shop)"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -184,6 +186,12 @@
       "default_category": "Không xóa được nhóm mặc định: sản phẩm chưa có nhóm sẽ dùng nhóm này.",
       "rate_exists": "Nhóm này đã có thuế suất cho nơi này. Hãy sửa thuế suất đó.",
       "rate_limit": "Đã đạt giới hạn số thuế suất của nhóm này."
+    },
+    "return": {
+      "not_eligible": "Đơn này không thể trả: chưa giao hàng hoặc đã quá thời hạn trả hàng.",
+      "invalid_transition": "Yêu cầu trả hàng đã thay đổi, nên bước này không còn khả dụng. Dữ liệu đã được tải lại.",
+      "quantity_exceeded": "Bạn yêu cầu trả nhiều hơn số lượng đã mua, tính cả các yêu cầu trả hàng đang mở.",
+      "no_refundable_payment": "Không có khoản thanh toán nào của đơn này có thể hoàn khoản này. Hãy hoàn tiền thủ công và chọn \"đã hoàn ngoài hệ thống\"."
     },
     "job": {
       "already_running": "Tác vụ này đang chạy. Hãy đợi nó chạy xong."
@@ -1493,6 +1501,87 @@
       "sendEmail": "Không gửi được email. Hãy thử lại sau.",
       "save": "Không lưu được đơn đăng ký.",
       "cancel": "Không hủy được đơn đăng ký."
+    }
+  },
+  "returns": {
+    "forOrder": "đơn {{number}}",
+    "item": "Sản phẩm",
+    "bought": "Đã mua",
+    "returnQuantity": "Trả",
+    "returnQuantityOf": "Số lượng {{name}} cần trả",
+    "reason": "Lý do",
+    "chooseReason": "Chọn lý do",
+    "yourNote": "Ghi chú của bạn",
+    "customerNote": "Ghi chú của khách",
+    "shopNote": "Ghi chú từ shop",
+    "refundAmount": "Hoàn tiền",
+    "refundedOn": "đã hoàn ngày {{date}}",
+    "restocked": "đã đưa lại lên bán",
+    "status": {
+      "requested": "Chờ shop xử lý",
+      "approved": "Đã duyệt",
+      "rejected": "Bị từ chối",
+      "received": "Đã nhận hàng",
+      "refunded": "Đã hoàn tiền",
+      "withdrawn": "Đã rút lại"
+    },
+    "reasons": {
+      "damaged": "Hàng hỏng hoặc lỗi",
+      "wrong_item": "Giao sai hàng",
+      "not_as_described": "Không đúng mô tả",
+      "changed_mind": "Đổi ý",
+      "other": "Khác"
+    },
+    "customer": {
+      "eyebrow": "Tài khoản / Trả hàng",
+      "title": "Trả hàng của tôi",
+      "lede": "Các sản phẩm bạn đã yêu cầu trả. Phí vận chuyển không được hoàn.",
+      "toOrders": "Về đơn hàng của tôi",
+      "myReturns": "Trả hàng của tôi",
+      "empty": "Bạn chưa yêu cầu trả hàng nào.",
+      "newTitle": "Trả hàng",
+      "backToOrder": "Về đơn hàng",
+      "requestReturn": "Trả hàng",
+      "submit": "Gửi yêu cầu trả hàng",
+      "withdraw": "Rút lại yêu cầu",
+      "withdrawn": "Đã rút lại yêu cầu.",
+      "sendBack": "Shop đã duyệt yêu cầu. Hãy gửi hàng lại; bạn sẽ được hoàn tiền khi shop nhận được hàng."
+    },
+    "vendor": {
+      "eyebrow": "Kênh người bán / Trả hàng",
+      "lede": "Yêu cầu trả hàng từ khách của shop bạn. Duyệt hoặc từ chối, và xác nhận khi đã nhận lại hàng. Sàn sẽ hoàn tiền."
+    },
+    "admin": {
+      "eyebrow": "Quản trị / Trả hàng",
+      "lede": "Mọi yêu cầu trả hàng của sàn. Có thể quyết định thay shop khi cần, và hoàn tiền sau khi hàng đã về."
+    },
+    "manage": {
+      "title": "Yêu cầu trả hàng",
+      "list": "Trả hàng",
+      "filterStatus": "Lọc theo trạng thái",
+      "allStatuses": "Mọi trạng thái",
+      "empty": "Không có yêu cầu nào phù hợp.",
+      "note": "Ghi chú cho khách (bắt buộc khi từ chối)",
+      "restock": "Đưa hàng lại lên bán",
+      "manual": "Đã hoàn ngoài hệ thống (tiền mặt, chuyển khoản)",
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "receive": "Đã nhận hàng",
+      "refund": "Hoàn tiền",
+      "done": {
+        "approved": "Đã duyệt yêu cầu.",
+        "rejected": "Đã từ chối yêu cầu.",
+        "received": "Đã ghi nhận nhận hàng.",
+        "refunded": "Đã ghi nhận hoàn tiền."
+      }
+    },
+    "errors": {
+      "load": "Không tải được danh sách trả hàng.",
+      "request": "Không gửi được yêu cầu trả hàng.",
+      "withdraw": "Không rút lại được yêu cầu.",
+      "action": "Không thực hiện được thao tác.",
+      "noItems": "Hãy chọn ít nhất một sản phẩm cần trả.",
+      "reasonRequired": "Hãy viết lý do cho khách."
     }
   },
   "orders": {
