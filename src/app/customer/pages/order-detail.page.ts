@@ -79,8 +79,11 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
                 <button type="button" class="secondary" (click)="startCancel(shop)" [disabled]="busy">{{ t('orders.cancelShopOrder') }}</button>
               }
             }
-            @if (shop.status === 'shipped') {
+            @if (shop.status === 'delivered') {
               <button type="button" class="primary" (click)="receive(shop)" [disabled]="busy">{{ t('orders.confirmReceipt') }}</button>
+            }
+            @if (shop.status === 'delivered' || shop.status === 'completed') {
+              <a class="secondary" [routerLink]="['/customer/returns/new', order.id, shop.id]">{{ t('returns.customer.requestReturn') }}</a>
             }
           </app-shop-order-panel>
         }
@@ -127,6 +130,7 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
     button:disabled { opacity: .4; cursor: not-allowed; }
     .primary { background: var(--ink); color: var(--paper); }
     .secondary { background: transparent; color: var(--ink); }
+    a.secondary { border: 1px solid var(--ink); padding: .45rem .9rem; font: 700 .8rem inherit; text-decoration: none; }
     .danger { background: #8d3128; border-color: #8d3128; color: #fff; }
   `]
 })

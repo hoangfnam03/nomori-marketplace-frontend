@@ -20,6 +20,7 @@ const PAGE_SIZE = 10;
     <div class="page">
       <div class="eyebrow">{{ t('orders.customer.eyebrow') }}</div>
       <h1>{{ t('orders.customer.title') }}</h1>
+      <p><a routerLink="/customer/returns">{{ t('returns.customer.myReturns') }}</a></p>
 
       @if (loading) {
         <p class="state">{{ t('common.states.loading') }}</p>
