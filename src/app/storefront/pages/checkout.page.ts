@@ -129,7 +129,7 @@ function newKey(): string {
               @for (m of preview.paymentMethods; track m.systemName) {
                 <label class="option">
                   <input type="radio" name="payment" [value]="m.systemName" [ngModel]="paymentMethod" (ngModelChange)="changePayment($event)" />
-                  <span>{{ m.displayName }}@if (m.isOffline) { <span class="muted"> · {{ t('storefront.checkout.offlineHint') }}</span> }</span>
+                  <span>{{ m.displayName }}@if (m.isOffline) { <span class="muted"> · {{ t('storefront.checkout.offlineHint') }}</span> }@if (m.redirects) { <span class="muted"> · {{ t('storefront.checkout.redirectHint') }}</span> }</span>
                 </label>
               } @empty {
                 <p class="issue" role="status">{{ t('storefront.checkout.noPaymentMethods') }}</p>
@@ -413,6 +413,8 @@ export class CheckoutPage implements OnInit {
         this.placing = false;
         // What was bought left the cart: the header follows.
         this.cart.refreshCount();
+        // A method that redirects: the customer pays on the gateway's page and comes back to the order.
+        if (placed.paymentRedirectUrl) { window.location.assign(placed.paymentRedirectUrl); return; }
         this.router.navigate(['/customer/orders', placed.orderId], { queryParams: { placed: 1 } });
       },
       error: err => {

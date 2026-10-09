@@ -16,7 +16,7 @@ describe('CheckoutPage: buying the chosen lines', () => {
   const preview: CheckoutPreview = {
     cart: { currencyCode: 'USD', groups: [], subtotal: 20, itemCount: 2, canCheckout: true },
     addressId: 3, shops: [{ vendorId: 5, vendorName: 'Shop', subtotal: 20, options: [{ rateId: 1, name: 'Standard', fee: 2, isFree: false, minDays: null, maxDays: null }], chosenRateId: 1, shippingFee: 2 }],
-    paymentMethods: [{ systemName: 'cod', displayName: 'COD', isOffline: true }], paymentMethod: 'cod',
+    paymentMethods: [{ systemName: 'cod', displayName: 'COD', isOffline: true, redirects: false }], paymentMethod: 'cod',
     subtotal: 20, shippingTotal: 2, total: 22, problems: [], canPlace: true, discount: null, couponReason: null, tax: null
   } as CheckoutPreview;
 

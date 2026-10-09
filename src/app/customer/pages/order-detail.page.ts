@@ -6,6 +6,7 @@ import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { OrderStatusBadgeComponent } from '../../shared/components/order-status-badge/order-status-badge.component';
 import { ShopOrderPanelComponent } from '../../shared/components/shop-order-panel/shop-order-panel.component';
 import { CurrencyService } from '../../core/money/currency.service';
+import { CheckoutApiService } from '../../core/checkout/checkout-api.service';
 import { OrderApiService } from '../../core/orders/order-api.service';
 import { OrderDetail, ShopOrderDetail } from '../../core/orders/order.models';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
@@ -27,7 +28,17 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
         <p class="state state-error" role="alert">{{ loadError }}</p>
         <button type="button" class="secondary" (click)="load()">{{ t('common.actions.retry') }}</button>
       } @else if (order) {
-        @if (placed) {
+        @if (order.awaitingPayment) {
+          <div class="banner banner-wait" role="status">
+            <span>{{ returned ? t('orders.customer.confirming') : t('orders.customer.awaitingPayment') }}</span>
+            <span class="row">
+              <button type="button" class="primary" (click)="payNow()" [disabled]="busy">{{ t('orders.customer.payNow') }}</button>
+              <button type="button" class="secondary" (click)="load()" [disabled]="busy">{{ t('orders.customer.refresh') }}</button>
+            </span>
+          </div>
+        } @else if (returned) {
+          <p class="banner banner-ok" role="status">{{ t('orders.customer.paid') }}</p>
+        } @else if (placed) {
           <p class="banner banner-ok" role="status">{{ t('orders.customer.placed') }}</p>
         }
         <div class="head">
@@ -68,12 +79,15 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
                 <button type="button" class="secondary" (click)="startCancel(shop)" [disabled]="busy">{{ t('orders.cancelShopOrder') }}</button>
               }
             }
-            <!-- Once the shop marked it delivered, the customer confirms receipt: the shop order is completed and complaints close. -->
+            <!-- Once the shop marked it delivered, the customer confirms receipt: the shop order is completed (a return can still be asked within the return window). -->
             @if (shop.status === 'delivered') {
               <div class="receipt">
                 <button type="button" class="primary" (click)="receive(shop)" [disabled]="busy">{{ t('orders.confirmReceipt') }}</button>
                 <span class="muted">{{ t('orders.confirmReceiptNote') }}</span>
               </div>
+            }
+            @if (shop.status === 'delivered' || shop.status === 'completed') {
+              <a class="secondary" [routerLink]="['/customer/returns/new', order.id, shop.id]">{{ t('returns.customer.requestReturn') }}</a>
             }
           </app-shop-order-panel>
         }
@@ -107,6 +121,7 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
     .recipient p { margin: 0 0 .5rem; line-height: 1.5; }
     .banner { margin: 0 0 1rem; padding: .8rem 1rem; border-left: 3px solid #b74e3c; background: #f8e9e4; color: #7d3026; font-size: .9rem; }
     .banner-ok { border-color: var(--green); background: #e5f0e9; color: #205e4a; }
+    .banner-wait { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-color: #e3c987; background: #fbf3dc; color: #6b4a00; }
     .totals { margin: 1.5rem 0 0; display: grid; gap: .3rem; max-width: 320px; margin-left: auto; }
     .totals div { display: flex; justify-content: space-between; }
     .totals dt { color: var(--muted); }
@@ -120,11 +135,13 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
     button:disabled { opacity: .4; cursor: not-allowed; }
     .primary { background: var(--ink); color: var(--paper); }
     .secondary { background: transparent; color: var(--ink); }
+    a.secondary { border: 1px solid var(--ink); padding: .45rem .9rem; font: 700 .8rem inherit; text-decoration: none; }
     .danger { background: #8d3128; border-color: #8d3128; color: #fff; }
   `]
 })
 export class OrderDetailPage implements OnInit {
   private readonly api = inject(OrderApiService);
+  private readonly checkout = inject(CheckoutApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly currency = inject(CurrencyService);
   private readonly transloco = inject(TranslocoService);
@@ -139,9 +156,12 @@ export class OrderDetailPage implements OnInit {
   reason = '';
   /** True right after checkout: the page says the order was placed. */
   placed = false;
+  /** True when the gateway sent the customer back here after paying (or not paying). */
+  returned = false;
 
   ngOnInit() {
     this.placed = this.route.snapshot.queryParamMap.get('placed') === '1';
+    this.returned = this.route.snapshot.queryParamMap.get('payment') === 'return';
     this.currency.load();
     this.load();
   }
@@ -160,6 +180,22 @@ export class OrderDetailPage implements OnInit {
         if (err?.status === 404) this.notFound = true;
         else this.loadError = vendorErrorMessage(err, this.transloco.translate('orders.errors.loadOne'));
       }
+    });
+  }
+
+  /** Asks where this order is paid and goes there. The page address is only given while the payment is still pending. */
+  payNow() {
+    if (!this.order) return;
+    this.busy = true;
+    this.actionError = '';
+    this.checkout.paymentStatus(this.order.id).subscribe({
+      next: info => {
+        this.busy = false;
+        if (info.redirectUrl) { window.location.assign(info.redirectUrl); return; }
+        // Nothing to pay any more (it was paid or failed meanwhile): show the order as it is now.
+        this.load();
+      },
+      error: err => { this.busy = false; this.actionError = vendorErrorMessage(err, this.transloco.translate('orders.errors.action')); }
     });
   }
 

@@ -79,7 +79,11 @@
     "payments": "Payments",
     "orders": "Orders",
     "discounts": "Discounts",
-    "tax": "Tax"
+    "tax": "Tax",
+    "jobs": "Jobs",
+    "emails": "Emails",
+    "returns": "Returns",
+    "vendorReturns": "Returns (shop)"
   },
   "language": {
     "label": "Language",
@@ -182,6 +186,19 @@
       "default_category": "The default category cannot be deleted: products without a category use it.",
       "rate_exists": "This category already has a rate for this place. Edit that one instead.",
       "rate_limit": "The limit of rates for this category is reached."
+    },
+    "return": {
+      "not_eligible": "This order cannot be returned: it was not delivered, or the return period is over.",
+      "invalid_transition": "This return changed in the meantime, so that step is no longer possible. It has been refreshed.",
+      "quantity_exceeded": "You asked to return more of an item than you bought, counting returns that are already open.",
+      "no_refundable_payment": "No paid payment of this order can take this refund. Refund by hand and tick \"refunded outside the system\"."
+    },
+    "job": {
+      "already_running": "This job is running right now. Wait until it finishes."
+    },
+    "email": {
+      "not_retryable": "Only an email that failed can be sent again.",
+      "busy": "This email is being sent right now. Try again in a moment."
     }
   },
   "vendorStatus": {
@@ -678,7 +695,8 @@
           "nothing_to_discount": "This code gives no discount on your cart."
         }
       },
-      "taxNote": "Prices are before tax. The tax follows your delivery address."
+      "taxNote": "Prices are before tax. The tax follows your delivery address.",
+      "redirectHint": "you pay on the payment page"
     }
   },
   "admin": {
@@ -992,6 +1010,86 @@
         "load": "Unable to load payments.",
         "action": "Unable to change the payment.",
         "refundRange": "Enter an amount above 0 and up to {{max}}."
+      },
+      "redirect": "Payment page"
+    },
+    "jobs": {
+      "eyebrow": "Admin / Jobs",
+      "title": "Background jobs",
+      "lede": "Jobs that clean up and keep the shop consistent, such as cancelling orders that were never paid. Each job runs on its own interval; only one copy of a job runs at a time.",
+      "jobs": "Jobs",
+      "job": "Job",
+      "refresh": "Refresh",
+      "empty": "No jobs are registered yet. They appear a moment after the API starts.",
+      "enabled": "Runs on schedule",
+      "on": "On",
+      "off": "Off",
+      "interval": "Every (minutes)",
+      "intervalLabel": "Interval of {{name}} in minutes",
+      "default": "Default {{minutes}}",
+      "lastRun": "Last run",
+      "nextRun": "Next run",
+      "never": "Never run",
+      "dueNow": "As soon as possible",
+      "runNow": "Run now",
+      "history": "History",
+      "historyOf": "History of {{name}}",
+      "noRuns": "This job has not run yet.",
+      "started": "Started",
+      "trigger": "Started by",
+      "processed": "Done",
+      "failed": "Failed",
+      "note": "Note",
+      "saved": "Saved.",
+      "ran": "Run finished: {{status}}, {{processed}} done, {{failed}} failed.",
+      "triggers": {
+        "schedule": "Schedule",
+        "manual": "Administrator"
+      },
+      "status": {
+        "running": "Running",
+        "succeeded": "Succeeded",
+        "partial": "Partly done",
+        "failed": "Failed"
+      },
+      "errors": {
+        "load": "Unable to load the jobs.",
+        "save": "Unable to save the job.",
+        "run": "Unable to run the job.",
+        "runs": "Unable to load the history.",
+        "interval": "Enter a whole number of minutes from {{min}} to {{max}}."
+      }
+    },
+    "emails": {
+      "eyebrow": "Admin / Emails",
+      "title": "Email queue",
+      "lede": "Emails the shop sends to customers, such as order confirmations. They are queued first and sent by a background job; a failed send is tried again a few times before it is marked failed.",
+      "queue": "Queue",
+      "filterStatus": "Filter by status",
+      "allStatuses": "All statuses",
+      "searchPlaceholder": "Address, subject or kind",
+      "empty": "No emails match.",
+      "created": "Queued",
+      "to": "To",
+      "subject": "Subject",
+      "attempts": "Attempts",
+      "nextAttempt": "Next try {{time}}",
+      "view": "View",
+      "retry": "Send again",
+      "retried": "The email will be sent again shortly.",
+      "deleted": "Email deleted.",
+      "confirmDelete": "Delete the email \"{{subject}}\"? It will not be sent if it is still waiting.",
+      "status": {
+        "pending": "Waiting",
+        "sending": "Sending",
+        "sent": "Sent",
+        "failed": "Failed"
+      },
+      "errors": {
+        "load": "Unable to load the emails.",
+        "view": "Unable to open the email.",
+        "retry": "Unable to send the email again.",
+        "delete": "Unable to delete the email."
       }
     },
     "orders": {
@@ -1410,6 +1508,87 @@
       "cancel": "Unable to cancel the application."
     }
   },
+  "returns": {
+    "forOrder": "order {{number}}",
+    "item": "Item",
+    "bought": "Bought",
+    "returnQuantity": "Return",
+    "returnQuantityOf": "Quantity of {{name}} to return",
+    "reason": "Reason",
+    "chooseReason": "Choose a reason",
+    "yourNote": "Your note",
+    "customerNote": "Note from the customer",
+    "shopNote": "Note from the shop",
+    "refundAmount": "Refund",
+    "refundedOn": "refunded on {{date}}",
+    "restocked": "put back on sale",
+    "status": {
+      "requested": "Waiting for the shop",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "received": "Goods received",
+      "refunded": "Refunded",
+      "withdrawn": "Withdrawn"
+    },
+    "reasons": {
+      "damaged": "Damaged or defective",
+      "wrong_item": "Wrong item",
+      "not_as_described": "Not as described",
+      "changed_mind": "Changed my mind",
+      "other": "Other"
+    },
+    "customer": {
+      "eyebrow": "Account / Returns",
+      "title": "My returns",
+      "lede": "Items you asked to return. Shipping is not refunded.",
+      "toOrders": "Back to my orders",
+      "myReturns": "My returns",
+      "empty": "You have not asked to return anything.",
+      "newTitle": "Return items",
+      "backToOrder": "Back to the order",
+      "requestReturn": "Return items",
+      "submit": "Send return request",
+      "withdraw": "Withdraw request",
+      "withdrawn": "Request withdrawn.",
+      "sendBack": "The shop approved your request. Send the items back; you get your refund once they arrive."
+    },
+    "vendor": {
+      "eyebrow": "Seller center / Returns",
+      "lede": "Return requests from customers of your shop. Approve or reject them, and confirm when the goods came back. The platform sends the refund."
+    },
+    "admin": {
+      "eyebrow": "Admin / Returns",
+      "lede": "Every return of the platform. Decide for a shop when needed, and send the refund once the goods came back."
+    },
+    "manage": {
+      "title": "Return requests",
+      "list": "Returns",
+      "filterStatus": "Filter by status",
+      "allStatuses": "All statuses",
+      "empty": "No returns match.",
+      "note": "Note to the customer (required to reject)",
+      "restock": "Put the items back on sale",
+      "manual": "Refunded outside the system (cash, bank transfer)",
+      "approve": "Approve",
+      "reject": "Reject",
+      "receive": "Goods received",
+      "refund": "Refund",
+      "done": {
+        "approved": "Return approved.",
+        "rejected": "Return rejected.",
+        "received": "Goods marked as received.",
+        "refunded": "Refund recorded."
+      }
+    },
+    "errors": {
+      "load": "Unable to load the returns.",
+      "request": "Unable to send the return request.",
+      "withdraw": "Unable to withdraw the request.",
+      "action": "Unable to do that.",
+      "noItems": "Choose at least one item to return.",
+      "reasonRequired": "Write a reason for the customer."
+    }
+  },
   "orders": {
     "status": {
       "pending": "Pending",
@@ -1449,7 +1628,13 @@
       "view": "View order",
       "emptyTitle": "No orders yet",
       "emptyMessage": "Orders you place show up here, one part for each shop.",
-      "placed": "Thank you! Your order was placed. Each shop prepares its own part."
+      "placed": "Thank you! Your order was placed. Each shop prepares its own part.",
+      "awaitingPayment": "This order is waiting for your payment. Pay on the payment page; the shops start on it once the payment is confirmed.",
+      "confirming": "We are confirming your payment. This can take a moment: refresh in a few seconds, or pay again if you did not finish.",
+      "payNow": "Pay now",
+      "refresh": "Refresh",
+      "paid": "Payment received. Thank you! Each shop prepares its own part.",
+      "awaitingShort": "Awaiting payment"
     },
     "errors": {
       "load": "Unable to load orders.",
@@ -1464,7 +1649,7 @@
     },
     "tax": "Tax",
     "taxLine": "tax {{rate}}% = {{amount}}",
-    "confirmReceiptNote": "Once you confirm, you can no longer ask for a return or refund for this order."
+    "confirmReceiptNote": "Only confirm once you have all the items. You can still ask for a return within the return window."
   },
   "discounts": {
     "list": "Discount codes",
@@ -1511,6 +1696,32 @@
       "save": "Unable to save the discount.",
       "delete": "Unable to delete the discount.",
       "required": "Enter a name, a code and a value."
+    }
+  },
+  "payments": {
+    "sandbox": {
+      "tag": "Test gateway: no real money",
+      "title": "Pay for your order",
+      "notFound": "This payment page does not exist.",
+      "hint": "This is a pretend payment page, like the one a real gateway shows. Choose what happens.",
+      "pay": "Pay",
+      "fail": "Fail the payment",
+      "leave": "Back to the shop without paying",
+      "back": "Back to the shop",
+      "alreadyDone": "This payment is already {{status}}.",
+      "status": {
+        "pending": "waiting",
+        "authorized": "authorized",
+        "paid": "paid",
+        "partially_refunded": "partly refunded",
+        "refunded": "refunded",
+        "voided": "cancelled",
+        "failed": "failed"
+      },
+      "errors": {
+        "load": "Unable to load the payment.",
+        "complete": "Unable to finish the payment. Try again."
+      }
     }
   }
 }

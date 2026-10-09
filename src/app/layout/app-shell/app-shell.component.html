@@ -11,7 +11,8 @@
       <a routerLink="/storefront/cart" routerLinkActive="active">{{ t('nav.cart') }}@if (cart.count() > 0) { <span class="cart-count" [attr.aria-label]="t('nav.cartItems')">({{ cart.count() }})</span> }</a>
       <a routerLink="/storefront/vendors" routerLinkActive="active">{{ t('nav.vendors') }}</a>
       @if (auth.session()?.vendorId) {
-        <a routerLink="/vendor" routerLinkActive="active">{{ t('nav.vendorPortal') }}</a>
+        <a routerLink="/vendor" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ t('nav.vendorPortal') }}</a>
+        <a routerLink="/vendor/returns" routerLinkActive="active">{{ t('nav.vendorReturns') }}</a>
       }
       @if (can(codes.adminAccess)) {
         <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ t('nav.admin') }}</a>
@@ -35,6 +36,15 @@
       }
       @if (can(codes.paymentsManage)) {
         <a routerLink="/admin/payments" routerLinkActive="active">{{ t('nav.payments') }}</a>
+      }
+      @if (can(codes.jobsManage)) {
+        <a routerLink="/admin/jobs" routerLinkActive="active">{{ t('nav.jobs') }}</a>
+      }
+      @if (can(codes.ordersManage)) {
+        <a routerLink="/admin/returns" routerLinkActive="active">{{ t('nav.returns') }}</a>
+      }
+      @if (can(codes.emailsManage)) {
+        <a routerLink="/admin/emails" routerLinkActive="active">{{ t('nav.emails') }}</a>
       }
       @if (can(codes.settingsManage)) {
         <a routerLink="/admin/currencies" routerLinkActive="active">{{ t('nav.currencies') }}</a>

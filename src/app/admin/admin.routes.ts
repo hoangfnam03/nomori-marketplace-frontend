@@ -44,6 +44,12 @@ export const adminRoutes: Routes = [
     loadComponent: () => import('./pages/admin-discounts.page').then(page => page.AdminDiscountsPage)
   },
   {
+    path: 'returns',
+    canActivate: [permissionGuard(permissionCodes.ordersManage)],
+    data: { mode: 'admin' },
+    loadComponent: () => import('../shared/pages/returns-manage.page').then(page => page.ReturnsManagePage)
+  },
+  {
     path: 'orders',
     canActivate: [permissionGuard(permissionCodes.ordersManage)],
     loadComponent: () => import('./pages/admin-orders.page').then(page => page.AdminOrdersPage)
@@ -52,6 +58,16 @@ export const adminRoutes: Routes = [
     path: 'payments',
     canActivate: [permissionGuard(permissionCodes.paymentsManage)],
     loadComponent: () => import('./pages/admin-payments.page').then(page => page.AdminPaymentsPage)
+  },
+  {
+    path: 'jobs',
+    canActivate: [permissionGuard(permissionCodes.jobsManage)],
+    loadComponent: () => import('./pages/admin-jobs.page').then(page => page.AdminJobsPage)
+  },
+  {
+    path: 'emails',
+    canActivate: [permissionGuard(permissionCodes.emailsManage)],
+    loadComponent: () => import('./pages/admin-emails.page').then(page => page.AdminEmailsPage)
   },
   {
     path: 'attributes',

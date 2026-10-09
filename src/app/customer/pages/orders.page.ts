@@ -20,6 +20,7 @@ const PAGE_SIZE = 10;
     <div class="page">
       <div class="eyebrow">{{ t('orders.customer.eyebrow') }}</div>
       <h1>{{ t('orders.customer.title') }}</h1>
+      <p><a routerLink="/customer/returns">{{ t('returns.customer.myReturns') }}</a></p>
 
       @if (loading) {
         <p class="state">{{ t('common.states.loading') }}</p>
@@ -39,6 +40,7 @@ const PAGE_SIZE = 10;
               </div>
               <div class="right">
                 <strong>{{ money(order.total) }}</strong>
+                @if (order.awaitingPayment) { <span class="wait">{{ t('orders.customer.awaitingShort') }}</span> }
                 <app-order-status-badge [status]="order.status" />
               </div>
             </header>
@@ -75,6 +77,7 @@ const PAGE_SIZE = 10;
     .number { font-weight: 700; color: var(--ink); margin-right: .75rem; }
     .muted { color: var(--muted); font-size: .8rem; }
     .right { display: flex; align-items: center; gap: .75rem; }
+    .wait { font-size: .75rem; font-weight: 700; color: #8a5a00; }
     .secondary { justify-self: start; border: 1px solid var(--ink); padding: .4rem .9rem; background: transparent; color: var(--ink); font: 700 .8rem inherit; cursor: pointer; text-decoration: none; }
     .secondary:disabled { opacity: .4; cursor: not-allowed; }
     .pager { display: flex; justify-content: center; align-items: center; gap: 1rem; margin-top: 1.5rem; }

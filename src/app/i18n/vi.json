@@ -79,7 +79,11 @@
     "payments": "Thanh toán",
     "orders": "Đơn hàng",
     "discounts": "Khuyến mãi",
-    "tax": "Thuế"
+    "tax": "Thuế",
+    "jobs": "Tác vụ nền",
+    "emails": "Hàng đợi email",
+    "returns": "Trả hàng",
+    "vendorReturns": "Trả hàng (shop)"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -182,6 +186,19 @@
       "default_category": "Không xóa được nhóm mặc định: sản phẩm chưa có nhóm sẽ dùng nhóm này.",
       "rate_exists": "Nhóm này đã có thuế suất cho nơi này. Hãy sửa thuế suất đó.",
       "rate_limit": "Đã đạt giới hạn số thuế suất của nhóm này."
+    },
+    "return": {
+      "not_eligible": "Đơn này không thể trả: chưa giao hàng hoặc đã quá thời hạn trả hàng.",
+      "invalid_transition": "Yêu cầu trả hàng đã thay đổi, nên bước này không còn khả dụng. Dữ liệu đã được tải lại.",
+      "quantity_exceeded": "Bạn yêu cầu trả nhiều hơn số lượng đã mua, tính cả các yêu cầu trả hàng đang mở.",
+      "no_refundable_payment": "Không có khoản thanh toán nào của đơn này có thể hoàn khoản này. Hãy hoàn tiền thủ công và chọn \"đã hoàn ngoài hệ thống\"."
+    },
+    "job": {
+      "already_running": "Tác vụ này đang chạy. Hãy đợi nó chạy xong."
+    },
+    "email": {
+      "not_retryable": "Chỉ email gửi lỗi mới được gửi lại.",
+      "busy": "Email này đang được gửi. Hãy thử lại sau giây lát."
     }
   },
   "vendorStatus": {
@@ -678,7 +695,8 @@
           "nothing_to_discount": "Mã này không giảm được gì cho giỏ hàng của bạn."
         }
       },
-      "taxNote": "Giá chưa gồm thuế. Thuế tính theo địa chỉ giao hàng của bạn."
+      "taxNote": "Giá chưa gồm thuế. Thuế tính theo địa chỉ giao hàng của bạn.",
+      "redirectHint": "bạn thanh toán ở trang thanh toán"
     }
   },
   "admin": {
@@ -992,6 +1010,86 @@
         "load": "Không tải được các khoản thanh toán.",
         "action": "Không thay đổi được khoản thanh toán.",
         "refundRange": "Nhập số tiền lớn hơn 0 và tối đa {{max}}."
+      },
+      "redirect": "Trang thanh toán"
+    },
+    "jobs": {
+      "eyebrow": "Quản trị / Tác vụ nền",
+      "title": "Tác vụ nền",
+      "lede": "Các tác vụ dọn dẹp và giữ dữ liệu nhất quán, ví dụ huỷ đơn không bao giờ được thanh toán. Mỗi tác vụ chạy theo chu kỳ riêng; mỗi lúc chỉ có một bản của tác vụ đang chạy.",
+      "jobs": "Tác vụ",
+      "job": "Tác vụ",
+      "refresh": "Tải lại",
+      "empty": "Chưa có tác vụ nào. Chúng sẽ xuất hiện ít phút sau khi API khởi động.",
+      "enabled": "Chạy theo lịch",
+      "on": "Bật",
+      "off": "Tắt",
+      "interval": "Mỗi (phút)",
+      "intervalLabel": "Chu kỳ của {{name}} (phút)",
+      "default": "Mặc định {{minutes}}",
+      "lastRun": "Lần chạy gần nhất",
+      "nextRun": "Lần chạy tiếp",
+      "never": "Chưa chạy",
+      "dueNow": "Sớm nhất có thể",
+      "runNow": "Chạy ngay",
+      "history": "Lịch sử",
+      "historyOf": "Lịch sử của {{name}}",
+      "noRuns": "Tác vụ này chưa chạy lần nào.",
+      "started": "Bắt đầu",
+      "trigger": "Do ai chạy",
+      "processed": "Đã xử lý",
+      "failed": "Lỗi",
+      "note": "Ghi chú",
+      "saved": "Đã lưu.",
+      "ran": "Đã chạy xong: {{status}}, xử lý {{processed}}, lỗi {{failed}}.",
+      "triggers": {
+        "schedule": "Theo lịch",
+        "manual": "Quản trị viên"
+      },
+      "status": {
+        "running": "Đang chạy",
+        "succeeded": "Thành công",
+        "partial": "Xong một phần",
+        "failed": "Thất bại"
+      },
+      "errors": {
+        "load": "Không tải được danh sách tác vụ.",
+        "save": "Không lưu được tác vụ.",
+        "run": "Không chạy được tác vụ.",
+        "runs": "Không tải được lịch sử.",
+        "interval": "Nhập số phút nguyên từ {{min}} đến {{max}}."
+      }
+    },
+    "emails": {
+      "eyebrow": "Quản trị / Email",
+      "title": "Hàng đợi email",
+      "lede": "Các email sàn gửi cho khách, ví dụ xác nhận đơn hàng. Email được xếp hàng rồi một tác vụ nền gửi đi; gửi lỗi sẽ được thử lại vài lần trước khi đánh dấu thất bại.",
+      "queue": "Hàng đợi",
+      "filterStatus": "Lọc theo trạng thái",
+      "allStatuses": "Mọi trạng thái",
+      "searchPlaceholder": "Địa chỉ, tiêu đề hoặc loại",
+      "empty": "Không có email nào phù hợp.",
+      "created": "Xếp hàng lúc",
+      "to": "Đến",
+      "subject": "Tiêu đề",
+      "attempts": "Lần thử",
+      "nextAttempt": "Thử lại lúc {{time}}",
+      "view": "Xem",
+      "retry": "Gửi lại",
+      "retried": "Email sẽ được gửi lại trong giây lát.",
+      "deleted": "Đã xoá email.",
+      "confirmDelete": "Xoá email \"{{subject}}\"? Nếu đang chờ gửi thì sẽ không được gửi.",
+      "status": {
+        "pending": "Đang chờ",
+        "sending": "Đang gửi",
+        "sent": "Đã gửi",
+        "failed": "Thất bại"
+      },
+      "errors": {
+        "load": "Không tải được danh sách email.",
+        "view": "Không mở được email.",
+        "retry": "Không gửi lại được email.",
+        "delete": "Không xoá được email."
       }
     },
     "orders": {
@@ -1410,6 +1508,87 @@
       "cancel": "Không hủy được đơn đăng ký."
     }
   },
+  "returns": {
+    "forOrder": "đơn {{number}}",
+    "item": "Sản phẩm",
+    "bought": "Đã mua",
+    "returnQuantity": "Trả",
+    "returnQuantityOf": "Số lượng {{name}} cần trả",
+    "reason": "Lý do",
+    "chooseReason": "Chọn lý do",
+    "yourNote": "Ghi chú của bạn",
+    "customerNote": "Ghi chú của khách",
+    "shopNote": "Ghi chú từ shop",
+    "refundAmount": "Hoàn tiền",
+    "refundedOn": "đã hoàn ngày {{date}}",
+    "restocked": "đã đưa lại lên bán",
+    "status": {
+      "requested": "Chờ shop xử lý",
+      "approved": "Đã duyệt",
+      "rejected": "Bị từ chối",
+      "received": "Đã nhận hàng",
+      "refunded": "Đã hoàn tiền",
+      "withdrawn": "Đã rút lại"
+    },
+    "reasons": {
+      "damaged": "Hàng hỏng hoặc lỗi",
+      "wrong_item": "Giao sai hàng",
+      "not_as_described": "Không đúng mô tả",
+      "changed_mind": "Đổi ý",
+      "other": "Khác"
+    },
+    "customer": {
+      "eyebrow": "Tài khoản / Trả hàng",
+      "title": "Trả hàng của tôi",
+      "lede": "Các sản phẩm bạn đã yêu cầu trả. Phí vận chuyển không được hoàn.",
+      "toOrders": "Về đơn hàng của tôi",
+      "myReturns": "Trả hàng của tôi",
+      "empty": "Bạn chưa yêu cầu trả hàng nào.",
+      "newTitle": "Trả hàng",
+      "backToOrder": "Về đơn hàng",
+      "requestReturn": "Trả hàng",
+      "submit": "Gửi yêu cầu trả hàng",
+      "withdraw": "Rút lại yêu cầu",
+      "withdrawn": "Đã rút lại yêu cầu.",
+      "sendBack": "Shop đã duyệt yêu cầu. Hãy gửi hàng lại; bạn sẽ được hoàn tiền khi shop nhận được hàng."
+    },
+    "vendor": {
+      "eyebrow": "Kênh người bán / Trả hàng",
+      "lede": "Yêu cầu trả hàng từ khách của shop bạn. Duyệt hoặc từ chối, và xác nhận khi đã nhận lại hàng. Sàn sẽ hoàn tiền."
+    },
+    "admin": {
+      "eyebrow": "Quản trị / Trả hàng",
+      "lede": "Mọi yêu cầu trả hàng của sàn. Có thể quyết định thay shop khi cần, và hoàn tiền sau khi hàng đã về."
+    },
+    "manage": {
+      "title": "Yêu cầu trả hàng",
+      "list": "Trả hàng",
+      "filterStatus": "Lọc theo trạng thái",
+      "allStatuses": "Mọi trạng thái",
+      "empty": "Không có yêu cầu nào phù hợp.",
+      "note": "Ghi chú cho khách (bắt buộc khi từ chối)",
+      "restock": "Đưa hàng lại lên bán",
+      "manual": "Đã hoàn ngoài hệ thống (tiền mặt, chuyển khoản)",
+      "approve": "Duyệt",
+      "reject": "Từ chối",
+      "receive": "Đã nhận hàng",
+      "refund": "Hoàn tiền",
+      "done": {
+        "approved": "Đã duyệt yêu cầu.",
+        "rejected": "Đã từ chối yêu cầu.",
+        "received": "Đã ghi nhận nhận hàng.",
+        "refunded": "Đã ghi nhận hoàn tiền."
+      }
+    },
+    "errors": {
+      "load": "Không tải được danh sách trả hàng.",
+      "request": "Không gửi được yêu cầu trả hàng.",
+      "withdraw": "Không rút lại được yêu cầu.",
+      "action": "Không thực hiện được thao tác.",
+      "noItems": "Hãy chọn ít nhất một sản phẩm cần trả.",
+      "reasonRequired": "Hãy viết lý do cho khách."
+    }
+  },
   "orders": {
     "status": {
       "pending": "Chờ xác nhận",
@@ -1449,7 +1628,13 @@
       "view": "Xem đơn",
       "emptyTitle": "Chưa có đơn hàng",
       "emptyMessage": "Đơn bạn đặt sẽ hiện ở đây, mỗi shop một phần.",
-      "placed": "Cảm ơn bạn! Đơn hàng đã được đặt. Mỗi shop sẽ chuẩn bị phần đơn của mình."
+      "placed": "Cảm ơn bạn! Đơn hàng đã được đặt. Mỗi shop sẽ chuẩn bị phần đơn của mình.",
+      "awaitingPayment": "Đơn hàng đang chờ bạn thanh toán. Hãy thanh toán ở trang thanh toán; các shop sẽ xử lý đơn sau khi thanh toán được xác nhận.",
+      "confirming": "Chúng tôi đang xác nhận thanh toán của bạn. Có thể mất vài giây: hãy làm mới sau ít giây, hoặc thanh toán lại nếu bạn chưa hoàn tất.",
+      "payNow": "Thanh toán ngay",
+      "refresh": "Làm mới",
+      "paid": "Đã nhận thanh toán. Cảm ơn bạn! Mỗi shop sẽ chuẩn bị phần đơn của mình.",
+      "awaitingShort": "Chờ thanh toán"
     },
     "errors": {
       "load": "Không tải được đơn hàng.",
@@ -1464,7 +1649,7 @@
     },
     "tax": "Thuế",
     "taxLine": "thuế {{rate}}% = {{amount}}",
-    "confirmReceiptNote": "Sau khi xác nhận, bạn sẽ không thể yêu cầu trả hàng hoặc hoàn tiền cho đơn này."
+    "confirmReceiptNote": "Chỉ xác nhận khi bạn đã nhận đủ hàng. Bạn vẫn có thể yêu cầu trả hàng trong thời hạn đổi trả."
   },
   "discounts": {
     "list": "Mã giảm giá",
@@ -1511,6 +1696,32 @@
       "save": "Không lưu được khuyến mãi.",
       "delete": "Không xóa được khuyến mãi.",
       "required": "Hãy nhập tên, mã và giá trị."
+    }
+  },
+  "payments": {
+    "sandbox": {
+      "tag": "Cổng thử nghiệm: không có tiền thật",
+      "title": "Thanh toán đơn hàng",
+      "notFound": "Trang thanh toán này không tồn tại.",
+      "hint": "Đây là trang thanh toán giả, giống trang của một cổng thật. Hãy chọn kết quả.",
+      "pay": "Thanh toán",
+      "fail": "Cho thanh toán thất bại",
+      "leave": "Về cửa hàng, không thanh toán",
+      "back": "Về cửa hàng",
+      "alreadyDone": "Khoản thanh toán này đã ở trạng thái: {{status}}.",
+      "status": {
+        "pending": "đang chờ",
+        "authorized": "đã cấp phép",
+        "paid": "đã thanh toán",
+        "partially_refunded": "hoàn một phần",
+        "refunded": "đã hoàn tiền",
+        "voided": "đã hủy",
+        "failed": "thất bại"
+      },
+      "errors": {
+        "load": "Không tải được khoản thanh toán.",
+        "complete": "Không hoàn tất được thanh toán. Hãy thử lại."
+      }
     }
   }
 }
