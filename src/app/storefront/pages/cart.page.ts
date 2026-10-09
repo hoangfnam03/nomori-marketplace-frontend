@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { ShippingEstimateComponent } from '../../shared/components/shipping-estimate/shipping-estimate.component';
@@ -51,15 +51,25 @@ const ISSUE_KEY: Record<CartIssue, string> = {
 
       <div class="cart-layout">
         <div class="groups">
+          <label class="select-all">
+            <input type="checkbox" [checked]="allSelected()" [indeterminate]="selected.size > 0 && !allSelected()" (change)="toggleAll()" [disabled]="busy" />
+            {{ t('storefront.cart.selectAll', { count: lines().length }) }}
+          </label>
           @for (group of view.groups; track group.vendorId) {
             <section class="group" [attr.aria-label]="t('storefront.cart.itemsFrom', { name: group.vendorName ?? t('admin.catalog.shop') })">
               <header class="group-head">
-                <h2>{{ t('storefront.productDetail.soldBy') }} <a [routerLink]="['/storefront/vendors', group.vendorId]">{{ group.vendorName ?? t('admin.catalog.shop') }}</a></h2>
+                <h2>
+                  <input type="checkbox" [checked]="groupSelected(group)" (change)="toggleGroup(group)" [disabled]="busy"
+                    [attr.aria-label]="t('storefront.cart.selectShop', { name: group.vendorName ?? t('admin.catalog.shop') })" />
+                  {{ t('storefront.productDetail.soldBy') }} <a [routerLink]="['/storefront/vendors', group.vendorId]">{{ group.vendorName ?? t('admin.catalog.shop') }}</a>
+                </h2>
                 <span class="muted">{{ t('storefront.cart.subtotalValue', { amount: money(group.subtotal) }) }}</span>
               </header>
 
               @for (line of group.lines; track line.id) {
                 <article class="line" [class.blocked]="isBlocked(line)">
+                  <input type="checkbox" class="pick" [checked]="selected.has(line.id)" (change)="toggleLine(line)" [disabled]="busy"
+                    [attr.aria-label]="t('storefront.cart.selectLine', { name: line.name })" />
                   <a class="thumb" [routerLink]="['/storefront/products', line.productId]" [attr.aria-label]="t('storefront.card.view', { name: line.name })">
                     @if (pictureUrl(line); as url) { <img [src]="url" alt="" loading="lazy" /> } @else { <span class="thumb-empty" aria-hidden="true"></span> }
                   </a>
@@ -80,7 +90,7 @@ const ISSUE_KEY: Record<CartIssue, string> = {
                     <label [attr.for]="'qty-' + line.id" class="sr-only">{{ t('storefront.cart.quantityOf', { name: line.name }) }}</label>
                     <input [id]="'qty-' + line.id" type="number" min="1" max="10000" step="1"
                       [ngModel]="line.quantity" (change)="changeQuantity(line, $event)" [disabled]="busy" />
-                    <button type="button" class="link" (click)="remove(line)" [disabled]="busy">{{ t('media.remove') }}</button>
+                    <button type="button" class="link" (click)="remove(line)" [disabled]="busy">{{ t('vendor.shipping.delete') }}</button>
                   </div>
 
                   <div class="line-price">
@@ -104,18 +114,18 @@ const ISSUE_KEY: Record<CartIssue, string> = {
         <aside class="summary" [attr.aria-label]="t('storefront.cart.summaryLabel')">
           <h2>{{ t('storefront.cart.summary') }}</h2>
           <dl>
-            <div><dt>{{ t('storefront.cart.items') }}</dt><dd>{{ view.itemCount }}</dd></div>
-            <div><dt>{{ t('storefront.cart.subtotal') }}</dt><dd>{{ money(view.subtotal) }}</dd></div>
+            <div><dt>{{ t('storefront.cart.selectedItems') }}</dt><dd>{{ selectedUnits() }}</dd></div>
+            <div><dt>{{ t('storefront.cart.subtotal') }}</dt><dd>{{ money(selectedSubtotal()) }}</dd></div>
           </dl>
           <p class="muted note">{{ t('storefront.cart.currencyNote', { code: view.currencyCode }) }}</p>
-          @if (!view.canCheckout) {
-            <p class="issue" role="status">{{ t('storefront.cart.fixLines') }}</p>
+          @if (selectedBlocked()) {
+            <p class="issue" role="status">{{ t('storefront.cart.fixSelected') }}</p>
+          } @else if (selected.size === 0) {
+            <p class="muted note" role="status">{{ t('storefront.cart.chooseItems') }}</p>
           }
-          @if (view.canCheckout) {
-            <a class="primary" routerLink="/storefront/checkout">{{ t('storefront.cart.checkout') }}</a>
-          } @else {
-            <button type="button" class="primary" disabled>{{ t('storefront.cart.checkout') }}</button>
-          }
+          <button type="button" class="primary" (click)="checkout()" [disabled]="!canCheckout()">
+            {{ t('storefront.cart.buy', { count: selected.size }) }}
+          </button>
           <button type="button" class="link" (click)="clear()" [disabled]="busy">{{ t('storefront.cart.clear') }}</button>
         </aside>
         <app-shipping-estimate [cartKey]="cartKey()" />
@@ -137,9 +147,12 @@ const ISSUE_KEY: Record<CartIssue, string> = {
     .cart-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 3rem; align-items: start; padding-bottom: 4rem; }
     .group { border: 1px solid var(--line); margin-bottom: 1.5rem; }
     .group-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: .8rem 1rem; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.4); }
-    .group-head h2 { margin: 0; font: 700 1rem var(--display-font); }
+    .group-head h2 { display: flex; align-items: center; gap: .5rem; margin: 0; font: 700 1rem var(--display-font); }
+    .select-all { display: flex; align-items: center; gap: .5rem; margin-bottom: .75rem; color: var(--muted); font-size: .85rem; }
+    input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--green); }
+    .pick { margin-top: .35rem; }
     .group-head a { color: var(--green); }
-    .line { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto auto; gap: 1rem; align-items: start; padding: 1rem; border-bottom: 1px solid var(--line); }
+    .line { display: grid; grid-template-columns: auto 72px minmax(0, 1fr) auto auto; gap: 1rem; align-items: start; padding: 1rem; border-bottom: 1px solid var(--line); }
     .line:last-child { border-bottom: 0; }
     .line.blocked { background: #faf3f1; }
     .thumb { display: block; width: 72px; height: 72px; background: #e4e8df; }
@@ -171,7 +184,7 @@ const ISSUE_KEY: Record<CartIssue, string> = {
     .link:hover { color: #8d3128; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
     @media (max-width: 900px) { .cart-layout { grid-template-columns: 1fr; } .side { position: static; } }
-    @media (max-width: 600px) { .line { grid-template-columns: 56px minmax(0, 1fr); } .thumb { width: 56px; height: 56px; } .line-qty, .line-price { grid-column: 2; justify-items: start; text-align: left; } }
+    @media (max-width: 600px) { .line { grid-template-columns: auto 56px minmax(0, 1fr); } .thumb { width: 56px; height: 56px; } .line-qty, .line-price { grid-column: 3; justify-items: start; text-align: left; } }
   `]
 })
 export class CartPage implements OnInit {
@@ -180,8 +193,11 @@ export class CartPage implements OnInit {
   private readonly currency = inject(CurrencyService);
   private readonly media = inject(MediaApiService);
   private readonly transloco = inject(TranslocoService);
+  private readonly router = inject(Router);
 
   view: CartView | null = null;
+  /** Lines to buy now. Nothing is ticked at first; lines left unticked stay in the cart after the order. */
+  selected = new Set<number>();
   loading = true;
   loadError = '';
   actionError = '';
@@ -238,6 +254,45 @@ export class CartPage implements OnInit {
 
   clear() { this.run(this.api.clear()); }
 
+  // ---- Choosing what to buy ----
+
+  lines(): CartLine[] { return this.view?.groups.flatMap(g => g.lines) ?? []; }
+
+  allSelected() { return this.lines().length > 0 && this.lines().every(l => this.selected.has(l.id)); }
+
+  groupSelected(group: CartView['groups'][number]) { return group.lines.every(l => this.selected.has(l.id)); }
+
+  toggleAll() { this.setSelected(this.lines(), !this.allSelected()); }
+
+  toggleGroup(group: CartView['groups'][number]) { this.setSelected(group.lines, !this.groupSelected(group)); }
+
+  toggleLine(line: CartLine) { this.setSelected([line], !this.selected.has(line.id)); }
+
+  selectedLines() { return this.lines().filter(l => this.selected.has(l.id)); }
+
+  selectedUnits() { return this.selectedLines().reduce((sum, l) => sum + l.quantity, 0); }
+
+  selectedSubtotal() { return this.selectedLines().reduce((sum, l) => sum + l.lineTotal, 0); }
+
+  /** A line that cannot be bought only matters when it is ticked. */
+  selectedBlocked() { return this.selectedLines().some(l => this.isBlocked(l)); }
+
+  canCheckout() { return !this.busy && this.selected.size > 0 && !this.selectedBlocked(); }
+
+  /** The chosen lines travel in the address bar, so a refresh of the checkout page keeps them. */
+  checkout() {
+    if (!this.canCheckout()) return;
+    this.router.navigate(['/storefront/checkout'], { queryParams: { items: this.selectedLines().map(l => l.id).join(',') } });
+  }
+
+  private setSelected(lines: CartLine[], on: boolean) {
+    const next = new Set(this.selected);
+    for (const line of lines) {
+      if (on) next.add(line.id); else next.delete(line.id);
+    }
+    this.selected = next;
+  }
+
   private run(request: ReturnType<CartApiService['get']>, lineId?: number, input?: HTMLInputElement, previous?: number) {
     this.busy = true;
     this.actionError = '';
@@ -259,5 +314,7 @@ export class CartPage implements OnInit {
     this.view = view;
     this.lineErrors = {};
     this.cart.publish(view);
+    const ids = view.groups.flatMap(g => g.lines.map(l => l.id));
+    this.selected = new Set(ids.filter(id => this.selected.has(id)));
   }
 }

@@ -79,8 +79,12 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
                 <button type="button" class="secondary" (click)="startCancel(shop)" [disabled]="busy">{{ t('orders.cancelShopOrder') }}</button>
               }
             }
+            <!-- Once the shop marked it delivered, the customer confirms receipt: the shop order is completed (a return can still be asked within the return window). -->
             @if (shop.status === 'delivered') {
-              <button type="button" class="primary" (click)="receive(shop)" [disabled]="busy">{{ t('orders.confirmReceipt') }}</button>
+              <div class="receipt">
+                <button type="button" class="primary" (click)="receive(shop)" [disabled]="busy">{{ t('orders.confirmReceipt') }}</button>
+                <span class="muted">{{ t('orders.confirmReceiptNote') }}</span>
+              </div>
             }
             @if (shop.status === 'delivered' || shop.status === 'completed') {
               <a class="secondary" [routerLink]="['/customer/returns/new', order.id, shop.id]">{{ t('returns.customer.requestReturn') }}</a>
@@ -112,6 +116,7 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
     .state { color: var(--muted); padding: 2rem 0; }
     .state-error { color: #8d3128; }
     .muted { color: var(--muted); font-size: .85rem; }
+    .receipt { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
     .recipient { border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem; }
     .recipient p { margin: 0 0 .5rem; line-height: 1.5; }
     .banner { margin: 0 0 1rem; padding: .8rem 1rem; border-left: 3px solid #b74e3c; background: #f8e9e4; color: #7d3026; font-size: .9rem; }

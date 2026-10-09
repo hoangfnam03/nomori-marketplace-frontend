@@ -7,7 +7,9 @@ export type CheckoutProblem =
   | 'cart_empty' | 'cart_issues' | 'prices_changed'
   | 'address_required' | 'address_invalid'
   | 'shipping_unavailable' | 'shipping_not_chosen' | 'shipping_invalid'
-  | 'payment_required' | 'payment_invalid' | 'coupon_invalid';
+  | 'payment_required' | 'payment_invalid' | 'coupon_invalid'
+  /** A chosen cart line is no longer in the cart (bought from another tab, or removed). */
+  | 'selection_changed';
 
 export interface ShippingChoice {
   vendorId: number;
@@ -20,6 +22,8 @@ export interface CheckoutChoices {
   paymentMethod: string | null;
   /** The code the customer typed, if any. */
   couponCode: string | null;
+  /** The cart lines to buy now; leave out to buy the whole cart. Lines left out stay in the cart. */
+  cartItemIds?: number[] | null;
 }
 
 export interface CheckoutShop {

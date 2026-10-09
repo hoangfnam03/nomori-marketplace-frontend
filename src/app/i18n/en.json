@@ -591,11 +591,8 @@
       "quantityPrice": "Quantity price",
       "summaryLabel": "Order summary",
       "summary": "Summary",
-      "items": "Items",
       "subtotal": "Subtotal",
       "currencyNote": "Shipping and taxes are added at checkout. Prices are in {{code}}; you always pay in {{code}}.",
-      "fixLines": "Fix or remove the lines marked above to continue.",
-      "checkout": "Checkout",
       "clear": "Clear cart",
       "errors": {
         "load": "Unable to load your cart."
@@ -632,7 +629,14 @@
           "load": "Unable to load countries.",
           "estimate": "Unable to estimate shipping. Try again."
         }
-      }
+      },
+      "selectAll": "Select all ({{count}})",
+      "selectShop": "Select every item from {{name}}",
+      "selectLine": "Select {{name}}",
+      "selectedItems": "Selected",
+      "fixSelected": "Some selected items cannot be bought. Unselect or remove them to continue.",
+      "chooseItems": "Choose the items to buy.",
+      "buy": "Check out ({{count}})"
     },
     "checkout": {
       "eyebrow": "Storefront / Checkout",
@@ -665,7 +669,8 @@
         "shippingInvalid": "A chosen shipping option is not available for this address.",
         "paymentRequired": "Choose a payment method.",
         "paymentInvalid": "This payment method is not available.",
-        "couponInvalid": "The discount code cannot be used."
+        "couponInvalid": "The discount code cannot be used.",
+        "selectionChanged": "Some chosen items are no longer in your cart. Go back to the cart and choose again."
       },
       "errors": {
         "load": "Unable to load checkout.",
@@ -1612,7 +1617,7 @@
     "reason": "Reason",
     "cancelShopOrder": "Cancel this order",
     "confirmCancel": "Cancel order",
-    "confirmReceipt": "I received it",
+    "confirmReceipt": "Order received",
     "items": "{{count}} items",
     "pageOf": "Page {{page}} of {{total}}",
     "next": "Next",
@@ -1643,7 +1648,8 @@
       "shop": "paid by the shop"
     },
     "tax": "Tax",
-    "taxLine": "tax {{rate}}% = {{amount}}"
+    "taxLine": "tax {{rate}}% = {{amount}}",
+    "confirmReceiptNote": "Only confirm once you have all the items. You can still ask for a return within the return window."
   },
   "discounts": {
     "list": "Discount codes",

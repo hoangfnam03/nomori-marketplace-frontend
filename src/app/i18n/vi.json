@@ -591,11 +591,8 @@
       "quantityPrice": "Giá theo số lượng",
       "summaryLabel": "Tóm tắt đơn hàng",
       "summary": "Tóm tắt",
-      "items": "Số sản phẩm",
       "subtotal": "Tạm tính",
       "currencyNote": "Phí vận chuyển và thuế được cộng khi thanh toán. Giá tính bằng {{code}} và bạn luôn thanh toán bằng {{code}}.",
-      "fixLines": "Hãy sửa hoặc bỏ các dòng được đánh dấu ở trên để tiếp tục.",
-      "checkout": "Thanh toán",
       "clear": "Xóa giỏ hàng",
       "errors": {
         "load": "Không tải được giỏ hàng."
@@ -632,7 +629,14 @@
           "load": "Không tải được danh sách quốc gia.",
           "estimate": "Không ước tính được phí vận chuyển. Hãy thử lại."
         }
-      }
+      },
+      "selectAll": "Chọn tất cả ({{count}})",
+      "selectShop": "Chọn mọi sản phẩm của {{name}}",
+      "selectLine": "Chọn {{name}}",
+      "selectedItems": "Đã chọn",
+      "fixSelected": "Có sản phẩm đã chọn không mua được. Bỏ chọn hoặc xoá chúng để tiếp tục.",
+      "chooseItems": "Chọn sản phẩm muốn mua.",
+      "buy": "Mua hàng ({{count}})"
     },
     "checkout": {
       "eyebrow": "Cửa hàng / Thanh toán",
@@ -665,7 +669,8 @@
         "shippingInvalid": "Cách vận chuyển đã chọn không dùng được cho địa chỉ này.",
         "paymentRequired": "Hãy chọn phương thức thanh toán.",
         "paymentInvalid": "Phương thức thanh toán này không dùng được.",
-        "couponInvalid": "Không dùng được mã giảm giá."
+        "couponInvalid": "Không dùng được mã giảm giá.",
+        "selectionChanged": "Một số sản phẩm đã chọn không còn trong giỏ hàng. Hãy quay lại giỏ hàng và chọn lại."
       },
       "errors": {
         "load": "Không tải được trang thanh toán.",
@@ -1612,7 +1617,7 @@
     "reason": "Lý do",
     "cancelShopOrder": "Hủy đơn này",
     "confirmCancel": "Hủy đơn",
-    "confirmReceipt": "Tôi đã nhận hàng",
+    "confirmReceipt": "Đã nhận được hàng",
     "items": "{{count}} sản phẩm",
     "pageOf": "Trang {{page}} / {{total}}",
     "next": "Sau",
@@ -1643,7 +1648,8 @@
       "shop": "do shop chịu"
     },
     "tax": "Thuế",
-    "taxLine": "thuế {{rate}}% = {{amount}}"
+    "taxLine": "thuế {{rate}}% = {{amount}}",
+    "confirmReceiptNote": "Chỉ xác nhận khi bạn đã nhận đủ hàng. Bạn vẫn có thể yêu cầu trả hàng trong thời hạn đổi trả."
   },
   "discounts": {
     "list": "Mã giảm giá",

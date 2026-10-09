@@ -160,7 +160,8 @@ interface Chip {
     .eyebrow { color: var(--green); font: 700 .72rem/1 var(--mono-font); letter-spacing: .13em; text-transform: uppercase; }
     h1 { max-width: 760px; margin: 1rem 0 0; font: 700 clamp(2.5rem, 6vw, 5.5rem)/.94 var(--display-font); overflow-wrap: anywhere; }
     .catalog-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 3rem; align-items: start; }
-    .sidebar { border-right: 1px solid var(--line); padding-right: 1.5rem; display: grid; gap: 1.5rem; }
+    /* The filters stay in view under the sticky site header while the products scroll; a long list scrolls on its own. */
+    .sidebar { border-right: 1px solid var(--line); padding-right: 1.5rem; display: grid; gap: 1.5rem; align-content: start; position: sticky; top: 5.5rem; max-height: calc(100vh - 6.5rem); overflow-y: auto; overscroll-behavior: contain; }
     .sidebar-label { color: var(--muted); font: 700 .68rem var(--mono-font); letter-spacing: .12em; text-transform: uppercase; margin-bottom: .75rem; }
     .sidebar-item { display: block; width: 100%; text-align: left; padding: .5rem .6rem; border: none; background: transparent; color: var(--ink); font: inherit; font-size: .9rem; cursor: pointer; border-radius: 2px; }
     .sidebar-item:hover { background: rgba(39,116,93,.08); }
@@ -193,7 +194,7 @@ interface Chip {
     .pagination button { border: 1px solid var(--line-strong); padding: .6rem 1rem; background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
     .pagination button:disabled { opacity: .4; cursor: not-allowed; }
     .pagination-info { color: var(--muted); font: .75rem var(--mono-font); }
-    @media (max-width: 900px) { .catalog-layout { grid-template-columns: 1fr; } .sidebar { border-right: none; border-bottom: 1px solid var(--line); padding-right: 0; padding-bottom: 1rem; } .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 900px) { .catalog-layout { grid-template-columns: 1fr; } .sidebar { position: static; max-height: none; overflow: visible; border-right: none; border-bottom: 1px solid var(--line); padding-right: 0; padding-bottom: 1rem; } .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     @media (max-width: 760px) { .heading-row { grid-template-columns: 1fr; } }
     @media (max-width: 520px) { .product-grid { grid-template-columns: 1fr; } }
     @keyframes rise-in { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }

@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
@@ -24,11 +24,12 @@ const PROBLEM_KEY: Record<CheckoutProblem, string> = {
   shipping_invalid: 'storefront.checkout.problems.shippingInvalid',
   payment_required: 'storefront.checkout.problems.paymentRequired',
   payment_invalid: 'storefront.checkout.problems.paymentInvalid',
-  coupon_invalid: 'storefront.checkout.problems.couponInvalid'
+  coupon_invalid: 'storefront.checkout.problems.couponInvalid',
+  selection_changed: 'storefront.checkout.problems.selectionChanged'
 };
 
 /** Problems that send the customer back to the cart rather than to a field of this page. */
-const CART_PROBLEMS: CheckoutProblem[] = ['cart_empty', 'cart_issues', 'prices_changed'];
+const CART_PROBLEMS: CheckoutProblem[] = ['cart_empty', 'cart_issues', 'prices_changed', 'selection_changed'];
 
 /** A key made once per visit; the same key can only ever make one order. */
 function newKey(): string {
@@ -257,9 +258,12 @@ export class CheckoutPage implements OnInit {
   private readonly cart = inject(CartService);
   private readonly currency = inject(CurrencyService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly transloco = inject(TranslocoService);
 
   preview: CheckoutPreview | null = null;
+  /** The cart lines chosen in the cart (?items=1,2,3); empty buys the whole cart. */
+  cartItemIds: number[] = [];
   addresses: CustomerAddress[] = [];
   addressId: number | null = null;
   /** The customer's pick per shop (vendor id to rate id). */
@@ -283,6 +287,8 @@ export class CheckoutPage implements OnInit {
 
   ngOnInit() {
     this.currency.load();
+    this.cartItemIds = (this.route.snapshot.queryParamMap.get('items') ?? '')
+      .split(',').map(Number).filter(id => Number.isInteger(id) && id > 0);
     this.start();
   }
 
@@ -369,7 +375,8 @@ export class CheckoutPage implements OnInit {
       addressId: this.addressId,
       shippingChoices: Object.entries(this.choices).map(([vendorId, rateId]) => ({ vendorId: Number(vendorId), rateId })),
       paymentMethod: this.paymentMethod,
-      couponCode: this.appliedCode
+      couponCode: this.appliedCode,
+      cartItemIds: this.cartItemIds.length ? this.cartItemIds : null
     }).subscribe({
       next: preview => {
         this.refreshing = false;
@@ -397,13 +404,14 @@ export class CheckoutPage implements OnInit {
       shippingChoices: Object.entries(this.choices).map(([vendorId, rateId]) => ({ vendorId: Number(vendorId), rateId })),
       paymentMethod: this.paymentMethod,
       couponCode: this.appliedCode,
+      cartItemIds: this.cartItemIds.length ? this.cartItemIds : null,
       idempotencyKey: this.key,
       acceptedTerms: this.acceptedTerms,
       note: this.note.trim() || null
     }).subscribe({
       next: placed => {
         this.placing = false;
-        // The cart is empty now: the header follows.
+        // What was bought left the cart: the header follows.
         this.cart.refreshCount();
         // A method that redirects: the customer pays on the gateway's page and comes back to the order.
         if (placed.paymentRedirectUrl) { window.location.assign(placed.paymentRedirectUrl); return; }
