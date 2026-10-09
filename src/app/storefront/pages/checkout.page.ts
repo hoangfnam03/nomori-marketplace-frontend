@@ -1,4 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, ElementRef, inject, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -6,7 +7,7 @@ import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcru
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { CartService } from '../../core/cart/cart.service';
 import { CheckoutApiService } from '../../core/checkout/checkout-api.service';
-import { CheckoutPreview, CheckoutProblem, CheckoutShop } from '../../core/checkout/checkout.models';
+import { CheckoutCoupon, CheckoutPreview, CheckoutProblem, CheckoutShop } from '../../core/checkout/checkout.models';
 import { CustomerAccountDataApiService, CustomerAddress } from '../../core/customer/customer-account-data-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
 import { ShippingOption } from '../../core/shipping/shipping.models';
@@ -43,7 +44,7 @@ function newKey(): string {
  */
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, EmptyStateComponent, FormsModule, RouterLink, TranslocoDirective],
+  imports: [BreadcrumbComponent, DatePipe, EmptyStateComponent, FormsModule, RouterLink, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
     <div class="page-heading">
@@ -173,7 +174,67 @@ function newKey(): string {
               <p class="coupon-ok" role="status">{{ t('storefront.checkout.coupon.applied', { code: discount.code }) }}
                 · {{ discount.funding === 'platform' ? t('storefront.checkout.coupon.platform') : t('storefront.checkout.coupon.shop') }}</p>
             }
+            <!-- The codes open in a dialog, so the summary stays short however many codes there are. -->
+            <button type="button" class="offers-open" (click)="openCoupons()" [disabled]="refreshing">
+              <span>{{ t('storefront.checkout.coupon.choose') }}</span>
+              <span class="muted">{{ usableCoupons() ? t('storefront.checkout.coupon.usableCount', { count: usableCoupons() }) : t('storefront.checkout.coupon.noneUsable') }} ›</span>
+            </button>
           </div>
+
+          <!--
+            Every code for these lines. A usable code is ticked with its radio, then "Use code" applies it. One code per order for now: once one is
+            ticked the others are disabled (untick it to choose another), so several kinds of code (shipping, for example) can be added later.
+          -->
+          <dialog #couponDialog class="coupon-dialog" [attr.aria-label]="t('storefront.checkout.coupon.available')" (click)="closeOnBackdrop($event)">
+            <div class="dialog-head">
+              <h3>{{ t('storefront.checkout.coupon.available') }}</h3>
+              <button type="button" class="dialog-close" (click)="closeCoupons()" [attr.aria-label]="t('storefront.checkout.coupon.close')">×</button>
+            </div>
+            <div class="dialog-body">
+              @if (preview.coupons.length) {
+                <p class="muted offers-hint">{{ t('storefront.checkout.coupon.oneCode') }}</p>
+                <ul class="offers">
+                  @for (offer of preview.coupons; track offer.code) {
+                    <li>
+                      <label class="offer" [class.picked]="offer.code === pendingCode" [class.disabled]="!canTick(offer)">
+                        <input type="radio" name="couponOffer" [value]="offer.code" [checked]="offer.code === pendingCode" [disabled]="!canTick(offer)"
+                          (click)="tick(offer)" />
+                        <span class="offer-text">
+                          <span class="offer-head">
+                            <strong class="offer-code">{{ offer.code }}</strong>
+                            @if (offer.amount !== null) { <span class="offer-amount">−{{ money(offer.amount) }}</span> }
+                          </span>
+                          <span class="offer-what">{{ offerSummary(offer) }} · {{ offerScope(offer) }}</span>
+                          <span class="offer-terms muted">
+                            @if (offer.minSubtotal !== null) { {{ t('storefront.checkout.coupon.minSubtotal', { amount: money(offer.minSubtotal) }) }} }
+                            @if (offer.minSubtotal !== null && offer.endsOnUtc) { · }
+                            @if (offer.endsOnUtc) { {{ t('storefront.checkout.coupon.endsOn', { date: (offer.endsOnUtc | date: 'dd/MM/yyyy HH:mm') }) }} }
+                          </span>
+                          @if (offer.code === appliedCode && offer.amount !== null) {
+                            <span class="offer-state">{{ t('storefront.checkout.coupon.inUse') }}</span>
+                          } @else if (offer.reason) {
+                            <span class="offer-reason">
+                              @switch (offer.reason) {
+                                @case ('min_subtotal') { {{ t('storefront.checkout.coupon.shortfall', { amount: money(offer.shortfall ?? 0) }) }} }
+                                @case ('not_started') { {{ t('storefront.checkout.coupon.startsOn', { date: (offer.startsOnUtc | date: 'dd/MM/yyyy HH:mm') }) }} }
+                                @default { {{ t('storefront.checkout.coupon.reasons.' + offer.reason) }} }
+                              }
+                            </span>
+                          }
+                        </span>
+                      </label>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="muted offers-none">{{ t('storefront.checkout.coupon.none') }}</p>
+              }
+            </div>
+            <div class="dialog-foot">
+              <button type="button" class="secondary" (click)="closeCoupons()">{{ t('storefront.checkout.coupon.back') }}</button>
+              <button type="button" class="primary use-code" (click)="useCode()" [disabled]="refreshing || pendingCode === appliedCode">{{ t('storefront.checkout.coupon.use') }}</button>
+            </div>
+          </dialog>
 
           <dl>
             <div><dt>{{ t('storefront.cart.subtotal') }}</dt><dd>{{ money(preview.subtotal) }}</dd></div>
@@ -243,6 +304,29 @@ function newKey(): string {
     .coupon-row { display: flex; gap: .5rem; }
     .coupon-row input { flex: 1; min-width: 0; border: 1px solid var(--line-strong); padding: .45rem .5rem; background: transparent; color: var(--ink); font: inherit; text-transform: uppercase; }
     .coupon-ok { margin: 0; color: #205e4a; font-size: .8rem; font-weight: 600; }
+    .offers-open { display: flex; justify-content: space-between; align-items: center; gap: .5rem; width: 100%; margin-top: .2rem; padding: .5rem .6rem; border: 1px dashed var(--line-strong); background: transparent; color: var(--ink); font: inherit; font-size: .82rem; cursor: pointer; text-align: left; }
+    .offers-open:hover:not(:disabled) { border-color: var(--green); }
+    .coupon-dialog { width: min(480px, calc(100vw - 2rem)); max-height: min(640px, calc(100vh - 4rem)); padding: 0; border: 1px solid var(--line-strong); background: var(--paper); color: var(--ink); }
+    .coupon-dialog[open] { display: flex; flex-direction: column; }
+    .coupon-dialog::backdrop { background: rgba(31,37,32,.45); }
+    .dialog-head { display: flex; justify-content: space-between; align-items: center; padding: .85rem 1rem; border-bottom: 1px solid var(--line); }
+    .dialog-head h3 { margin: 0; font-size: 1rem; }
+    .dialog-close { border: none; background: transparent; color: var(--ink); font-size: 1.4rem; line-height: 1; cursor: pointer; }
+    .dialog-body { padding: .85rem 1rem 1rem; overflow-y: auto; }
+    .offers-none { margin: 0; font-size: .85rem; }
+    .offers { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+    .offer { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .65rem; align-items: start; padding: .6rem .7rem; border: 1px dashed var(--line-strong); font-size: .8rem; cursor: pointer; }
+    .offer input { margin: .15rem 0 0; accent-color: var(--green); }
+    .offer-text { display: grid; gap: .15rem; }
+    .offer:hover:not(.disabled) { border-color: var(--green); background: rgba(39,116,93,.05); }
+    .offer.picked { border-style: solid; border-color: var(--green); background: rgba(39,116,93,.08); }
+    .offer.disabled { cursor: not-allowed; opacity: .55; }
+    .offers-hint { margin: 0 0 .6rem; font-size: .78rem; }
+    .dialog-foot { display: flex; justify-content: flex-end; gap: .5rem; padding: .75rem 1rem; border-top: 1px solid var(--line); }
+    .offer-head { display: flex; justify-content: space-between; gap: .5rem; }
+    .offer-code { font-family: var(--mono-font); letter-spacing: .04em; }
+    .offer-amount, .offer-state { color: #205e4a; font-weight: 600; }
+    .offer-reason { color: #9a3b26; }
     .discount dd { color: #205e4a; }
     .problems { margin: 0; padding-left: 1.1rem; color: #8d3128; font-size: .8rem; }
     .primary { width: 100%; border: 1px solid var(--ink); padding: .9rem; background: var(--ink); color: var(--paper); font: 700 .95rem inherit; cursor: pointer; }
@@ -260,6 +344,7 @@ export class CheckoutPage implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly transloco = inject(TranslocoService);
+  @ViewChild('couponDialog') private couponDialog?: ElementRef<HTMLDialogElement>;
 
   preview: CheckoutPreview | null = null;
   /** The cart lines chosen in the cart (?items=1,2,3); empty buys the whole cart. */
@@ -353,6 +438,56 @@ export class CheckoutPage implements OnInit {
     this.couponInput = code;
     this.appliedCode = code;
     this.refresh();
+  }
+
+  usableCoupons() { return this.preview?.coupons.filter(c => c.amount !== null).length ?? 0; }
+
+  /** The code ticked in the dialog, not yet used. The dialog opens with the code in use ticked. */
+  pendingCode: string | null = null;
+
+  openCoupons() {
+    const applied = this.preview?.coupons.find(c => c.code === this.appliedCode && c.amount !== null);
+    this.pendingCode = applied?.code ?? null;
+    this.couponDialog?.nativeElement.showModal();
+  }
+
+  /** Usable, and no other code is ticked: one code per order for now. */
+  canTick(offer: CheckoutCoupon) { return offer.amount !== null && (this.pendingCode === null || this.pendingCode === offer.code); }
+
+  /** Ticking the ticked code again unticks it, so another one can be chosen. */
+  tick(offer: CheckoutCoupon) {
+    if (!this.canTick(offer)) return;
+    this.pendingCode = this.pendingCode === offer.code ? null : offer.code;
+  }
+
+  /** Uses the ticked code (or takes the code off when nothing is ticked) and closes the dialog. */
+  useCode() {
+    const code = this.pendingCode;
+    this.closeCoupons();
+    if (code === this.appliedCode) return;
+    if (code === null) { this.removeCoupon(); return; }
+    this.couponInput = code;
+    this.applyCoupon();
+  }
+
+  closeCoupons() { this.couponDialog?.nativeElement.close(); }
+
+  /** A click on the dim backdrop (the dialog element itself, outside its content) closes it. */
+  closeOnBackdrop(event: MouseEvent) {
+    if (event.target === this.couponDialog?.nativeElement) this.closeCoupons();
+  }
+
+  offerSummary(offer: CheckoutCoupon) {
+    if (offer.type === 'fixed') return this.transloco.translate('storefront.checkout.coupon.fixedOff', { amount: this.money(offer.value) });
+    return offer.maxDiscountAmount === null
+      ? this.transloco.translate('storefront.checkout.coupon.percentOff', { value: offer.value })
+      : this.transloco.translate('storefront.checkout.coupon.percentOffCapped', { value: offer.value, cap: this.money(offer.maxDiscountAmount) });
+  }
+
+  offerScope(offer: CheckoutCoupon) {
+    if (offer.vendorId === null) return this.transloco.translate('storefront.checkout.coupon.platformCode');
+    const shop = this.preview?.cart.groups.find(g => g.vendorId === offer.vendorId)?.vendorName;
+    return this.transloco.translate('storefront.checkout.coupon.shopCode', { shop: shop ?? '' });
   }
 
   removeCoupon() {

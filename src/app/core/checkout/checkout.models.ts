@@ -1,5 +1,5 @@
 import { CartView } from '../cart/cart.models';
-import { CouponReason, DiscountFunding } from '../discounts/discount.models';
+import { CouponReason, DiscountFunding, DiscountType } from '../discounts/discount.models';
 import { ShippingOption } from '../shipping/shipping.models';
 
 /** What can be wrong with the cart or the choices at checkout. The server gives a stable code for each. */
@@ -53,6 +53,27 @@ export interface CheckoutDiscount {
   split: Record<number, number>;
 }
 
+/**
+ * A code the customer can pick for the lines being bought. `amount` is what it takes off now; when it is null the code cannot be used and
+ * `reason` says why (`shortfall` is what is missing to reach the minimum).
+ */
+export interface CheckoutCoupon {
+  code: string;
+  name: string;
+  funding: DiscountFunding;
+  /** The shop that offers it; null for a marketplace code. */
+  vendorId: number | null;
+  type: DiscountType;
+  value: number;
+  maxDiscountAmount: number | null;
+  minSubtotal: number | null;
+  startsOnUtc: string | null;
+  endsOnUtc: string | null;
+  amount: number | null;
+  reason: CouponReason | null;
+  shortfall: number | null;
+}
+
 /** The tax of the cart for the chosen address: in all, and per shop (vendor id to tax). Prices are before tax. */
 export interface CheckoutTax {
   total: number;
@@ -84,6 +105,8 @@ export interface CheckoutPreview {
   couponReason: CouponReason | null;
   /** Null until there is an address: the tax follows the delivery address. */
   tax: CheckoutTax | null;
+  /** The codes to pick from: usable ones first, the biggest discount first. */
+  coupons: CheckoutCoupon[];
 }
 
 export interface PlaceOrderRequest extends CheckoutChoices {
