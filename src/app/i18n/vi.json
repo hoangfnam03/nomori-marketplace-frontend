@@ -83,7 +83,9 @@
     "jobs": "Tác vụ nền",
     "emails": "Hàng đợi email",
     "returns": "Trả hàng",
-    "vendorReturns": "Trả hàng (shop)"
+    "vendorReturns": "Trả hàng (shop)",
+    "vendorFinance": "Tài chính (shop)",
+    "finance": "Tài chính"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -199,6 +201,10 @@
     "email": {
       "not_retryable": "Chỉ email gửi lỗi mới được gửi lại.",
       "busy": "Email này đang được gửi. Hãy thử lại sau giây lát."
+    },
+    "finance": {
+      "no_bank_account": "Shop chưa có tài khoản ngân hàng để nhận tiền.",
+      "payout_invalid_transition": "Khoản chi trả này đã thay đổi nên không thể thực hiện bước đó nữa. Danh sách đã được làm mới."
     }
   },
   "vendorStatus": {
@@ -1740,6 +1746,148 @@
       "errors": {
         "load": "Không tải được khoản thanh toán.",
         "complete": "Không hoàn tất được thanh toán. Hãy thử lại."
+      }
+    }
+  },
+  "finance": {
+    "kinds": {
+      "sale": "Doanh thu",
+      "refund": "Hoàn tiền",
+      "adjustment": "Điều chỉnh"
+    },
+    "payoutStatus": {
+      "pending": "Đang chờ",
+      "paid": "Đã chi trả",
+      "failed": "Thất bại"
+    },
+    "bankStatus": {
+      "missing": "Chưa có tài khoản",
+      "hold": "Đang chờ hiệu lực",
+      "ready": "Sẵn sàng"
+    },
+    "vendor": {
+      "eyebrow": "Shop",
+      "title": "Tài chính",
+      "lede": "Số tiền sàn còn nợ shop: doanh thu sau hoa hồng, hoàn tiền, điều chỉnh và các lần chi trả.",
+      "noShop": "Tài khoản của bạn chưa thuộc shop nào.",
+      "tabs": {
+        "overview": "Tổng quan",
+        "ledger": "Bút toán",
+        "payouts": "Chi trả",
+        "bank": "Tài khoản ngân hàng"
+      },
+      "rate": "Tỷ lệ hoa hồng cho đơn mới",
+      "pending": "Đang chờ",
+      "pendingHint": "Đơn đã giao nhưng khách chưa xác nhận đã nhận. Chưa chi trả được.",
+      "available": "Khả dụng",
+      "availableHint": "Được chi trả ở kỳ chi trả tiếp theo khi đạt {{minimum}}.",
+      "inPayout": "Trong khoản chi trả đang chuyển",
+      "paid": "Tổng đã chi trả",
+      "noBank": "Chưa có tài khoản ngân hàng nhận tiền. Hãy thêm ở tab Tài khoản ngân hàng: nếu không, số dư sẽ không được chi trả.",
+      "bankHold": "Tài khoản ngân hàng vừa được thay đổi. Có thể dùng để chi trả sau khi hết thời gian chờ an toàn.",
+      "months": "Theo tháng",
+      "noMonths": "Chưa có doanh thu.",
+      "month": "Tháng",
+      "sales": "Doanh thu",
+      "commission": "Hoa hồng",
+      "refunds": "Hoàn tiền",
+      "type": "Loại",
+      "allTypes": "Tất cả loại",
+      "searchOrder": "Mã đơn",
+      "search": "Tìm",
+      "previous": "Trước",
+      "next": "Sau",
+      "noEntries": "Chưa có bút toán.",
+      "date": "Ngày",
+      "order": "Đơn",
+      "goods": "Tiền hàng",
+      "amount": "Số tiền",
+      "note": "Ghi chú",
+      "noPayouts": "Chưa có khoản chi trả.",
+      "payout": "Chi trả",
+      "account": "Tài khoản",
+      "status": "Trạng thái",
+      "reference": "Mã giao dịch ngân hàng",
+      "csv": "CSV",
+      "bankName": "Ngân hàng",
+      "chooseBank": "Chọn ngân hàng",
+      "accountNumber": "Số tài khoản",
+      "holderName": "Chủ tài khoản",
+      "branch": "Chi nhánh (không bắt buộc)",
+      "password": "Mật khẩu của bạn",
+      "passwordHint": "Cần để đổi nơi nhận tiền. Mọi thành viên của shop sẽ nhận email.",
+      "bankHint": "Tài khoản mới hoặc vừa đổi chỉ dùng để chi trả sau một thời gian chờ an toàn. Số tài khoản được lưu mã hoá và chỉ hiện 4 số cuối.",
+      "bankUsable": "Sẵn sàng nhận chi trả.",
+      "bankUsableFrom": "Dùng được để chi trả từ {{date}}.",
+      "bankSaved": "Đã lưu tài khoản ngân hàng.",
+      "save": "Lưu",
+      "errors": {
+        "load": "Không tải được dữ liệu tài chính. Hãy thử lại.",
+        "save": "Không lưu được tài khoản ngân hàng. Hãy thử lại."
+      }
+    },
+    "admin": {
+      "eyebrow": "Sàn",
+      "title": "Tài chính",
+      "lede": "Tỷ lệ hoa hồng, số tiền từng shop được hưởng, các khoản chi trả cần làm và xác nhận, và điều chỉnh thủ công.",
+      "tabs": {
+        "commission": "Hoa hồng",
+        "balances": "Số dư",
+        "payouts": "Chi trả",
+        "adjustments": "Điều chỉnh"
+      },
+      "defaultRate": "Tỷ lệ hoa hồng mặc định",
+      "newRate": "Tỷ lệ mới (%)",
+      "note": "Ghi chú",
+      "rateHint": "Từ 0 đến {{max}} phần trăm. Chỉ áp dụng cho đơn đặt sau khi lưu; đơn cũ giữ tỷ lệ của nó.",
+      "saveRate": "Lưu tỷ lệ mặc định",
+      "shopRates": "Tỷ lệ riêng của từng shop",
+      "shopId": "Mã shop",
+      "saveShopRate": "Lưu tỷ lệ shop",
+      "noOverrides": "Chưa shop nào có tỷ lệ riêng.",
+      "shop": "Shop",
+      "rate": "Tỷ lệ",
+      "removeRate": "Dùng mặc định",
+      "history": "Lịch sử thay đổi",
+      "noHistory": "Chưa có thay đổi.",
+      "when": "Lúc",
+      "scope": "Áp dụng cho",
+      "platformDefault": "Mặc định của sàn",
+      "oldRate": "Tỷ lệ cũ",
+      "saved": "Đã lưu.",
+      "bankStatus": "Tài khoản ngân hàng",
+      "allBanks": "Mọi trạng thái",
+      "searchShop": "Tên shop",
+      "search": "Tìm",
+      "previous": "Trước",
+      "next": "Sau",
+      "noBalances": "Chưa shop nào có phát sinh tiền.",
+      "available": "Khả dụng",
+      "inPayout": "Đang chi trả",
+      "paid": "Đã chi trả",
+      "cutoff": "Ngày chốt",
+      "cutoffHint": "Các bút toán đến thời điểm này sẽ được chi trả. Để trống là ngay bây giờ.",
+      "createPayouts": "Tạo chi trả",
+      "exportCsv": "Xuất danh sách chờ (CSV)",
+      "allStatuses": "Mọi trạng thái",
+      "status": "Trạng thái",
+      "noPayouts": "Không có khoản chi trả.",
+      "payout": "Chi trả",
+      "amount": "Số tiền",
+      "account": "Tài khoản",
+      "entries": "{{count}} bút toán",
+      "referenceOrReason": "Mã giao dịch hoặc lý do thất bại",
+      "markPaid": "Đã chuyển",
+      "markFailed": "Thất bại",
+      "payoutsCreated": "Đã tạo {{created}} khoản chi trả, bỏ qua {{skipped}} shop (chưa có tài khoản dùng được, số dư quá thấp hoặc không có gì để trả).",
+      "adjustHint": "Điều chỉnh cộng hoặc trừ vào số dư của shop. Không sửa hay xoá được: sai sót được sửa bằng một điều chỉnh khác.",
+      "adjustAmount": "Số tiền (số âm là trừ tiền)",
+      "reason": "Lý do",
+      "addAdjustment": "Thêm điều chỉnh",
+      "adjusted": "Đã thêm điều chỉnh.",
+      "errors": {
+        "load": "Không tải được dữ liệu tài chính. Hãy thử lại.",
+        "action": "Không thực hiện được. Hãy thử lại."
       }
     }
   }
