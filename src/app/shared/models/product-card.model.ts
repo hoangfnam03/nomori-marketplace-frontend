@@ -1,6 +1,8 @@
 export interface ProductCardModel {
   id: number;
   name: string;
+  /** The name as a URL fragment, for the address of the product page. */
+  slug?: string;
   category: string;
   price: string;
   compareAtPrice?: string;

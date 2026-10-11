@@ -15,7 +15,7 @@ describe('VendorSettingsPage', () => {
   const shop: VendorResponse = {
     id: 3, name: 'meo meo shop', email: 'meo@example.com', description: 'hello', pictureId: 7, displayOrder: 0,
     active: true, addressId: 0, createdOnUtc: '2026-10-03T06:32:34Z', updatedOnUtc: null, adminComment: null,
-    phoneNumber: '0901234567', taxCode: '123', businessAddress: 'Hanoi'
+    phoneNumber: '0901234567', taxCode: '123', businessAddress: 'Hanoi', slug: 'meo-meo-shop'
   };
 
   async function render(vendor: VendorResponse, update: (body: UpdateVendorRequest) => ReturnType<VendorApiService['updateVendor']>) {

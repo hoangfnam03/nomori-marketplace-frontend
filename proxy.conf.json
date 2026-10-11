@@ -4,5 +4,17 @@
     "secure": false,
     "changeOrigin": true,
     "logLevel": "info"
+  },
+  "/sitemap.xml": {
+    "target": "https://localhost:7014",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "info"
+  },
+  "/robots.txt": {
+    "target": "https://localhost:7014",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "info"
   }
 }

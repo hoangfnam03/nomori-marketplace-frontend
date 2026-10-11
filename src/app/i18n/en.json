@@ -2034,5 +2034,19 @@
     "errors": {
       "load": "Could not load the report. Try again."
     }
+  },
+  "seo": {
+    "home": {
+      "title": "Nomori Marketplace",
+      "description": "Shop products from independent sellers in one place."
+    },
+    "products": {
+      "title": "Products",
+      "description": "Browse products from independent sellers: search, filter by category, brand and price."
+    },
+    "vendors": {
+      "title": "Shops",
+      "description": "Discover the shops that sell on Nomori Marketplace."
+    }
   }
 }

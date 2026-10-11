@@ -2034,5 +2034,19 @@
     "errors": {
       "load": "Không tải được báo cáo. Hãy thử lại."
     }
+  },
+  "seo": {
+    "home": {
+      "title": "Nomori Marketplace",
+      "description": "Mua sắm sản phẩm của nhiều người bán độc lập tại một nơi."
+    },
+    "products": {
+      "title": "Sản phẩm",
+      "description": "Xem sản phẩm từ các người bán độc lập: tìm kiếm, lọc theo danh mục, thương hiệu và giá."
+    },
+    "vendors": {
+      "title": "Cửa hàng",
+      "description": "Khám phá các cửa hàng đang bán trên Nomori Marketplace."
+    }
   }
 }

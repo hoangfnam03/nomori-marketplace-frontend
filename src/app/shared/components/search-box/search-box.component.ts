@@ -7,6 +7,7 @@ import { catchError, debounceTime, distinctUntilChanged, of, Subject, switchMap 
 import { CatalogApiService } from '../../../core/catalog/catalog-api.service';
 import { ProductSuggestion } from '../../../core/catalog/catalog.models';
 import { MediaApiService } from '../../../core/media/media-api.service';
+import { productLink } from '../../../core/seo/seo-paths';
 import { CurrencyService } from '../../../core/money/currency.service';
 
 const MIN_CHARACTERS = 2;
@@ -103,7 +104,7 @@ export class SearchBoxComponent {
 
   choose(suggestion: ProductSuggestion) {
     this.open = false;
-    this.router.navigate(['/storefront/products', suggestion.id]);
+    this.router.navigate(productLink(suggestion.id, suggestion.slug));
   }
 
   /** Waits a moment so a click on a suggestion lands before the list disappears. */

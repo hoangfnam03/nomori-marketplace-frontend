@@ -11,7 +11,7 @@ export const storefrontRoutes: Routes = [
     loadComponent: () => import('./pages/product-list.page').then(page => page.ProductListPage)
   },
   {
-    path: 'products/:id',
+    path: 'products/:key',
     loadComponent: () => import('./pages/product-detail.page').then(page => page.ProductDetailPage)
   },
   {
@@ -29,7 +29,7 @@ export const storefrontRoutes: Routes = [
     loadComponent: () => import('./pages/vendor-list.page').then(page => page.VendorListPage)
   },
   {
-    path: 'vendors/:id',
+    path: 'vendors/:key',
     loadComponent: () => import('./pages/vendor-detail.page').then(page => page.VendorDetailPage)
   }
 ];

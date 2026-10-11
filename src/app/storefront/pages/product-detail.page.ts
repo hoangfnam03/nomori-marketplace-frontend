@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -7,6 +8,8 @@ import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { MediaApiService } from '../../core/media/media-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
 import { CartService } from '../../core/cart/cart.service';
+import { describe, keyFor, parseKey, productLink, productPath, PRODUCTS_PATH } from '../../core/seo/seo-paths';
+import { SeoService } from '../../core/seo/seo.service';
 import { CartNoticeComponent } from '../../shared/components/cart-notice/cart-notice.component';
 import { PriceQuote, ProductDetailResponse, TierPrice } from '../../core/catalog/catalog.models';
 import { PublicAttributeCombination, PublicAttributeDetail } from '../../core/catalog/product-attribute.models';
@@ -171,7 +174,7 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
           <h2 id="related-title" class="specs-title">{{ t('storefront.productDetail.related') }}</h2>
           <div class="related-grid">
             @for (r of detail.relatedProducts; track r.id) {
-              <a class="related-card" [routerLink]="['/storefront/products', r.id]">
+              <a class="related-card" [routerLink]="productLink(r.id, r.slug)">
                 @if (media.url(r.mainPictureId); as url) { <img [src]="url" alt="" loading="lazy" /> }
                 @else { <span class="related-empty" aria-hidden="true"></span> }
                 <span class="related-name">{{ r.name }}</span>
@@ -310,6 +313,9 @@ export class ProductDetailPage implements OnInit {
   private readonly currency = inject(CurrencyService);
   private readonly cart = inject(CartService);
   private readonly transloco = inject(TranslocoService);
+  private readonly seo = inject(SeoService);
+  private readonly location = inject(Location);
+  readonly productLink = productLink;
   adding = false;
   cartMessage = '';
   cartFailed = false;
@@ -330,10 +336,26 @@ export class ProductDetailPage implements OnInit {
   selectedPictureId = 0;
 
   ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    // The same page is reused when the visitor goes from one product to another, so every key is loaded.
+    this.route.paramMap.subscribe(params => this.load(params.get('key')));
+  }
+
+  private load(key: string | null) {
+    const id = parseKey(key);
+    this.detail = null;
+    this.attrs = null;
+    this.specs = null;
+    this.tags = [];
+    this.quote = null;
+    this.error = '';
+    if (!id) { this.error = 'storefront.productDetail.notFound'; this.loading = false; return; }
+
+    this.loading = true;
     this.api.getProduct(id).subscribe({
       next: detail => {
         this.detail = detail;
+        this.canonicalize(key, detail);
+        this.describePage(detail);
         this.selectedPictureId = detail.pictureIds[0] ?? 0;
         this.loading = false;
         this.api.getProductAttributes(id).subscribe({ next: a => { this.attrs = a; this.preselect(a); this.refreshQuote(); }, error: () => {} });
@@ -344,6 +366,42 @@ export class ProductDetailPage implements OnInit {
       error: err => {
         this.error = err.status === 404 ? 'storefront.productDetail.notFound' : 'storefront.productDetail.loadError';
         this.loading = false;
+      }
+    });
+  }
+
+  /** An old name or a bare id opens the page; the address is then replaced by the canonical one (the server redirects a first visit). */
+  private canonicalize(key: string | null, detail: ProductDetailResponse) {
+    const canonical = keyFor(detail.product.id, detail.product.slug);
+    if (key !== canonical) this.location.replaceState(`${PRODUCTS_PATH}/${canonical}`);
+  }
+
+  private describePage(detail: ProductDetailResponse) {
+    const p = detail.product;
+    const picture = detail.pictureIds[0] ?? p.mainPictureId;
+    const image = this.media.url(picture) ?? undefined;
+    const description = describe(p.shortDescription ?? detail.fullDescription);
+    const path = productPath(p.id, p.slug);
+    this.seo.set({
+      title: p.vendorName ? `${p.name} · ${p.vendorName}` : p.name,
+      description,
+      path,
+      image,
+      type: 'product',
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: p.name,
+        description: description || undefined,
+        image: image ? [this.seo.absolute(image)] : undefined,
+        brand: p.vendorName ? { '@type': 'Brand', name: p.vendorName } : undefined,
+        offers: {
+          '@type': 'Offer',
+          url: this.seo.absolute(path),
+          priceCurrency: this.currency.primary().code,
+          price: p.finalPrice,
+          availability: p.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
+        }
       }
     });
   }
@@ -373,7 +431,7 @@ export class ProductDetailPage implements OnInit {
     if (!this.detail || this.adding) return;
     this.adding = true;
     this.cartMessage = '';
-    this.cart.add(this.detail.product.id, Number(this.quantity) || 1, Object.values(this.selected), `/storefront/products/${this.detail.product.id}`).subscribe(outcome => {
+    this.cart.add(this.detail.product.id, Number(this.quantity) || 1, Object.values(this.selected), productPath(this.detail.product.id, this.detail.product.slug)).subscribe(outcome => {
       this.adding = false;
       this.cartFailed = outcome.kind === 'error' || outcome.kind === 'choose-options';
       if (outcome.kind === 'added') this.cartMessage = this.transloco.translate('storefront.cart.added', { name: this.detail?.product.name });

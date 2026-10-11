@@ -3,6 +3,8 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { MediaApiService } from '../../core/media/media-api.service';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
+import { vendorLink } from '../../core/seo/seo-paths';
+import { SeoService } from '../../core/seo/seo.service';
 import { VendorResponse } from '../../core/vendors/vendor.models';
 
 @Component({
@@ -25,7 +27,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
         <ul class="vendor-grid" role="list">
           @for (v of vendors; track v.id) {
             <li class="vendor-card">
-              <a [routerLink]="['/storefront/vendors', v.id]" class="vendor-link">
+              <a [routerLink]="vendorLink(v.id, v.slug)" class="vendor-link">
                 @if (logoUrl(v.pictureId); as logo) {
                   <img class="vendor-avatar" [src]="logo" [alt]="t('storefront.vendors.logoAlt', { name: v.name })" />
                 } @else {
@@ -154,7 +156,13 @@ export class VendorListPage implements OnInit {
   page = 1;
   totalPages = 1;
 
-  ngOnInit() { this.loadVendors(); }
+  private readonly seo = inject(SeoService);
+  readonly vendorLink = vendorLink;
+
+  ngOnInit() {
+    this.seo.setByKeys('seo.vendors.title', 'seo.vendors.description', '/storefront/vendors');
+    this.loadVendors();
+  }
 
   loadVendors() {
     this.loading = true;

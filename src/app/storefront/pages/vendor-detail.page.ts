@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
@@ -6,6 +7,8 @@ import { MediaApiService } from '../../core/media/media-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { ProductResponse } from '../../core/catalog/catalog.models';
+import { describe, keyFor, parseKey, productLink, vendorPath, VENDORS_PATH } from '../../core/seo/seo-paths';
+import { SeoService } from '../../core/seo/seo.service';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { VendorResponse } from '../../core/vendors/vendor.models';
 
@@ -59,7 +62,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
             } @else {
               <ul class="product-list" role="list">
                 @for (p of products; track p.id) {
-                  <li><a [routerLink]="['/storefront/products', p.id]">{{ p.name }}</a><span>{{ price(p.price) }}</span></li>
+                  <li><a [routerLink]="productLink(p.id, p.slug)">{{ p.name }}</a><span>{{ price(p.price) }}</span></li>
                 }
               </ul>
             }
@@ -149,6 +152,9 @@ export class VendorDetailPage implements OnInit {
   private readonly catalog = inject(CatalogApiService);
   private readonly media = inject(MediaApiService);
   private readonly currency = inject(CurrencyService);
+  private readonly seo = inject(SeoService);
+  private readonly location = inject(Location);
+  readonly productLink = productLink;
 
   vendor: VendorResponse | null = null;
   loading = false;
@@ -158,11 +164,42 @@ export class VendorDetailPage implements OnInit {
   productsError = '';
 
   ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    this.route.paramMap.subscribe(params => this.load(params.get('key')));
+  }
+
+  private load(key: string | null) {
+    const id = parseKey(key);
+    this.vendor = null;
+    this.products = [];
+    this.error = '';
     if (!id) { this.error = 'storefront.vendorDetail.invalid'; return; }
     this.loading = true;
     this.api.getVendor(id).subscribe({
-      next: v => { this.vendor = v; this.loading = false; this.loadProducts(v.id); },
+      next: v => {
+        this.vendor = v;
+        this.loading = false;
+        this.loadProducts(v.id);
+        // An old name or a bare id opens the page; the address is replaced by the canonical one.
+        const canonical = keyFor(v.id, v.slug);
+        if (key !== canonical) this.location.replaceState(`${VENDORS_PATH}/${canonical}`);
+        const logo = this.media.url(v.pictureId) ?? undefined;
+        const description = describe(v.description);
+        this.seo.set({
+          title: v.name,
+          description,
+          path: vendorPath(v.id, v.slug),
+          image: logo,
+          type: 'profile',
+          jsonLd: {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: v.name,
+            description: description || undefined,
+            logo: logo ? this.seo.absolute(logo) : undefined,
+            url: this.seo.absolute(vendorPath(v.id, v.slug))
+          }
+        });
+      },
       error: err => {
         this.loading = false;
         this.error = err?.status === 404 ? 'storefront.vendorDetail.notFound' : 'storefront.vendorDetail.loadError';

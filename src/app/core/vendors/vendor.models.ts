@@ -16,6 +16,8 @@ export interface VendorResponse {
   phoneNumber: string | null;
   taxCode: string | null;
   businessAddress: string | null;
+  /** The name as a URL fragment; the address of the shop page is `slug-id`. */
+  slug: string;
 }
 
 export interface PagedResponse<T> {
