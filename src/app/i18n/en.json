@@ -86,7 +86,9 @@
     "vendorReturns": "Returns (shop)",
     "vendorFinance": "Finance (shop)",
     "finance": "Finance",
-    "carriers": "Carriers"
+    "carriers": "Carriers",
+    "vendorReports": "Reports (shop)",
+    "reports": "Reports"
   },
   "language": {
     "label": "Language",
@@ -1941,6 +1943,96 @@
     "errors": {
       "load": "Could not load the tracking. Try again.",
       "add": "Could not add the update. Try again."
+    }
+  },
+  "reports": {
+    "from": "From",
+    "to": "To",
+    "apply": "Apply",
+    "lastDays": "Last {{days}} days",
+    "rangeError": "Choose a range of 1 to 92 days, with the first day not after the last.",
+    "overview": "Overview",
+    "orders": "Orders",
+    "units": "Units sold",
+    "sales": "Sales",
+    "averageOrder": "Average order",
+    "shipping": "Shipping",
+    "cancelled": "Cancelled orders",
+    "returnsOpened": "Returns requested",
+    "refunded": "Refunded to customers",
+    "merchandise": "Paid by customers",
+    "commission": "Commission kept",
+    "activeShops": "Shops with sales",
+    "newCustomers": "New customers",
+    "shop": "Shop",
+    "salesHint": "Orders that were not cancelled and whose payment is confirmed, by the day they were placed (UTC). Sales are the items less a discount the shop pays for.",
+    "salesByDay": "Sales by day",
+    "noSales": "No sales in this period.",
+    "barsLabel": "{{orders}} orders, {{sales}} in total",
+    "showTable": "Show as a table",
+    "day": "Day",
+    "ordersByStatus": "Orders by status (all time)",
+    "topProducts": "Best sellers",
+    "topShops": "Top shops",
+    "noProducts": "No products sold in this period.",
+    "product": "Product",
+    "revenue": "Revenue",
+    "lowStock": "Running out of stock",
+    "noLowStock": "Nothing is running out.",
+    "sku": "SKU",
+    "inStock": "In stock",
+    "threshold": "Alert at",
+    "vendor": {
+      "eyebrow": "Shop",
+      "title": "Reports",
+      "lede": "How your shop is doing: sales, returns, best sellers and stock.",
+      "noShop": "Your account is not linked to a shop."
+    },
+    "admin": {
+      "eyebrow": "Platform",
+      "title": "Reports",
+      "lede": "Sales and commission, what needs attention now, and proof that the money adds up.",
+      "tabs": {
+        "overview": "Overview",
+        "operations": "Operations",
+        "reconciliation": "Reconciliation"
+      },
+      "attention": "Needs attention"
+    },
+    "ops": {
+      "pendingPayouts": "Payouts waiting to be paid",
+      "openReturns": "Open returns",
+      "unconfirmed": "Shop orders not confirmed for over 24 hours",
+      "failedJobs": "Jobs that failed in the last 24 hours",
+      "failedEmails": "Emails that could not be sent",
+      "unrecordedSales": "Completed orders not yet in the ledger",
+      "unrecordedRefunds": "Refunded returns not yet in the ledger",
+      "lowStock": "Products running out of stock",
+      "open": "Open",
+      "hint": "The two ledger counts should drop to 0 within minutes: the job records them every 5 minutes. If they stay above 0, check the job."
+    },
+    "rec": {
+      "title": "Reconciliation",
+      "balanced": "The books agree: what customers paid equals what shops are owed plus what the platform keeps.",
+      "unbalanced": "The books do not agree: difference {{difference}}, payouts that do not match their lines: {{payouts}}. Investigate; do not adjust the report.",
+      "explain": "Customers paid = shop revenue + commission + tax - discounts paid by the platform. Figures are for sale lines written to the ledger in this period.",
+      "saleLines": "Sale lines",
+      "items": "Items",
+      "shopDiscount": "Discounts paid by shops",
+      "platformDiscount": "Discounts paid by the platform",
+      "shipping": "Shipping",
+      "tax": "Tax",
+      "customerPaid": "Customers paid",
+      "shopRevenue": "Owed to shops",
+      "commission": "Commission",
+      "difference": "Difference (must be 0)",
+      "refundLines": "Refund lines",
+      "refundedFromShops": "Taken back from shops",
+      "commissionReturned": "Commission given back",
+      "payoutMismatches": "Payouts not matching their lines"
+    },
+    "errors": {
+      "load": "Could not load the report. Try again."
     }
   }
 }

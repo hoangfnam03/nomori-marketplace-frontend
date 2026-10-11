@@ -7,6 +7,7 @@ export const permissionCodes = {
   discountsManage: 'discounts.manage',
   jobsManage: 'jobs.manage',
   financeManage: 'finance.manage',
+  reportsView: 'reports.view',
   emailsManage: 'emails.manage',
   vendorManage: 'vendor.manage',
   vendorPortal: 'vendor.portal'

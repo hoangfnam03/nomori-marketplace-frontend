@@ -14,6 +14,7 @@
         <a routerLink="/vendor" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ t('nav.vendorPortal') }}</a>
         <a routerLink="/vendor/returns" routerLinkActive="active">{{ t('nav.vendorReturns') }}</a>
         <a routerLink="/vendor/finance" routerLinkActive="active">{{ t('nav.vendorFinance') }}</a>
+        <a routerLink="/vendor/reports" routerLinkActive="active">{{ t('nav.vendorReports') }}</a>
       }
       @if (can(codes.adminAccess)) {
         <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ t('nav.admin') }}</a>
@@ -46,6 +47,9 @@
       }
       @if (can(codes.ordersManage)) {
         <a routerLink="/admin/returns" routerLinkActive="active">{{ t('nav.returns') }}</a>
+      }
+      @if (can(codes.reportsView)) {
+        <a routerLink="/admin/reports" routerLinkActive="active">{{ t('nav.reports') }}</a>
       }
       @if (can(codes.financeManage)) {
         <a routerLink="/admin/finance" routerLinkActive="active">{{ t('nav.finance') }}</a>
