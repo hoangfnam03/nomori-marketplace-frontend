@@ -14,6 +14,7 @@ const codes = new Set([
   'checkout.cart_not_ready', 'checkout.prices_changed', 'checkout.payment_failed', 'checkout.coupon_unavailable',
   'discount.code_exists', 'discount.limit', 'discount.in_use',
   'job.already_running', 'return.not_eligible', 'return.invalid_transition', 'return.quantity_exceeded', 'return.no_refundable_payment', 'email.not_retryable', 'email.busy',
+  'carrier.name_exists', 'carrier.limit', 'tracking.not_shipped', 'tracking.event_limit',
   'finance.no_bank_account', 'finance.payout_invalid_transition',
   'tax.category_exists', 'tax.category_limit', 'tax.category_in_use', 'tax.default_category', 'tax.rate_exists', 'tax.rate_limit'
 ]);

@@ -85,7 +85,8 @@
     "returns": "Returns",
     "vendorReturns": "Returns (shop)",
     "vendorFinance": "Finance (shop)",
-    "finance": "Finance"
+    "finance": "Finance",
+    "carriers": "Carriers"
   },
   "language": {
     "label": "Language",
@@ -205,6 +206,14 @@
     "finance": {
       "no_bank_account": "The shop has no bank account for payouts yet.",
       "payout_invalid_transition": "This payout changed in the meantime, so that step is no longer possible. It has been refreshed."
+    },
+    "carrier": {
+      "name_exists": "A carrier with this name already exists.",
+      "limit": "The number of carriers is at its limit."
+    },
+    "tracking": {
+      "not_shipped": "Tracking can only be added while the order is shipped.",
+      "event_limit": "This parcel has the most tracking lines it can have."
     }
   },
   "vendorStatus": {
@@ -1168,6 +1177,28 @@
         "rateRequired": "Choose a country and enter a rate.",
         "product": "Unable to find this product."
       }
+    },
+    "carriers": {
+      "eyebrow": "Shipping",
+      "title": "Carriers",
+      "lede": "The carriers shops can pick when they ship. An address with the tracking number in it gives customers a link to the carrier page.",
+      "add": "Add a carrier",
+      "edit": "Edit the carrier",
+      "name": "Name",
+      "order": "Order",
+      "template": "Tracking address",
+      "active": "Offered to shops",
+      "list": "Carriers",
+      "empty": "No carriers yet.",
+      "templateHint": "An http or https address with {tracking} where the tracking number goes. Leave empty if the carrier has no public page.",
+      "on": "Offered",
+      "off": "Hidden",
+      "confirmDelete": "Delete {{name}}? Orders already shipped keep the name.",
+      "errors": {
+        "load": "Could not load the carriers. Try again.",
+        "save": "Could not save the carrier. Try again.",
+        "delete": "Could not delete the carrier. Try again."
+      }
     }
   },
   "currency": {
@@ -1889,6 +1920,27 @@
         "load": "Could not load the finance data. Try again.",
         "action": "That did not work. Try again."
       }
+    }
+  },
+  "tracking": {
+    "journey": "Parcel journey",
+    "noEvents": "No tracking updates yet.",
+    "add": "Add a tracking update",
+    "statusLabel": "Status",
+    "location": "Location (optional)",
+    "note": "Note (optional)",
+    "addButton": "Add update",
+    "status": {
+      "picked_up": "Picked up",
+      "in_transit": "In transit",
+      "out_for_delivery": "Out for delivery",
+      "delivery_attempted": "Delivery attempted",
+      "exception": "Problem",
+      "info": "Update"
+    },
+    "errors": {
+      "load": "Could not load the tracking. Try again.",
+      "add": "Could not add the update. Try again."
     }
   }
 }
