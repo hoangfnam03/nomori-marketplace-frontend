@@ -86,7 +86,9 @@
     "vendorReturns": "Trả hàng (shop)",
     "vendorFinance": "Tài chính (shop)",
     "finance": "Tài chính",
-    "carriers": "Hãng vận chuyển"
+    "carriers": "Hãng vận chuyển",
+    "vendorReports": "Báo cáo (shop)",
+    "reports": "Báo cáo"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -1941,6 +1943,96 @@
     "errors": {
       "load": "Không tải được hành trình. Hãy thử lại.",
       "add": "Không thêm được cập nhật. Hãy thử lại."
+    }
+  },
+  "reports": {
+    "from": "Từ ngày",
+    "to": "Đến ngày",
+    "apply": "Áp dụng",
+    "lastDays": "{{days}} ngày qua",
+    "rangeError": "Chọn khoảng từ 1 đến 92 ngày, ngày đầu không sau ngày cuối.",
+    "overview": "Tổng quan",
+    "orders": "Đơn hàng",
+    "units": "Số lượng bán",
+    "sales": "Doanh số",
+    "averageOrder": "Giá trị đơn trung bình",
+    "shipping": "Phí vận chuyển",
+    "cancelled": "Đơn đã huỷ",
+    "returnsOpened": "Yêu cầu trả hàng",
+    "refunded": "Đã hoàn cho khách",
+    "merchandise": "Khách đã thanh toán",
+    "commission": "Hoa hồng giữ lại",
+    "activeShops": "Shop có doanh số",
+    "newCustomers": "Khách hàng mới",
+    "shop": "Shop",
+    "salesHint": "Các đơn chưa huỷ và đã xác nhận thanh toán, tính theo ngày đặt (UTC). Doanh số là tiền hàng trừ phần giảm giá do shop chịu.",
+    "salesByDay": "Doanh số theo ngày",
+    "noSales": "Chưa có doanh số trong khoảng này.",
+    "barsLabel": "{{orders}} đơn, tổng {{sales}}",
+    "showTable": "Xem dạng bảng",
+    "day": "Ngày",
+    "ordersByStatus": "Đơn theo trạng thái (toàn bộ)",
+    "topProducts": "Bán chạy nhất",
+    "topShops": "Shop bán nhiều nhất",
+    "noProducts": "Chưa bán được sản phẩm nào trong khoảng này.",
+    "product": "Sản phẩm",
+    "revenue": "Doanh thu",
+    "lowStock": "Sắp hết hàng",
+    "noLowStock": "Không có sản phẩm nào sắp hết.",
+    "sku": "SKU",
+    "inStock": "Tồn kho",
+    "threshold": "Ngưỡng cảnh báo",
+    "vendor": {
+      "eyebrow": "Shop",
+      "title": "Báo cáo",
+      "lede": "Tình hình của shop: doanh số, trả hàng, sản phẩm bán chạy và tồn kho.",
+      "noShop": "Tài khoản của bạn chưa thuộc shop nào."
+    },
+    "admin": {
+      "eyebrow": "Sàn",
+      "title": "Báo cáo",
+      "lede": "Doanh số và hoa hồng, những việc cần xử lý ngay, và bằng chứng rằng tiền khớp nhau.",
+      "tabs": {
+        "overview": "Tổng quan",
+        "operations": "Vận hành",
+        "reconciliation": "Đối soát"
+      },
+      "attention": "Cần xử lý"
+    },
+    "ops": {
+      "pendingPayouts": "Khoản chi trả đang chờ",
+      "openReturns": "Yêu cầu trả hàng đang mở",
+      "unconfirmed": "Đơn con chưa được shop xác nhận quá 24 giờ",
+      "failedJobs": "Job lỗi trong 24 giờ qua",
+      "failedEmails": "Email gửi không được",
+      "unrecordedSales": "Đơn hoàn tất chưa vào sổ",
+      "unrecordedRefunds": "Yêu cầu trả hàng đã hoàn tiền chưa vào sổ",
+      "lowStock": "Sản phẩm sắp hết hàng",
+      "open": "Mở",
+      "hint": "Hai số về sổ bút toán phải về 0 sau vài phút: job ghi sổ chạy mỗi 5 phút. Nếu vẫn lớn hơn 0, hãy kiểm tra job."
+    },
+    "rec": {
+      "title": "Đối soát",
+      "balanced": "Sổ sách khớp: tiền khách trả bằng tiền shop được hưởng cộng phần sàn giữ lại.",
+      "unbalanced": "Sổ sách không khớp: chênh lệch {{difference}}, khoản chi trả không khớp với bút toán: {{payouts}}. Hãy tìm nguyên nhân; không chỉnh báo cáo.",
+      "explain": "Khách trả = doanh thu shop + hoa hồng + thuế - giảm giá do sàn chịu. Số liệu của các dòng doanh thu được ghi vào sổ trong khoảng này.",
+      "saleLines": "Dòng doanh thu",
+      "items": "Tiền hàng",
+      "shopDiscount": "Giảm giá do shop chịu",
+      "platformDiscount": "Giảm giá do sàn chịu",
+      "shipping": "Phí vận chuyển",
+      "tax": "Thuế",
+      "customerPaid": "Khách đã trả",
+      "shopRevenue": "Shop được hưởng",
+      "commission": "Hoa hồng",
+      "difference": "Chênh lệch (phải bằng 0)",
+      "refundLines": "Dòng hoàn tiền",
+      "refundedFromShops": "Thu lại từ shop",
+      "commissionReturned": "Hoa hồng trả lại",
+      "payoutMismatches": "Chi trả không khớp bút toán"
+    },
+    "errors": {
+      "load": "Không tải được báo cáo. Hãy thử lại."
     }
   }
 }

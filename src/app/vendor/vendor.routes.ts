@@ -55,6 +55,11 @@ export const vendorRoutes: Routes = [
     loadComponent: () => import('./pages/vendor-finance.page').then(page => page.VendorFinancePage)
   },
   {
+    path: 'reports',
+    canActivate: [permissionGuard(permissionCodes.vendorPortal)],
+    loadComponent: () => import('./pages/vendor-reports.page').then(page => page.VendorReportsPage)
+  },
+  {
     path: 'members',
     canActivate: [permissionGuard(permissionCodes.vendorPortal)],
     loadComponent: () => import('./pages/vendor-members.page').then(page => page.VendorMembersPage)
