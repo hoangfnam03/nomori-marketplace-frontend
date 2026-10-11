@@ -35,6 +35,9 @@
       @if (can(codes.ordersManage)) {
         <a routerLink="/admin/orders" routerLinkActive="active">{{ t('nav.orders') }}</a>
       }
+      @if (can(codes.ordersManage)) {
+        <a routerLink="/admin/carriers" routerLinkActive="active">{{ t('nav.carriers') }}</a>
+      }
       @if (can(codes.paymentsManage)) {
         <a routerLink="/admin/payments" routerLinkActive="active">{{ t('nav.payments') }}</a>
       }

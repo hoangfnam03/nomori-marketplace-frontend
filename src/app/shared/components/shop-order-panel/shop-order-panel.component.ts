@@ -5,6 +5,7 @@ import { MediaApiService } from '../../../core/media/media-api.service';
 import { CurrencyService } from '../../../core/money/currency.service';
 import { OrderLine, ShopOrderDetail } from '../../../core/orders/order.models';
 import { OrderStatusBadgeComponent } from '../order-status-badge/order-status-badge.component';
+import { ParcelTrackingComponent } from '../parcel-tracking/parcel-tracking.component';
 
 /**
  * One shop order: lines with their price snapshot, totals, tracking, who changed it when. Actions are projected in by the page,
@@ -13,7 +14,7 @@ import { OrderStatusBadgeComponent } from '../order-status-badge/order-status-ba
 @Component({
   selector: 'app-shop-order-panel',
   standalone: true,
-  imports: [DatePipe, OrderStatusBadgeComponent, TranslocoDirective],
+  imports: [DatePipe, OrderStatusBadgeComponent, ParcelTrackingComponent, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
     <section class="shop-order" [attr.aria-label]="order.number">
@@ -56,7 +57,7 @@ import { OrderStatusBadgeComponent } from '../order-status-badge/order-status-ba
       </dl>
 
       @if (order.carrier) {
-        <p class="tracking"><strong>{{ t('orders.tracking') }}:</strong> {{ order.carrier }} · {{ order.trackingNumber }}</p>
+        <app-parcel-tracking [shopOrderId]="order.id" [carrier]="order.carrier" [trackingNumber]="order.trackingNumber" [orderStatus]="order.status" [vendorId]="vendorId" />
       }
       @if (order.cancelReason) {
         <p class="cancel"><strong>{{ t('orders.cancelReason') }}:</strong> {{ order.cancelReason }}</p>
@@ -111,6 +112,8 @@ export class ShopOrderPanelComponent {
   private readonly currency = inject(CurrencyService);
 
   @Input({ required: true }) order!: ShopOrderDetail;
+  /** Set by the shop's own page, so that its members can add tracking events. */
+  @Input() vendorId: number | null = null;
 
   money(value: number) { return this.currency.formatPrimary(value); }
 

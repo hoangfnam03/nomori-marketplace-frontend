@@ -85,7 +85,8 @@
     "returns": "Trả hàng",
     "vendorReturns": "Trả hàng (shop)",
     "vendorFinance": "Tài chính (shop)",
-    "finance": "Tài chính"
+    "finance": "Tài chính",
+    "carriers": "Hãng vận chuyển"
   },
   "language": {
     "label": "Ngôn ngữ",
@@ -205,6 +206,14 @@
     "finance": {
       "no_bank_account": "Shop chưa có tài khoản ngân hàng để nhận tiền.",
       "payout_invalid_transition": "Khoản chi trả này đã thay đổi nên không thể thực hiện bước đó nữa. Danh sách đã được làm mới."
+    },
+    "carrier": {
+      "name_exists": "Đã có hãng vận chuyển với tên này.",
+      "limit": "Đã đạt số hãng vận chuyển tối đa."
+    },
+    "tracking": {
+      "not_shipped": "Chỉ cập nhật hành trình khi đơn đang được giao.",
+      "event_limit": "Bưu kiện này đã có số dòng hành trình tối đa."
     }
   },
   "vendorStatus": {
@@ -1168,6 +1177,28 @@
         "rateRequired": "Hãy chọn quốc gia và nhập thuế suất.",
         "product": "Không tìm thấy sản phẩm này."
       }
+    },
+    "carriers": {
+      "eyebrow": "Vận chuyển",
+      "title": "Hãng vận chuyển",
+      "lede": "Các hãng shop có thể chọn khi giao hàng. Địa chỉ có chứa mã vận đơn giúp khách mở thẳng trang tra cứu của hãng.",
+      "add": "Thêm hãng",
+      "edit": "Sửa hãng",
+      "name": "Tên",
+      "order": "Thứ tự",
+      "template": "Địa chỉ tra cứu",
+      "active": "Cho shop chọn",
+      "list": "Danh sách hãng",
+      "empty": "Chưa có hãng nào.",
+      "templateHint": "Địa chỉ http hoặc https có {tracking} ở chỗ mã vận đơn. Để trống nếu hãng không có trang tra cứu công khai.",
+      "on": "Đang cho chọn",
+      "off": "Đang ẩn",
+      "confirmDelete": "Xoá {{name}}? Đơn đã giao vẫn giữ tên hãng.",
+      "errors": {
+        "load": "Không tải được danh sách hãng. Hãy thử lại.",
+        "save": "Không lưu được hãng. Hãy thử lại.",
+        "delete": "Không xoá được hãng. Hãy thử lại."
+      }
     }
   },
   "currency": {
@@ -1889,6 +1920,27 @@
         "load": "Không tải được dữ liệu tài chính. Hãy thử lại.",
         "action": "Không thực hiện được. Hãy thử lại."
       }
+    }
+  },
+  "tracking": {
+    "journey": "Hành trình bưu kiện",
+    "noEvents": "Chưa có cập nhật hành trình.",
+    "add": "Thêm cập nhật hành trình",
+    "statusLabel": "Trạng thái",
+    "location": "Vị trí (không bắt buộc)",
+    "note": "Ghi chú (không bắt buộc)",
+    "addButton": "Thêm cập nhật",
+    "status": {
+      "picked_up": "Đã lấy hàng",
+      "in_transit": "Đang vận chuyển",
+      "out_for_delivery": "Đang giao",
+      "delivery_attempted": "Giao không thành công",
+      "exception": "Có sự cố",
+      "info": "Cập nhật"
+    },
+    "errors": {
+      "load": "Không tải được hành trình. Hãy thử lại.",
+      "add": "Không thêm được cập nhật. Hãy thử lại."
     }
   }
 }

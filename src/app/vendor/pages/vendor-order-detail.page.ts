@@ -5,6 +5,7 @@ import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { AuthFacade } from '../../core/auth/auth.facade';
 import { OrderApiService } from '../../core/orders/order-api.service';
 import { ShopOrderDetail } from '../../core/orders/order.models';
+import { TrackingApiService } from '../../core/shipping/tracking-api.service';
 import { ShopOrderPanelComponent } from '../../shared/components/shop-order-panel/shop-order-panel.component';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
@@ -51,7 +52,7 @@ type Form = 'ship' | 'tracking' | 'cancel' | null;
 
       <div class="panel"><div class="panel-body">
         @if (actionError) { <p class="banner" role="alert">{{ actionError }}</p> }
-        <app-shop-order-panel [order]="order">
+        <app-shop-order-panel [order]="order" [vendorId]="vendorId">
           @if (order.status === 'pending') {
             <button type="button" class="btn btn-small" (click)="confirm()" [disabled]="busy">{{ t('vendor.orders.confirm') }}</button>
           }
@@ -72,7 +73,8 @@ type Form = 'ship' | 'tracking' | 'cancel' | null;
             <h3>{{ form === 'ship' ? t('vendor.orders.ship') : t('vendor.orders.editTracking') }}</h3>
             <div class="form-row">
               <label>{{ t('vendor.orders.carrier') }} *
-                <input type="text" name="carrier" [(ngModel)]="carrier" maxlength="100" required />
+                <input type="text" name="carrier" [(ngModel)]="carrier" maxlength="100" required list="carrier-names" autocomplete="off" />
+                <datalist id="carrier-names">@for (name of carrierNames; track name) { <option [value]="name"></option> }</datalist>
                 @if (fieldError('carrier'); as e) { <span class="field-error">{{ e }}</span> }
               </label>
               <label>{{ t('vendor.orders.trackingNumber') }} *
@@ -106,11 +108,14 @@ type Form = 'ship' | 'tracking' | 'cancel' | null;
 })
 export class VendorOrderDetailPage implements OnInit {
   private readonly api = inject(OrderApiService);
+  private readonly trackingApi = inject(TrackingApiService);
   private readonly auth = inject(AuthFacade);
   private readonly route = inject(ActivatedRoute);
   private readonly transloco = inject(TranslocoService);
 
   vendorId: number | null = null;
+  /** The carriers an administrator offers; the shop may still type another name. */
+  carrierNames: string[] = [];
   order: ShopOrderDetail | null = null;
   loading = true;
   notFound = false;
@@ -136,6 +141,7 @@ export class VendorOrderDetailPage implements OnInit {
       next: session => {
         this.vendorId = session.vendorId;
         if (!this.vendorId) { this.loading = false; return; }
+        this.trackingApi.carrierNames().subscribe({ next: carriers => this.carrierNames = carriers.map(c => c.name) });
         this.api.shopOrder(this.vendorId, Number(this.route.snapshot.paramMap.get('id'))).subscribe({
           next: order => { this.order = order; this.loading = false; },
           error: err => {
