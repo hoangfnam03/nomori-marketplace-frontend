@@ -1,6 +1,7 @@
-import { Component, input, output } from '@angular/core';
+import { Component, computed, input, output } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
+import { productLink } from '../../../core/seo/seo-paths';
 import { ProductCardModel } from '../../models/product-card.model';
 
 @Component({
@@ -9,7 +10,7 @@ import { ProductCardModel } from '../../models/product-card.model';
   imports: [RouterLink, TranslocoDirective],
   template: `
     <article class="product-card" *transloco="let t">
-      <a class="product-image" [routerLink]="['/storefront/products', product().id]" [attr.aria-label]="t('storefront.card.view', { name: product().name })">
+      <a class="product-image" [routerLink]="link()" [attr.aria-label]="t('storefront.card.view', { name: product().name })">
         @if (product().outOfStock) { <span class="badge badge-out">{{ t('storefront.productDetail.outOfStock') }}</span> }
         @else if (product().badge) { <span class="badge">{{ t(product().badge!) }}</span> }
         <img [src]="product().imageUrl" [alt]="product().name" loading="lazy" />
@@ -17,7 +18,7 @@ import { ProductCardModel } from '../../models/product-card.model';
       <div class="product-info">
         <div class="category">{{ product().category }}</div>
         @if (product().shopName) { <a class="shop" [routerLink]="['/storefront/vendors', product().shopId]">{{ product().shopName }}</a> }
-        <h3><a [routerLink]="['/storefront/products', product().id]">{{ product().name }}</a></h3>
+        <h3><a [routerLink]="link()">{{ product().name }}</a></h3>
         @if (product().rating) {
           <div class="rating" [attr.aria-label]="t('storefront.card.rating', { rating: product().rating })">{{ '★'.repeat(product().rating ?? 0) }}<span>{{ t('storefront.card.reviews', { count: product().reviewCount ?? 0 }) }}</span></div>
         }
@@ -53,5 +54,6 @@ import { ProductCardModel } from '../../models/product-card.model';
 })
 export class ProductCardComponent {
   readonly product = input.required<ProductCardModel>();
+  readonly link = computed(() => productLink(this.product().id, this.product().slug));
   readonly addToCart = output<ProductCardModel>();
 }

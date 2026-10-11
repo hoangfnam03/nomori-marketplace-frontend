@@ -44,6 +44,8 @@ export interface ProductResponse {
   finalPrice: number;
   /** True while a special price applies; price is then the regular price to strike through. */
   onSale: boolean;
+  /** The name as a URL fragment; the address of the page is `slug-id`. Empty when the name has no letters. */
+  slug: string;
 }
 
 /** From quantity units on, each unit costs price. */
@@ -81,6 +83,7 @@ export interface ProductSuggestion {
   name: string;
   price: number;
   mainPictureId: number;
+  slug: string;
 }
 
 export interface ProductDetailResponse {

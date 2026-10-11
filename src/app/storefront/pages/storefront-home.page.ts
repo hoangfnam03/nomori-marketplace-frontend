@@ -9,6 +9,8 @@ import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcru
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { ProductCardComponent } from '../../shared/components/product-card/product-card.component';
 import { SearchBoxComponent } from '../../shared/components/search-box/search-box.component';
+import { productLink } from '../../core/seo/seo-paths';
+import { SeoService } from '../../core/seo/seo.service';
 import { ProductCardModel } from '../../shared/models/product-card.model';
 import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { ProductResponse } from '../../core/catalog/catalog.models';
@@ -96,7 +98,10 @@ export class StorefrontHomePage {
   loading = true;
   error: string | null = null;
 
+  private readonly seo = inject(SeoService);
+
   constructor() {
+    this.seo.setByKeys('seo.home.title', 'seo.home.description', '/storefront');
     this.api.getProducts({ pageSize: 8, sort: 'DisplayOrder' }).subscribe({
       next: result => {
         const featured = result.items.filter(p => p.showOnHomepage).slice(0, 8);
@@ -116,7 +121,7 @@ export class StorefrontHomePage {
       this.cartFailed = outcome.kind === 'error';
       if (outcome.kind === 'added') this.cartMessage = this.transloco.translate('storefront.cart.added', { name: card.name });
       // A product with variants needs its options chosen on its own page.
-      else if (outcome.kind === 'choose-options') this.router.navigate(['/storefront/products', card.id]);
+      else if (outcome.kind === 'choose-options') this.router.navigate(productLink(card.id, card.slug));
       else if (outcome.kind === 'error') this.cartMessage = outcome.message;
     });
   }
@@ -134,6 +139,7 @@ function toProductCard(p: ProductResponse, pictureUrl: string | null, format: (v
   return {
     id: p.id,
     name: p.name,
+    slug: p.slug,
     category: '',
     price: format(p.finalPrice),
     compareAtPrice: p.onSale ? format(p.price) : p.oldPrice > 0 ? format(p.oldPrice) : undefined,
