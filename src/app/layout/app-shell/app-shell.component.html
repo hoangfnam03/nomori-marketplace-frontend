@@ -13,6 +13,7 @@
       @if (auth.session()?.vendorId) {
         <a routerLink="/vendor" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ t('nav.vendorPortal') }}</a>
         <a routerLink="/vendor/returns" routerLinkActive="active">{{ t('nav.vendorReturns') }}</a>
+        <a routerLink="/vendor/finance" routerLinkActive="active">{{ t('nav.vendorFinance') }}</a>
       }
       @if (can(codes.adminAccess)) {
         <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">{{ t('nav.admin') }}</a>
@@ -42,6 +43,9 @@
       }
       @if (can(codes.ordersManage)) {
         <a routerLink="/admin/returns" routerLinkActive="active">{{ t('nav.returns') }}</a>
+      }
+      @if (can(codes.financeManage)) {
+        <a routerLink="/admin/finance" routerLinkActive="active">{{ t('nav.finance') }}</a>
       }
       @if (can(codes.emailsManage)) {
         <a routerLink="/admin/emails" routerLinkActive="active">{{ t('nav.emails') }}</a>

@@ -65,6 +65,11 @@ export const adminRoutes: Routes = [
     loadComponent: () => import('./pages/admin-jobs.page').then(page => page.AdminJobsPage)
   },
   {
+    path: 'finance',
+    canActivate: [permissionGuard(permissionCodes.financeManage)],
+    loadComponent: () => import('./pages/admin-finance.page').then(page => page.AdminFinancePage)
+  },
+  {
     path: 'emails',
     canActivate: [permissionGuard(permissionCodes.emailsManage)],
     loadComponent: () => import('./pages/admin-emails.page').then(page => page.AdminEmailsPage)

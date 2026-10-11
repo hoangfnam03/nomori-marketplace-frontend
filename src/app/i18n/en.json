@@ -83,7 +83,9 @@
     "jobs": "Jobs",
     "emails": "Emails",
     "returns": "Returns",
-    "vendorReturns": "Returns (shop)"
+    "vendorReturns": "Returns (shop)",
+    "vendorFinance": "Finance (shop)",
+    "finance": "Finance"
   },
   "language": {
     "label": "Language",
@@ -199,6 +201,10 @@
     "email": {
       "not_retryable": "Only an email that failed can be sent again.",
       "busy": "This email is being sent right now. Try again in a moment."
+    },
+    "finance": {
+      "no_bank_account": "The shop has no bank account for payouts yet.",
+      "payout_invalid_transition": "This payout changed in the meantime, so that step is no longer possible. It has been refreshed."
     }
   },
   "vendorStatus": {
@@ -1740,6 +1746,148 @@
       "errors": {
         "load": "Unable to load the payment.",
         "complete": "Unable to finish the payment. Try again."
+      }
+    }
+  },
+  "finance": {
+    "kinds": {
+      "sale": "Sale",
+      "refund": "Refund",
+      "adjustment": "Adjustment"
+    },
+    "payoutStatus": {
+      "pending": "Pending",
+      "paid": "Paid",
+      "failed": "Failed"
+    },
+    "bankStatus": {
+      "missing": "No account",
+      "hold": "On hold",
+      "ready": "Ready"
+    },
+    "vendor": {
+      "eyebrow": "Shop",
+      "title": "Finance",
+      "lede": "What the platform owes your shop: sales after commission, refunds, adjustments and payouts.",
+      "noShop": "Your account is not linked to a shop.",
+      "tabs": {
+        "overview": "Overview",
+        "ledger": "Ledger",
+        "payouts": "Payouts",
+        "bank": "Bank account"
+      },
+      "rate": "Commission rate for new orders",
+      "pending": "Pending",
+      "pendingHint": "Delivered orders the customer has not confirmed yet. Not payable yet.",
+      "available": "Available",
+      "availableHint": "Paid out in the next payout run once it reaches {{minimum}}.",
+      "inPayout": "In a payout being sent",
+      "paid": "Paid out in total",
+      "noBank": "No bank account for payouts yet. Add one in the Bank account tab: without it your balance is not paid out.",
+      "bankHold": "Your bank account was changed recently. It can be used for payouts once the safety period has passed.",
+      "months": "By month",
+      "noMonths": "No sales yet.",
+      "month": "Month",
+      "sales": "Sales",
+      "commission": "Commission",
+      "refunds": "Refunds",
+      "type": "Type",
+      "allTypes": "All types",
+      "searchOrder": "Order number",
+      "search": "Search",
+      "previous": "Previous",
+      "next": "Next",
+      "noEntries": "No entries yet.",
+      "date": "Date",
+      "order": "Order",
+      "goods": "Goods",
+      "amount": "Amount",
+      "note": "Note",
+      "noPayouts": "No payouts yet.",
+      "payout": "Payout",
+      "account": "Account",
+      "status": "Status",
+      "reference": "Bank reference",
+      "csv": "CSV",
+      "bankName": "Bank",
+      "chooseBank": "Choose a bank",
+      "accountNumber": "Account number",
+      "holderName": "Account holder",
+      "branch": "Branch (optional)",
+      "password": "Your password",
+      "passwordHint": "Needed to change where your money goes. Everyone in the shop is emailed.",
+      "bankHint": "A new or changed account is used for payouts only after a safety period. The number is stored encrypted and only the last 4 digits are shown.",
+      "bankUsable": "Ready for payouts.",
+      "bankUsableFrom": "Can be used for payouts from {{date}}.",
+      "bankSaved": "Bank account saved.",
+      "save": "Save",
+      "errors": {
+        "load": "Could not load the finance data. Try again.",
+        "save": "Could not save the bank account. Try again."
+      }
+    },
+    "admin": {
+      "eyebrow": "Platform",
+      "title": "Finance",
+      "lede": "Commission rates, what every shop is owed, payouts to make and confirm, and manual adjustments.",
+      "tabs": {
+        "commission": "Commission",
+        "balances": "Balances",
+        "payouts": "Payouts",
+        "adjustments": "Adjustments"
+      },
+      "defaultRate": "Default commission rate",
+      "newRate": "New rate (%)",
+      "note": "Note",
+      "rateHint": "From 0 to {{max}} percent. It applies to orders placed after you save; earlier orders keep their rate.",
+      "saveRate": "Save default rate",
+      "shopRates": "Rates of single shops",
+      "shopId": "Shop id",
+      "saveShopRate": "Save shop rate",
+      "noOverrides": "No shop has its own rate.",
+      "shop": "Shop",
+      "rate": "Rate",
+      "removeRate": "Use default",
+      "history": "Changes",
+      "noHistory": "No changes yet.",
+      "when": "When",
+      "scope": "Applies to",
+      "platformDefault": "Platform default",
+      "oldRate": "Old rate",
+      "saved": "Saved.",
+      "bankStatus": "Bank account",
+      "allBanks": "Any bank status",
+      "searchShop": "Shop name",
+      "search": "Search",
+      "previous": "Previous",
+      "next": "Next",
+      "noBalances": "No shop has any money movement yet.",
+      "available": "Available",
+      "inPayout": "In payout",
+      "paid": "Paid",
+      "cutoff": "Cut-off",
+      "cutoffHint": "Entries up to this moment are paid out. Leave empty for now.",
+      "createPayouts": "Create payouts",
+      "exportCsv": "Export pending (CSV)",
+      "allStatuses": "All statuses",
+      "status": "Status",
+      "noPayouts": "No payouts.",
+      "payout": "Payout",
+      "amount": "Amount",
+      "account": "Account",
+      "entries": "{{count}} entries",
+      "referenceOrReason": "Bank reference or failure reason",
+      "markPaid": "Paid",
+      "markFailed": "Failed",
+      "payoutsCreated": "{{created}} payouts created, {{skipped}} shops skipped (no usable bank account, balance too low, or nothing to pay).",
+      "adjustHint": "An adjustment adds to or takes from a shop balance. It cannot be edited or deleted: fix a mistake with another adjustment.",
+      "adjustAmount": "Amount (negative takes money away)",
+      "reason": "Reason",
+      "addAdjustment": "Add adjustment",
+      "adjusted": "Adjustment added.",
+      "errors": {
+        "load": "Could not load the finance data. Try again.",
+        "action": "That did not work. Try again."
       }
     }
   }
