@@ -8,6 +8,7 @@ import { CurrencyService } from '../../core/money/currency.service';
 import { SaveShippingRateRequest, ShippingRate } from '../../core/shipping/shipping.models';
 import { ShippingApiService } from '../../core/shipping/shipping-api.service';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
+import { GhnPickupComponent } from '../components/ghn-pickup.component';
 
 interface RateForm {
   name: string;
@@ -27,7 +28,7 @@ const emptyForm = (): RateForm => ({
 /** Shipping rates of the signed-in member's shop: where the shop ships and for how much. */
 @Component({
   standalone: true,
-  imports: [FormsModule, RouterLink, TranslocoDirective],
+  imports: [FormsModule, GhnPickupComponent, RouterLink, TranslocoDirective],
   styleUrls: ['../../shared/styles/vendor-pages.scss'],
   template: `
     <ng-container *transloco="let t">
@@ -158,6 +159,7 @@ const emptyForm = (): RateForm => ({
           </form>
         </div>
       }
+      <app-ghn-pickup [vendorId]="vendorId" />
     }
     </ng-container>
   `,
