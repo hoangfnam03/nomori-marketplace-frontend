@@ -398,7 +398,10 @@
       "country": "Quốc gia",
       "stateProvince": "Tỉnh / bang",
       "stateProvinceOptional": "Tỉnh / bang (không bắt buộc)",
-      "postalCode": "Mã bưu chính"
+      "postalCode": "Mã bưu chính",
+      "ghnProvince": "Tỉnh/Thành (GHN)",
+      "ghnDistrict": "Quận/Huyện (GHN)",
+      "ghnWard": "Phường/Xã (GHN)"
     },
     "gender": {
       "none": "Không muốn nêu",
@@ -463,7 +466,8 @@
         "emailChange": "Không gửi được yêu cầu đổi email.",
         "loadCountries": "Không tải được danh sách quốc gia."
       },
-      "choose": "Chọn…"
+      "choose": "Chọn…",
+      "ghnHint": "Chọn đủ tỉnh, quận, phường để được giao bằng Giao Hàng Nhanh."
     }
   },
   "storefront": {
@@ -1497,7 +1501,30 @@
       "editTracking": "Sửa vận đơn",
       "deliver": "Đã giao thành công",
       "carrier": "Đơn vị vận chuyển",
-      "trackingNumber": "Mã vận đơn"
+      "trackingNumber": "Mã vận đơn",
+      "ghn": {
+        "ship": "Gửi qua GHN",
+        "sync": "Cập nhật từ GHN",
+        "label": "In nhãn GHN"
+      }
+    },
+    "ghn": {
+      "title": "Giao Hàng Nhanh (GHN)",
+      "on": "Đang bật: khách được chọn GHN, shipper GHN tới địa chỉ dưới đây lấy hàng.",
+      "off": "Chưa bật. Nhập địa chỉ lấy hàng để khách chọn được GHN cho đơn của shop.",
+      "turnOn": "Bật GHN",
+      "edit": "Sửa địa chỉ",
+      "turnOff": "Tắt GHN",
+      "hint": "Tên và số điện thoại lấy sẵn từ thông tin shop, shipper GHN sẽ gọi số này khi đến lấy hàng. Phí ship tính từ địa chỉ này tới khách.",
+      "contactName": "Tên người gửi (in trên nhãn)",
+      "phone": "Số điện thoại",
+      "province": "Tỉnh/Thành",
+      "district": "Quận/Huyện",
+      "ward": "Phường/Xã",
+      "address": "Số nhà, tên đường",
+      "choose": "Chọn…",
+      "save": "Lưu và bật GHN",
+      "error": "Không lưu được địa chỉ lấy hàng."
     }
   },
   "adminVendorApplications": {

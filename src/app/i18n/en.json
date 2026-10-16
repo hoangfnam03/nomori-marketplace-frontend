@@ -398,7 +398,10 @@
       "country": "Country",
       "stateProvince": "State / province",
       "stateProvinceOptional": "State / province (optional)",
-      "postalCode": "Postal code"
+      "postalCode": "Postal code",
+      "ghnProvince": "Province (GHN)",
+      "ghnDistrict": "District (GHN)",
+      "ghnWard": "Ward (GHN)"
     },
     "gender": {
       "none": "Prefer not to say",
@@ -463,7 +466,8 @@
         "emailChange": "Unable to request email change.",
         "loadCountries": "Unable to load the country list."
       },
-      "choose": "Choose…"
+      "choose": "Choose…",
+      "ghnHint": "Pick the province, district and ward to get Giao Hang Nhanh delivery."
     }
   },
   "storefront": {
@@ -1497,7 +1501,30 @@
       "editTracking": "Edit tracking",
       "deliver": "Mark as delivered",
       "carrier": "Carrier",
-      "trackingNumber": "Tracking number"
+      "trackingNumber": "Tracking number",
+      "ghn": {
+        "ship": "Ship with GHN",
+        "sync": "Update from GHN",
+        "label": "Print GHN label"
+      }
+    },
+    "ghn": {
+      "title": "Giao Hang Nhanh (GHN)",
+      "on": "On: customers can choose GHN, and the GHN driver picks up at the address below.",
+      "off": "Off. Add a pickup address so customers can choose GHN for this shop's orders.",
+      "turnOn": "Turn on GHN",
+      "edit": "Edit address",
+      "turnOff": "Turn off GHN",
+      "hint": "The name and phone come from the shop's details; the GHN driver calls this number when picking up. Shipping is priced from this address to the customer.",
+      "contactName": "Sender name (printed on the label)",
+      "phone": "Phone",
+      "province": "Province",
+      "district": "District",
+      "ward": "Ward",
+      "address": "House number and street",
+      "choose": "Choose…",
+      "save": "Save and turn on GHN",
+      "error": "The pickup address could not be saved."
     }
   },
   "adminVendorApplications": {
