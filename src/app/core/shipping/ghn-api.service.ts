@@ -4,18 +4,21 @@ import { map, Observable, of, shareReplay, catchError } from 'rxjs';
 import { API_BASE_URL } from '../config/api-config';
 import { ShopOrderDetail } from '../orders/order.models';
 
+/** Two-level administrative units (since 1 July 2025): a province and its wards, no district. */
 export interface GhnProvince { id: number; name: string; }
-export interface GhnDistrict { id: number; provinceId: number; name: string; }
-export interface GhnWard { code: string; districtId: number; name: string; }
+export interface GhnWard { id: number; provinceId: number; name: string; }
 
 /** Where GHN picks up one shop's parcels; the shop has GHN only once it has one. */
 export interface GhnPickup {
   vendorId: number; contactName: string; phone: string; address: string;
-  provinceId: number; provinceName: string; districtId: number; districtName: string; wardCode: string; wardName: string;
+  provinceId: number; provinceName: string; wardId: number; wardName: string;
+  /** The shop pays the shipping from this subtotal (primary currency); null: no free shipping. */
+  freeShippingOverSubtotal: number | null;
 }
 export interface SaveGhnPickup {
   contactName: string; phone: string; address: string;
-  provinceId: number; provinceName: string | null; districtId: number; districtName: string | null; wardCode: string | null; wardName: string | null;
+  provinceId: number; provinceName: string | null; wardId: number; wardName: string | null;
+  freeShippingOverSubtotal: number | null;
 }
 
 /** GHN (Giao Hàng Nhanh, prototype): its address lists, and handing a shop order to GHN. Off unless the server is configured. */
@@ -33,8 +36,7 @@ export class GhnApiService {
   }
 
   provinces() { return this.http.get<GhnProvince[]>(`${this.root}/shipping/ghn/provinces`); }
-  districts(provinceId: number) { return this.http.get<GhnDistrict[]>(`${this.root}/shipping/ghn/districts`, { params: { provinceId } }); }
-  wards(districtId: number) { return this.http.get<GhnWard[]>(`${this.root}/shipping/ghn/wards`, { params: { districtId } }); }
+  wards(provinceId: number) { return this.http.get<GhnWard[]>(`${this.root}/shipping/ghn/wards`, { params: { provinceId } }); }
 
   // ---- Shop ----
   pickup(vendorId: number) { return this.http.get<{ enabled: boolean; pickup: GhnPickup | null }>(`${this.root}/vendors/${vendorId}/ghn/pickup`); }

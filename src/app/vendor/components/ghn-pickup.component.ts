@@ -1,7 +1,8 @@
 import { Component, inject, Input, OnChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
-import { GhnApiService, GhnDistrict, GhnPickup, GhnProvince, GhnWard } from '../../core/shipping/ghn-api.service';
+import { GhnApiService, GhnPickup, GhnProvince, GhnWard } from '../../core/shipping/ghn-api.service';
+import { CurrencyService } from '../../core/money/currency.service';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { ApiError, vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
@@ -10,11 +11,11 @@ interface PickupForm {
   phone: string;
   address: string;
   provinceId: number | null;
-  districtId: number | null;
-  wardCode: string | null;
+  wardId: number | null;
+  freeShippingOverSubtotal: number | null;
 }
 
-const emptyForm = (): PickupForm => ({ contactName: '', phone: '', address: '', provinceId: null, districtId: null, wardCode: null });
+const emptyForm = (): PickupForm => ({ contactName: '', phone: '', address: '', provinceId: null, wardId: null, freeShippingOverSubtotal: null });
 
 /**
  * GHN (prototype): where GHN picks up this shop's parcels. With an address the shop's customers get a GHN option priced from here, and
@@ -42,7 +43,14 @@ const emptyForm = (): PickupForm => ({ contactName: '', phone: '', address: '', 
           @if (error) { <p class="banner" role="alert">{{ error }}</p> }
           @if (pickup && !editing) {
             <p class="state ghn-on">{{ t('vendor.ghn.on') }}</p>
-            <p>{{ pickup.contactName }} · {{ pickup.phone }}<br />{{ pickup.address }}, {{ pickup.wardName }}, {{ pickup.districtName }}, {{ pickup.provinceName }}</p>
+            <p>{{ pickup.contactName }} · {{ pickup.phone }}<br />{{ pickup.address }}, {{ pickup.wardName }}, {{ pickup.provinceName }}</p>
+            <p class="free">
+              @if (pickup.freeShippingOverSubtotal !== null) {
+                {{ t('vendor.ghn.freeOn', { amount: money(pickup.freeShippingOverSubtotal) }) }}
+              } @else {
+                {{ t('vendor.ghn.freeOff') }}
+              }
+            </p>
           } @else if (!editing) {
             <p class="state">{{ t('vendor.ghn.off') }}</p>
             <div class="actions"><button type="button" class="btn btn-small" (click)="edit()" [disabled]="busy">{{ t('vendor.ghn.turnOn') }}</button></div>
@@ -66,23 +74,22 @@ const emptyForm = (): PickupForm => ({ contactName: '', phone: '', address: '', 
                     @for (p of provinces; track p.id) { <option [ngValue]="p.id">{{ p.name }}</option> }
                   </select>
                 </label>
-                <label>{{ t('vendor.ghn.district') }}
-                  <select name="districtId" [(ngModel)]="form.districtId" (ngModelChange)="onDistrict()" [disabled]="!form.provinceId">
-                    <option [ngValue]="null">{{ t('vendor.ghn.choose') }}</option>
-                    @for (d of districts; track d.id) { <option [ngValue]="d.id">{{ d.name }}</option> }
-                  </select>
-                </label>
                 <label>{{ t('vendor.ghn.ward') }}
-                  <select name="wardCode" [(ngModel)]="form.wardCode" [disabled]="!form.districtId">
+                  <select name="wardId" [(ngModel)]="form.wardId" [disabled]="!form.provinceId">
                     <option [ngValue]="null">{{ t('vendor.ghn.choose') }}</option>
-                    @for (w of wards; track w.code) { <option [ngValue]="w.code">{{ w.name }}</option> }
+                    @for (w of wards; track w.id) { <option [ngValue]="w.id">{{ w.name }}</option> }
                   </select>
-                  @if (fieldError('wardCode'); as e) { <span class="field-error">{{ e }}</span> }
+                  @if (fieldError('wardId'); as e) { <span class="field-error">{{ e }}</span> }
                 </label>
               </div>
               <label>{{ t('vendor.ghn.address') }}
                 <input type="text" name="address" [(ngModel)]="form.address" maxlength="200" />
                 @if (fieldError('address'); as e) { <span class="field-error">{{ e }}</span> }
+              </label>
+              <label>{{ t('vendor.ghn.freeShipping') }}
+                <input type="number" name="freeShippingOverSubtotal" [(ngModel)]="form.freeShippingOverSubtotal" min="0" step="any" />
+                <span class="hint">{{ t('vendor.ghn.freeShippingHint') }}</span>
+                @if (fieldError('freeShippingOverSubtotal'); as e) { <span class="field-error">{{ e }}</span> }
               </label>
               <div class="actions">
                 <button type="submit" class="btn" [disabled]="busy">{{ t('vendor.ghn.save') }}</button>
@@ -95,12 +102,13 @@ const emptyForm = (): PickupForm => ({ contactName: '', phone: '', address: '', 
     }
     </ng-container>
   `,
-  styles: [`.ghn-on { color: #205e4a; font-weight: 600; padding: 0; } .hint { color: var(--muted); font-size: .85rem; margin: 0; }`]
+  styles: [`.ghn-on { color: #205e4a; font-weight: 600; padding: 0; } .hint { color: var(--muted); font-size: .85rem; margin: 0; font-weight: 400; } .free { margin: 0; color: var(--muted); }`]
 })
 export class GhnPickupComponent implements OnChanges {
   private readonly ghn = inject(GhnApiService);
   private readonly transloco = inject(TranslocoService);
   private readonly vendors = inject(VendorApiService);
+  private readonly currency = inject(CurrencyService);
 
   @Input() vendorId: number | null = null;
 
@@ -112,11 +120,11 @@ export class GhnPickupComponent implements OnChanges {
   fieldErrors: Record<string, string[]> = {};
   form: PickupForm = emptyForm();
   provinces: GhnProvince[] = [];
-  districts: GhnDistrict[] = [];
   wards: GhnWard[] = [];
 
   ngOnChanges() {
     if (!this.vendorId) return;
+    this.currency.load();
     this.ghn.pickup(this.vendorId).subscribe({
       next: state => { this.enabled = state.enabled; this.pickup = state.pickup; },
       error: () => { this.enabled = false; }
@@ -125,13 +133,16 @@ export class GhnPickupComponent implements OnChanges {
 
   fieldError(name: string) { return this.fieldErrors[name]?.join(' ') ?? ''; }
 
+  money(value: number) { return this.currency.formatPrimary(value); }
+
   edit() {
     this.editing = true;
     this.error = '';
     this.fieldErrors = {};
     const p = this.pickup;
     this.form = p
-      ? { contactName: p.contactName, phone: p.phone, address: p.address, provinceId: p.provinceId, districtId: p.districtId, wardCode: p.wardCode }
+      ? { contactName: p.contactName, phone: p.phone, address: p.address, provinceId: p.provinceId, wardId: p.wardId,
+          freeShippingOverSubtotal: p.freeShippingOverSubtotal }
       : emptyForm();
     // A first address starts from the shop itself: its name goes on the label as the sender, its phone is the one the driver calls.
     if (!p && this.vendorId) {
@@ -142,27 +153,17 @@ export class GhnPickupComponent implements OnChanges {
         }
       });
     }
-    this.districts = [];
     this.wards = [];
     if (!this.provinces.length) this.ghn.provinces().subscribe({ next: list => this.provinces = list, error: err => this.fail(err) });
     if (p) {
-      this.ghn.districts(p.provinceId).subscribe({ next: list => this.districts = list });
-      this.ghn.wards(p.districtId).subscribe({ next: list => this.wards = list });
+      this.ghn.wards(p.provinceId).subscribe({ next: list => this.wards = list });
     }
   }
 
   onProvince() {
-    this.form.districtId = null;
-    this.form.wardCode = null;
-    this.districts = [];
+    this.form.wardId = null;
     this.wards = [];
-    if (this.form.provinceId) this.ghn.districts(this.form.provinceId).subscribe({ next: list => this.districts = list, error: err => this.fail(err) });
-  }
-
-  onDistrict() {
-    this.form.wardCode = null;
-    this.wards = [];
-    if (this.form.districtId) this.ghn.wards(this.form.districtId).subscribe({ next: list => this.wards = list, error: err => this.fail(err) });
+    if (this.form.provinceId) this.ghn.wards(this.form.provinceId).subscribe({ next: list => this.wards = list, error: err => this.fail(err) });
   }
 
   save() {
@@ -174,8 +175,9 @@ export class GhnPickupComponent implements OnChanges {
     this.ghn.savePickup(this.vendorId, {
       contactName: f.contactName.trim(), phone: f.phone.trim(), address: f.address.trim(),
       provinceId: f.provinceId ?? 0, provinceName: this.provinces.find(p => p.id === f.provinceId)?.name ?? null,
-      districtId: f.districtId ?? 0, districtName: this.districts.find(d => d.id === f.districtId)?.name ?? null,
-      wardCode: f.wardCode, wardName: this.wards.find(w => w.code === f.wardCode)?.name ?? null
+      wardId: f.wardId ?? 0, wardName: this.wards.find(w => w.id === f.wardId)?.name ?? null,
+      // An empty box (or 0) means no free shipping.
+      freeShippingOverSubtotal: f.freeShippingOverSubtotal ? Number(f.freeShippingOverSubtotal) : null
     }).subscribe({
       next: pickup => { this.busy = false; this.pickup = pickup; this.editing = false; },
       error: err => {

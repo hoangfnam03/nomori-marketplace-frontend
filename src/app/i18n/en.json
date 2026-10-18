@@ -159,9 +159,6 @@
       "platform_shop": "The platform shop cannot be deleted or deactivated.",
       "inactive": "This shop is switched off, so members cannot change it. Contact an administrator."
     },
-    "shipping": {
-      "rate_limit": "This shop already has 50 shipping rates. Remove one to add another."
-    },
     "payment": {
       "method_unavailable": "This payment method is not available. Its provider is not installed or the method is off.",
       "idempotency_conflict": "This request was already used with different details.",
@@ -216,6 +213,13 @@
     "tracking": {
       "not_shipped": "Tracking can only be added while the order is shipped.",
       "event_limit": "This parcel has the most tracking lines it can have."
+    },
+    "ghn": {
+      "not_configured": "Giao Hang Nhanh is not turned on.",
+      "not_confirmed": "Only a confirmed order can be shipped with GHN.",
+      "no_area": "The order's address has no province and ward in the new units.",
+      "not_ghn": "This order was not shipped with GHN.",
+      "no_pickup": "The shop has no pickup address yet. Add it on the Shipping page before adding products."
     }
   },
   "vendorStatus": {
@@ -399,9 +403,8 @@
       "stateProvince": "State / province",
       "stateProvinceOptional": "State / province (optional)",
       "postalCode": "Postal code",
-      "ghnProvince": "Province (GHN)",
-      "ghnDistrict": "District (GHN)",
-      "ghnWard": "Ward (GHN)"
+      "ghnProvince": "Province",
+      "ghnWard": "Ward"
     },
     "gender": {
       "none": "Prefer not to say",
@@ -467,7 +470,8 @@
         "loadCountries": "Unable to load the country list."
       },
       "choose": "Choose…",
-      "ghnHint": "Pick the province, district and ward to get Giao Hang Nhanh delivery."
+      "ghnHint": "Using the new administrative units (province and ward; districts no longer exist).",
+      "ghnRequired": "Pick the province and the ward so the address can be delivered."
     }
   },
   "storefront": {
@@ -613,7 +617,7 @@
       "summaryLabel": "Order summary",
       "summary": "Summary",
       "subtotal": "Subtotal",
-      "currencyNote": "Shipping and taxes are added at checkout. Prices are in {{code}}; you always pay in {{code}}.",
+      "currencyNote": "Shipping and taxes are added at checkout.",
       "clear": "Clear cart",
       "errors": {
         "load": "Unable to load your cart."
@@ -691,7 +695,8 @@
         "paymentRequired": "Choose a payment method.",
         "paymentInvalid": "This payment method is not available.",
         "couponInvalid": "The discount code cannot be used.",
-        "selectionChanged": "Some chosen items are no longer in your cart. Go back to the cart and choose again."
+        "selectionChanged": "Some chosen items are no longer in your cart. Go back to the cart and choose again.",
+        "addressAreaMissing": "This address has no province and ward in the new units yet."
       },
       "errors": {
         "load": "Unable to load checkout.",
@@ -736,7 +741,10 @@
         }
       },
       "taxNote": "Prices are before tax. The tax follows your delivery address.",
-      "redirectHint": "you pay on the payment page"
+      "redirectHint": "you pay on the payment page",
+      "editAddress": "Update the address",
+      "expectedOn": "Expected {{date}}",
+      "expectedBetween": "Expected {{from}} – {{to}}"
     }
   },
   "admin": {
@@ -1207,10 +1215,6 @@
       }
     }
   },
-  "currency": {
-    "display": "Display currency",
-    "approximate": "Prices in other currencies are approximate. Payment is always in {{code}}."
-  },
   "media": {
     "image": "Image",
     "noImage": "No image",
@@ -1247,7 +1251,7 @@
         "loadAccount": "Unable to load your account."
       },
       "editShop": "Shop settings",
-      "manageShipping": "Shipping rates",
+      "manageShipping": "Shipping (GHN)",
       "manageOrders": "Orders",
       "manageDiscounts": "Discounts"
     },
@@ -1334,7 +1338,14 @@
         "copy": "Unable to copy the product.",
         "status": "Unable to change the product status.",
         "review": "Unable to request a review."
-      }
+      },
+      "shippingSize": "Shipping",
+      "weight": "Packed weight (grams)",
+      "weightHint": "Include the box and padding. Shipping is priced by this weight.",
+      "length": "Length (cm)",
+      "width": "Width (cm)",
+      "height": "Height (cm)",
+      "sizeHint": "The packed size is optional: all three or none. A bulky parcel is charged by its size when that is more than its weight."
     },
     "details": {
       "eyebrow": "Vendor portal / Products / Details",
@@ -1439,8 +1450,8 @@
     },
     "shipping": {
       "eyebrow": "Vendor portal",
-      "title": "Shipping rates",
-      "lede": "Choose where your shop ships and what it charges. Customers cannot check out your products to a place without a rate.",
+      "title": "Shipping",
+      "lede": "Every order of the shop goes with Giao Hang Nhanh (GHN) from the pickup address below; GHN prices it for the customer's address. Add the pickup address before adding products.",
       "rates": "Rates",
       "add": "Add rate",
       "addHeading": "New shipping rate",
@@ -1511,20 +1522,23 @@
     "ghn": {
       "title": "Giao Hang Nhanh (GHN)",
       "on": "On: customers can choose GHN, and the GHN driver picks up at the address below.",
-      "off": "Off. Add a pickup address so customers can choose GHN for this shop's orders.",
-      "turnOn": "Turn on GHN",
+      "off": "No pickup address yet (new units: province and ward). The shop needs one to add products and take orders.",
+      "turnOn": "Add pickup address",
       "edit": "Edit address",
       "turnOff": "Turn off GHN",
       "hint": "The name and phone come from the shop's details; the GHN driver calls this number when picking up. Shipping is priced from this address to the customer.",
       "contactName": "Sender name (printed on the label)",
       "phone": "Phone",
       "province": "Province",
-      "district": "District",
       "ward": "Ward",
       "address": "House number and street",
       "choose": "Choose…",
-      "save": "Save and turn on GHN",
-      "error": "The pickup address could not be saved."
+      "save": "Save pickup address",
+      "error": "The pickup address could not be saved.",
+      "freeShipping": "Free shipping for orders from (leave empty for none)",
+      "freeShippingHint": "When the shop's items in an order reach this amount the customer pays no shipping; the shop takes the GHN fee on, taken off its settlement.",
+      "freeOn": "Free shipping for orders from {{amount}} (the shop pays GHN).",
+      "freeOff": "No free shipping."
     }
   },
   "adminVendorApplications": {
@@ -1734,7 +1748,16 @@
     },
     "tax": "Tax",
     "taxLine": "tax {{rate}}% = {{amount}}",
-    "confirmReceiptNote": "Only confirm once you have all the items. You can still ask for a return within the return window."
+    "confirmReceiptNote": "Only confirm once you have all the items. You can still ask for a return within the return window.",
+    "expectedDelivery": "Expected delivery: {{date}}",
+    "shipment": {
+      "carrierFee": "GHN fee charged",
+      "freeShipping": "Free shipping (paid by the shop)",
+      "weightAdjustment": "Weight difference (paid by the shop)",
+      "cod": "Cash on delivery",
+      "codPaid": "GHN paid it over on {{date}}",
+      "codHeld": "Not paid over by GHN yet"
+    }
   },
   "discounts": {
     "list": "Discount codes",
