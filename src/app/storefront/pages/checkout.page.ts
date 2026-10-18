@@ -20,6 +20,7 @@ const PROBLEM_KEY: Record<CheckoutProblem, string> = {
   prices_changed: 'storefront.checkout.problems.pricesChanged',
   address_required: 'storefront.checkout.problems.addressRequired',
   address_invalid: 'storefront.checkout.problems.addressInvalid',
+  address_area_missing: 'storefront.checkout.problems.addressAreaMissing',
   shipping_unavailable: 'storefront.checkout.problems.shippingUnavailable',
   shipping_not_chosen: 'storefront.checkout.problems.shippingNotChosen',
   shipping_invalid: 'storefront.checkout.problems.shippingInvalid',
@@ -94,6 +95,9 @@ function newKey(): string {
             }
             @if (fieldError('addressId'); as e) { <p class="issue" role="alert">{{ e }}</p> }
             @if (hasProblem('address_invalid')) { <p class="issue" role="alert">{{ t(problemKey('address_invalid')) }}</p> }
+            @if (hasProblem('address_area_missing')) {
+              <p class="issue" role="alert">{{ t(problemKey('address_area_missing')) }} <a routerLink="/customer/account-data">{{ t('storefront.checkout.editAddress') }}</a></p>
+            }
           </section>
 
           <section class="step" aria-labelledby="step-shipping">
@@ -400,11 +404,20 @@ export class CheckoutPage implements OnInit {
     return CART_PROBLEMS.find(p => this.hasProblem(p)) ?? null;
   }
 
-  otherProblems(): CheckoutProblem[] { return (this.preview?.problems ?? []).filter(p => !CART_PROBLEMS.includes(p) && p !== 'address_invalid' && p !== 'coupon_invalid'); }
+  otherProblems(): CheckoutProblem[] { return (this.preview?.problems ?? []).filter(p => !CART_PROBLEMS.includes(p) && p !== 'address_invalid' && p !== 'address_area_missing' && p !== 'coupon_invalid'); }
 
   fieldError(name: string) { return this.fieldErrors[name]?.join(' ') ?? ''; }
 
   daysText(option: ShippingOption) {
+    // GHN's own window comes first: "Expected 21/10 – 22/10".
+    if (option.estimatedFromUtc || option.estimatedToUtc) {
+      const day = (iso: string) => new Date(iso).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+      const from = day((option.estimatedFromUtc ?? option.estimatedToUtc)!);
+      const to = day((option.estimatedToUtc ?? option.estimatedFromUtc)!);
+      return from === to
+        ? this.transloco.translate('storefront.checkout.expectedOn', { date: from })
+        : this.transloco.translate('storefront.checkout.expectedBetween', { from, to });
+    }
     const { minDays, maxDays } = option;
     if (minDays === null && maxDays === null) return '';
     if (minDays === null || maxDays === null || minDays === maxDays) return this.transloco.translate('storefront.cart.shipping.daysOne', { days: minDays ?? maxDays });

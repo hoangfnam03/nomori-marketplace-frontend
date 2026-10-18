@@ -101,6 +101,10 @@ export interface ShopOrderDetail {
   total: number;
   shippingMethodName: string;
   carrier: string | null;
+  /** GHN's expected delivery day, once the parcel was handed over. */
+  expectedDeliveryUtc?: string | null;
+  /** What shipping cost (shops and administrators only; absent for the customer). */
+  shipment?: ShipmentCost | null;
   trackingNumber: string | null;
   cancelReason: string | null;
   customerNote: string | null;
@@ -146,4 +150,15 @@ export interface ShopOrderFilter {
   search: string;
   from: string;
   to: string;
+}
+
+/** GHN's real fee, what the shop pays for shipping, and the cash GHN collects for the platform. */
+export interface ShipmentCost {
+  carrierFee: number | null;
+  parcelWeightGrams: number | null;
+  shopShippingCost: number;
+  /** The rise in GHN's fee for a parcel weighed heavier than declared; the shop pays it. */
+  shippingAdjustment: number;
+  codAmount: number;
+  codTransferredOnUtc: string | null;
 }

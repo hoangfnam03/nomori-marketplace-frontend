@@ -159,9 +159,6 @@
       "platform_shop": "Không thể xóa hoặc tắt shop của sàn.",
       "inactive": "Shop đang bị tắt nên thành viên chưa sửa được. Hãy liên hệ quản trị viên."
     },
-    "shipping": {
-      "rate_limit": "Shop đã có 50 mức phí vận chuyển. Hãy xóa bớt một mức để thêm mới."
-    },
     "payment": {
       "method_unavailable": "Phương thức thanh toán này không dùng được. Chưa có nhà cung cấp hoặc phương thức đang tắt.",
       "idempotency_conflict": "Yêu cầu này đã được dùng với nội dung khác.",
@@ -216,6 +213,13 @@
     "tracking": {
       "not_shipped": "Chỉ cập nhật hành trình khi đơn đang được giao.",
       "event_limit": "Bưu kiện này đã có số dòng hành trình tối đa."
+    },
+    "ghn": {
+      "not_configured": "Giao Hàng Nhanh chưa được bật trên hệ thống.",
+      "not_confirmed": "Chỉ gửi qua GHN được đơn đã xác nhận.",
+      "no_area": "Địa chỉ người nhận chưa có tỉnh/thành và phường/xã theo địa giới mới.",
+      "not_ghn": "Đơn này không được gửi qua GHN.",
+      "no_pickup": "Shop chưa khai địa chỉ lấy hàng. Vào trang Vận chuyển để khai địa chỉ trước khi thêm sản phẩm."
     }
   },
   "vendorStatus": {
@@ -398,7 +402,9 @@
       "country": "Quốc gia",
       "stateProvince": "Tỉnh / bang",
       "stateProvinceOptional": "Tỉnh / bang (không bắt buộc)",
-      "postalCode": "Mã bưu chính"
+      "postalCode": "Mã bưu chính",
+      "ghnProvince": "Tỉnh/Thành",
+      "ghnWard": "Phường/Xã"
     },
     "gender": {
       "none": "Không muốn nêu",
@@ -463,7 +469,9 @@
         "emailChange": "Không gửi được yêu cầu đổi email.",
         "loadCountries": "Không tải được danh sách quốc gia."
       },
-      "choose": "Chọn…"
+      "choose": "Chọn…",
+      "ghnHint": "Theo địa giới hành chính mới (tỉnh/thành và phường/xã, không còn quận/huyện).",
+      "ghnRequired": "Chọn tỉnh/thành và phường/xã để được giao hàng."
     }
   },
   "storefront": {
@@ -609,7 +617,7 @@
       "summaryLabel": "Tóm tắt đơn hàng",
       "summary": "Tóm tắt",
       "subtotal": "Tạm tính",
-      "currencyNote": "Phí vận chuyển và thuế được cộng khi thanh toán. Giá tính bằng {{code}} và bạn luôn thanh toán bằng {{code}}.",
+      "currencyNote": "Phí vận chuyển và thuế được cộng khi thanh toán.",
       "clear": "Xóa giỏ hàng",
       "errors": {
         "load": "Không tải được giỏ hàng."
@@ -687,7 +695,8 @@
         "paymentRequired": "Hãy chọn phương thức thanh toán.",
         "paymentInvalid": "Phương thức thanh toán này không dùng được.",
         "couponInvalid": "Không dùng được mã giảm giá.",
-        "selectionChanged": "Một số sản phẩm đã chọn không còn trong giỏ hàng. Hãy quay lại giỏ hàng và chọn lại."
+        "selectionChanged": "Một số sản phẩm đã chọn không còn trong giỏ hàng. Hãy quay lại giỏ hàng và chọn lại.",
+        "addressAreaMissing": "Địa chỉ này chưa có tỉnh/thành và phường/xã theo địa giới mới."
       },
       "errors": {
         "load": "Không tải được trang thanh toán.",
@@ -732,7 +741,10 @@
         }
       },
       "taxNote": "Giá chưa gồm thuế. Thuế tính theo địa chỉ giao hàng của bạn.",
-      "redirectHint": "bạn thanh toán ở trang thanh toán"
+      "redirectHint": "bạn thanh toán ở trang thanh toán",
+      "editAddress": "Cập nhật địa chỉ",
+      "expectedOn": "Dự kiến giao {{date}}",
+      "expectedBetween": "Dự kiến giao {{from}} – {{to}}"
     }
   },
   "admin": {
@@ -1203,10 +1215,6 @@
       }
     }
   },
-  "currency": {
-    "display": "Tiền tệ hiển thị",
-    "approximate": "Giá theo tiền tệ khác chỉ là ước tính. Thanh toán luôn bằng {{code}}."
-  },
   "media": {
     "image": "Ảnh",
     "noImage": "Chưa có ảnh",
@@ -1243,7 +1251,7 @@
         "loadAccount": "Không tải được tài khoản của bạn."
       },
       "editShop": "Cài đặt shop",
-      "manageShipping": "Phí vận chuyển",
+      "manageShipping": "Vận chuyển (GHN)",
       "manageOrders": "Đơn hàng",
       "manageDiscounts": "Khuyến mãi"
     },
@@ -1330,7 +1338,14 @@
         "copy": "Không sao chép được sản phẩm.",
         "status": "Không đổi được trạng thái sản phẩm.",
         "review": "Không gửi được yêu cầu xem lại."
-      }
+      },
+      "shippingSize": "Vận chuyển",
+      "weight": "Cân nặng sau đóng gói (gram)",
+      "weightHint": "Tính cả hộp và vật liệu chèn. Phí ship tính theo cân nặng này.",
+      "length": "Dài (cm)",
+      "width": "Rộng (cm)",
+      "height": "Cao (cm)",
+      "sizeHint": "Kích thước đóng gói không bắt buộc, nhập đủ cả ba hoặc để trống. Hàng cồng kềnh được tính phí theo kích thước nếu lớn hơn cân nặng."
     },
     "details": {
       "eyebrow": "Kênh người bán / Sản phẩm / Chi tiết",
@@ -1435,8 +1450,8 @@
     },
     "shipping": {
       "eyebrow": "Cổng người bán",
-      "title": "Phí vận chuyển",
-      "lede": "Chọn nơi shop giao hàng và mức phí. Khách không thể thanh toán sản phẩm của shop tới nơi chưa có mức phí.",
+      "title": "Vận chuyển",
+      "lede": "Mọi đơn của shop được giao bằng Giao Hàng Nhanh (GHN) từ địa chỉ lấy hàng dưới đây; phí do GHN tính theo địa chỉ khách. Shop cần khai địa chỉ lấy hàng trước khi thêm sản phẩm.",
       "rates": "Mức phí",
       "add": "Thêm mức phí",
       "addHeading": "Mức phí vận chuyển mới",
@@ -1497,7 +1512,33 @@
       "editTracking": "Sửa vận đơn",
       "deliver": "Đã giao thành công",
       "carrier": "Đơn vị vận chuyển",
-      "trackingNumber": "Mã vận đơn"
+      "trackingNumber": "Mã vận đơn",
+      "ghn": {
+        "ship": "Gửi qua GHN",
+        "sync": "Cập nhật từ GHN",
+        "label": "In nhãn GHN"
+      }
+    },
+    "ghn": {
+      "title": "Giao Hàng Nhanh (GHN)",
+      "on": "Đang bật: khách được chọn GHN, shipper GHN tới địa chỉ dưới đây lấy hàng.",
+      "off": "Chưa có địa chỉ lấy hàng (theo địa giới mới: tỉnh/thành và phường/xã). Shop cần khai địa chỉ này để thêm sản phẩm và nhận đơn.",
+      "turnOn": "Khai địa chỉ lấy hàng",
+      "edit": "Sửa địa chỉ",
+      "turnOff": "Tắt GHN",
+      "hint": "Tên và số điện thoại lấy sẵn từ thông tin shop, shipper GHN sẽ gọi số này khi đến lấy hàng. Phí ship tính từ địa chỉ này tới khách.",
+      "contactName": "Tên người gửi (in trên nhãn)",
+      "phone": "Số điện thoại",
+      "province": "Tỉnh/Thành",
+      "ward": "Phường/Xã",
+      "address": "Số nhà, tên đường",
+      "choose": "Chọn…",
+      "save": "Lưu địa chỉ lấy hàng",
+      "error": "Không lưu được địa chỉ lấy hàng.",
+      "freeShipping": "Miễn phí vận chuyển cho đơn từ (để trống nếu không áp dụng)",
+      "freeShippingHint": "Khi tiền hàng của shop trong đơn đạt mức này, khách không trả phí ship; shop chịu phí GHN và số tiền này được trừ khi đối soát.",
+      "freeOn": "Miễn phí vận chuyển cho đơn từ {{amount}} (shop chịu phí GHN).",
+      "freeOff": "Không áp dụng miễn phí vận chuyển."
     }
   },
   "adminVendorApplications": {
@@ -1707,7 +1748,16 @@
     },
     "tax": "Thuế",
     "taxLine": "thuế {{rate}}% = {{amount}}",
-    "confirmReceiptNote": "Chỉ xác nhận khi bạn đã nhận đủ hàng. Bạn vẫn có thể yêu cầu trả hàng trong thời hạn đổi trả."
+    "confirmReceiptNote": "Chỉ xác nhận khi bạn đã nhận đủ hàng. Bạn vẫn có thể yêu cầu trả hàng trong thời hạn đổi trả.",
+    "expectedDelivery": "Dự kiến giao: {{date}}",
+    "shipment": {
+      "carrierFee": "Phí GHN thực tế",
+      "freeShipping": "Miễn phí vận chuyển (shop chịu)",
+      "weightAdjustment": "Chênh lệch cân nặng (shop chịu)",
+      "cod": "Tiền thu hộ (COD)",
+      "codPaid": "GHN đã chuyển ngày {{date}}",
+      "codHeld": "GHN chưa chuyển"
+    }
   },
   "discounts": {
     "list": "Mã giảm giá",

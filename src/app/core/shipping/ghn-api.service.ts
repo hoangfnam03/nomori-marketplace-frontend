@@ -1,0 +1,58 @@
+import { HttpClient } from '@angular/common/http';
+import { inject, Injectable } from '@angular/core';
+import { map, Observable, of, shareReplay, catchError } from 'rxjs';
+import { API_BASE_URL } from '../config/api-config';
+import { ShopOrderDetail } from '../orders/order.models';
+
+/** Two-level administrative units (since 1 July 2025): a province and its wards, no district. */
+export interface GhnProvince { id: number; name: string; }
+export interface GhnWard { id: number; provinceId: number; name: string; }
+
+/** Where GHN picks up one shop's parcels; the shop has GHN only once it has one. */
+export interface GhnPickup {
+  vendorId: number; contactName: string; phone: string; address: string;
+  provinceId: number; provinceName: string; wardId: number; wardName: string;
+  /** The shop pays the shipping from this subtotal (primary currency); null: no free shipping. */
+  freeShippingOverSubtotal: number | null;
+}
+export interface SaveGhnPickup {
+  contactName: string; phone: string; address: string;
+  provinceId: number; provinceName: string | null; wardId: number; wardName: string | null;
+  freeShippingOverSubtotal: number | null;
+}
+
+/** GHN (Giao Hàng Nhanh, prototype): its address lists, and handing a shop order to GHN. Off unless the server is configured. */
+@Injectable({ providedIn: 'root' })
+export class GhnApiService {
+  private readonly http = inject(HttpClient);
+  private readonly root = `${inject(API_BASE_URL)}/v1`;
+  private enabled$?: Observable<boolean>;
+
+  /** Asked once per visit; any failure means GHN is not there. */
+  enabled(): Observable<boolean> {
+    this.enabled$ ??= this.http.get<{ enabled: boolean }>(`${this.root}/shipping/ghn/status`).pipe(
+      map(s => s.enabled), catchError(() => of(false)), shareReplay(1));
+    return this.enabled$;
+  }
+
+  provinces() { return this.http.get<GhnProvince[]>(`${this.root}/shipping/ghn/provinces`); }
+  wards(provinceId: number) { return this.http.get<GhnWard[]>(`${this.root}/shipping/ghn/wards`, { params: { provinceId } }); }
+
+  // ---- Shop ----
+  pickup(vendorId: number) { return this.http.get<{ enabled: boolean; pickup: GhnPickup | null }>(`${this.root}/vendors/${vendorId}/ghn/pickup`); }
+  savePickup(vendorId: number, body: SaveGhnPickup) { return this.http.put<GhnPickup>(`${this.root}/vendors/${vendorId}/ghn/pickup`, body); }
+  deletePickup(vendorId: number) { return this.http.delete<void>(`${this.root}/vendors/${vendorId}/ghn/pickup`); }
+
+  createShipment(vendorId: number, shopOrderId: number) {
+    return this.http.post<ShopOrderDetail>(`${this.root}/vendors/${vendorId}/orders/${shopOrderId}/ghn/shipment`, {});
+  }
+  sync(vendorId: number, shopOrderId: number) {
+    return this.http.post<ShopOrderDetail>(`${this.root}/vendors/${vendorId}/orders/${shopOrderId}/ghn/sync`, {});
+  }
+  label(vendorId: number, shopOrderId: number) {
+    return this.http.get<{ url: string }>(`${this.root}/vendors/${vendorId}/orders/${shopOrderId}/ghn/label`);
+  }
+}
+
+/** The carrier name the server writes on a shop order handed to GHN. */
+export const GHN_CARRIER = 'Giao Hang Nhanh';

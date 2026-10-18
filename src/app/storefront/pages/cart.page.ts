@@ -3,7 +3,6 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
-import { ShippingEstimateComponent } from '../../shared/components/shipping-estimate/shipping-estimate.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { CartApiService } from '../../core/cart/cart-api.service';
 import { CartService } from '../../core/cart/cart.service';
@@ -23,7 +22,7 @@ const ISSUE_KEY: Record<CartIssue, string> = {
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, EmptyStateComponent, FormsModule, RouterLink, ShippingEstimateComponent, TranslocoDirective],
+  imports: [BreadcrumbComponent, EmptyStateComponent, FormsModule, RouterLink, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
     <div class="page-heading">
@@ -128,7 +127,6 @@ const ISSUE_KEY: Record<CartIssue, string> = {
           </button>
           <button type="button" class="link" (click)="clear()" [disabled]="busy">{{ t('storefront.cart.clear') }}</button>
         </aside>
-        <app-shipping-estimate [cartKey]="cartKey()" />
         </div>
       </div>
     }
@@ -226,7 +224,6 @@ export class CartPage implements OnInit {
   isUnpriced(line: CartLine) { return line.issues.includes('unavailable') || line.issues.includes('variant_unavailable'); }
 
   /** Changes with every quantity and subtotal, so an estimate that is on screen is refreshed. */
-  cartKey() { return this.view ? `${this.view.itemCount}:${this.view.subtotal}:${this.view.groups.length}` : ''; }
 
   hasPriceChange() { return !!this.view?.groups.some(g => g.lines.some(l => l.issues.includes('price_changed'))); }
 
