@@ -1,6 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { provideI18n } from '../i18n/i18n.providers';
+import { SITE_ORIGIN } from './site-origin';
 import { SeoService } from './seo.service';
 
 describe('SeoService', () => {
@@ -67,5 +68,17 @@ describe('SeoService', () => {
 
     seo.set({ title: 'Home', path: '/storefront' });
     expect(content('meta[name="robots"]')).toBeNull();
+  });
+
+  it('uses the public address given by the server instead of the address of the page it renders', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideI18n(), { provide: SITE_ORIGIN, useValue: 'https://shop.example.com/' }] });
+    const configured = TestBed.inject(SeoService);
+    const doc = TestBed.inject(DOCUMENT);
+
+    configured.set({ title: 'A', path: '/storefront/products/a-1', image: '/api/v1/media/5' });
+
+    expect(doc.head.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://shop.example.com/storefront/products/a-1');
+    expect(doc.head.querySelector('meta[property="og:image"]')?.getAttribute('content')).toBe('https://shop.example.com/api/v1/media/5');
   });
 });

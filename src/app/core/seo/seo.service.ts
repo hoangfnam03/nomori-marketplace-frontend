@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { TranslocoService } from '@jsverse/transloco';
 import { combineLatest, take } from 'rxjs';
+import { SITE_ORIGIN } from './site-origin';
 
 export const SITE_NAME = 'Nomori';
 
@@ -28,10 +29,12 @@ export class SeoService {
   private readonly meta = inject(Meta);
   private readonly document = inject(DOCUMENT);
   private readonly transloco = inject(TranslocoService);
+  private readonly configuredOrigin = inject(SITE_ORIGIN, { optional: true });
 
   /** The address of the site as the visitor (or the crawler) sees it. Empty when the page does not know it. */
   origin(): string {
-    const origin = this.document.location?.origin;
+    // The server knows the public address from its settings; the browser from the page itself.
+    const origin = this.configuredOrigin?.replace(/\/$/, '') || this.document.location?.origin;
     return origin && origin !== 'null' ? origin : '';
   }
 

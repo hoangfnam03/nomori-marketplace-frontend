@@ -5,10 +5,13 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join, resolve } from 'node:path';
 import bootstrap from './src/main.server';
 import { DEFAULT_LANG, REQUEST_LANG, readLangCookie } from './src/app/core/i18n/i18n.providers';
+import { SITE_ORIGIN } from './src/app/core/seo/site-origin';
 
 // Where the API is: crawlers ask the storefront for sitemap.xml and robots.txt, and the canonical address of a page is asked from the API.
 const API_ORIGIN = (process.env['API_ORIGIN'] ?? 'http://localhost:5214').replace(/\/$/, '');
 const API_TIMEOUT_MS = 3000;
+// The address visitors use (https://shop.example.com). Needed behind a proxy or a tunnel; without it the address of the request is used.
+const PUBLIC_URL = process.env['PUBLIC_URL']?.replace(/\/$/, '');
 
 // The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
@@ -82,16 +85,20 @@ export function app(): express.Express {
   // All regular routes use the Angular engine
   server.get('**', (req, res, next) => {
     const { protocol, originalUrl, baseUrl, headers } = req;
+    // The page is rendered at this server's own address, so that its data requests (/api/...) come straight back here and are passed on to the API
+    // without leaving the machine. The address visitors use is given separately, for canonical links and social tags.
+    const internalUrl = `http://localhost:${process.env['PORT'] || 4000}${originalUrl}`;
 
     commonEngine
       .render({
         bootstrap,
         documentFilePath: indexHtml,
-        url: `${protocol}://${headers.host}${originalUrl}`,
+        url: internalUrl,
         publicPath: browserDistFolder,
         providers: [
           { provide: APP_BASE_HREF, useValue: baseUrl },
           { provide: REQUEST_LANG, useValue: readLangCookie(headers.cookie) ?? DEFAULT_LANG },
+          { provide: SITE_ORIGIN, useValue: PUBLIC_URL ?? `${protocol}://${headers.host}` },
         ],
       })
       .then((html) => res.send(html))
