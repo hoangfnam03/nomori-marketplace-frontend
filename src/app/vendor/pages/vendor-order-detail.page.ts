@@ -6,6 +6,7 @@ import { AuthFacade } from '../../core/auth/auth.facade';
 import { OrderApiService } from '../../core/orders/order-api.service';
 import { ShopOrderDetail } from '../../core/orders/order.models';
 import { TrackingApiService } from '../../core/shipping/tracking-api.service';
+import { GHN_CARRIER, GhnApiService } from '../../core/shipping/ghn-api.service';
 import { ShopOrderPanelComponent } from '../../shared/components/shop-order-panel/shop-order-panel.component';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
@@ -57,7 +58,14 @@ type Form = 'ship' | 'tracking' | 'cancel' | null;
             <button type="button" class="btn btn-small" (click)="confirm()" [disabled]="busy">{{ t('vendor.orders.confirm') }}</button>
           }
           @if (order.status === 'confirmed') {
-            <button type="button" class="btn btn-small" (click)="open('ship')" [disabled]="busy">{{ t('vendor.orders.ship') }}</button>
+            @if (ghnEnabled) {
+              <button type="button" class="btn btn-small" (click)="ghnShip()" [disabled]="busy">{{ t('vendor.orders.ghn.ship') }}</button>
+            }
+            <button type="button" class="btn btn-small" [class.btn-secondary]="ghnEnabled" (click)="open('ship')" [disabled]="busy">{{ t('vendor.orders.ship') }}</button>
+          }
+          @if (ghnEnabled && isGhn(order) && (order.status === 'shipped' || order.status === 'delivered')) {
+            <button type="button" class="btn btn-secondary btn-small" (click)="ghnSync()" [disabled]="busy">{{ t('vendor.orders.ghn.sync') }}</button>
+            <button type="button" class="btn btn-secondary btn-small" (click)="ghnLabel()" [disabled]="busy">{{ t('vendor.orders.ghn.label') }}</button>
           }
           @if (order.status === 'shipped') {
             <button type="button" class="btn btn-small" (click)="deliver()" [disabled]="busy">{{ t('vendor.orders.deliver') }}</button>
@@ -109,6 +117,9 @@ type Form = 'ship' | 'tracking' | 'cancel' | null;
 export class VendorOrderDetailPage implements OnInit {
   private readonly api = inject(OrderApiService);
   private readonly trackingApi = inject(TrackingApiService);
+  private readonly ghn = inject(GhnApiService);
+  /** GHN (prototype): hand the parcel to GHN, pull its journey, print its label. */
+  ghnEnabled = false;
   private readonly auth = inject(AuthFacade);
   private readonly route = inject(ActivatedRoute);
   private readonly transloco = inject(TranslocoService);
@@ -128,7 +139,10 @@ export class VendorOrderDetailPage implements OnInit {
   reason = '';
   fieldErrors: Record<string, string[]> = {};
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.load();
+    this.ghn.enabled().subscribe(enabled => this.ghnEnabled = enabled);
+  }
 
   fieldError(name: string) { return this.fieldErrors[name]?.join(' ') ?? ''; }
 
@@ -167,6 +181,22 @@ export class VendorOrderDetailPage implements OnInit {
 
   confirm() { this.run(id => this.api.confirm(this.vendorId!, id)); }
 
+  isGhn(order: ShopOrderDetail) { return order.carrier === GHN_CARRIER && !!order.trackingNumber; }
+
+  ghnShip() { this.run(id => this.ghn.createShipment(this.vendorId!, id)); }
+
+  ghnSync() { this.run(id => this.ghn.sync(this.vendorId!, id)); }
+
+  ghnLabel() {
+    if (!this.vendorId || !this.order) return;
+    // Opened at once (inside the click) so the browser does not block it, then pointed at GHN's print page.
+    const tab = window.open('', '_blank');
+    this.ghn.label(this.vendorId, this.order.id).subscribe({
+      next: ({ url }) => { if (tab) tab.location.href = url; else window.open(url, '_blank'); },
+      error: err => { tab?.close(); this.actionError = vendorErrorMessage(err, this.transloco.translate('orders.errors.action')); }
+    });
+  }
+
   deliver() { this.run(id => this.api.deliver(this.vendorId!, id)); }
 
   saveShipping() {
@@ -185,7 +215,12 @@ export class VendorOrderDetailPage implements OnInit {
       next: order => { this.busy = false; this.order = order; this.form = null; },
       error: err => {
         this.busy = false;
-        if (err?.status === 400 && err?.fieldErrors) { this.fieldErrors = err.fieldErrors; return; }
+        if (err?.status === 400 && err?.fieldErrors) {
+          this.fieldErrors = err.fieldErrors;
+          // GHN refused (bad phone, area it does not serve...): its own message is shown above the actions.
+          if (err.fieldErrors['ghn']) this.actionError = err.fieldErrors['ghn'].join(' ');
+          return;
+        }
         this.actionError = vendorErrorMessage(err, this.transloco.translate('orders.errors.action'));
         // The customer may have cancelled meanwhile: show the order as it is now.
         if (err?.status === 409) { this.form = null; this.refresh(); }

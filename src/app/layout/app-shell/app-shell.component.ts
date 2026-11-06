@@ -13,12 +13,11 @@ import { MediaApiService } from '../../core/media/media-api.service';
 import { LanguageSwitcherComponent } from '../../core/i18n/language-switcher.component';
 import { CurrencyService } from '../../core/money/currency.service';
 import { AvatarComponent } from '../../shared/components/avatar/avatar.component';
-import { CurrencySelectorComponent } from '../../shared/components/currency-selector/currency-selector.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, TranslocoDirective, AvatarComponent, CurrencySelectorComponent, LanguageSwitcherComponent],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, TranslocoDirective, AvatarComponent, LanguageSwitcherComponent],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss'
 })

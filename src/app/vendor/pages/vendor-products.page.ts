@@ -26,6 +26,11 @@ interface ProductForm {
   sku: string;
   gtin: string;
   manufacturerPartNumber: string;
+  /** Packed weight (grams) and size (cm): shipping is priced by them. Null while empty. */
+  weightGrams: number | null;
+  lengthCm: number | null;
+  widthCm: number | null;
+  heightCm: number | null;
   /** Local date and time for a datetime-local input, or empty for no bound. */
   availableStart: string;
   availableEnd: string;
@@ -203,6 +208,27 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
                 @if (fieldError('manufacturerPartNumber')) { <span class="field-error">{{ fieldError('manufacturerPartNumber') }}</span> }
               </label>
             </div>
+            <fieldset class="shipping-size">
+              <legend>{{ t('vendor.products.shippingSize') }}</legend>
+              <div class="form-row">
+                <label>{{ t('vendor.products.weight') }} *
+                  <input type="number" name="weightGrams" [(ngModel)]="form.weightGrams" min="1" max="50000" step="1" required />
+                  <span class="hint">{{ t('vendor.products.weightHint') }}</span>
+                  @if (fieldError('weightGrams')) { <span class="field-error">{{ fieldError('weightGrams') }}</span> }
+                </label>
+                <label>{{ t('vendor.products.length') }}
+                  <input type="number" name="lengthCm" [(ngModel)]="form.lengthCm" min="1" max="200" step="1" />
+                </label>
+                <label>{{ t('vendor.products.width') }}
+                  <input type="number" name="widthCm" [(ngModel)]="form.widthCm" min="1" max="200" step="1" />
+                </label>
+                <label>{{ t('vendor.products.height') }}
+                  <input type="number" name="heightCm" [(ngModel)]="form.heightCm" min="1" max="200" step="1" />
+                </label>
+              </div>
+              <span class="hint">{{ t('vendor.products.sizeHint') }}</span>
+              @if (fieldError('dimensions')) { <span class="field-error">{{ fieldError('dimensions') }}</span> }
+            </fieldset>
             <div class="form-row">
               <label>{{ t('vendor.products.saleFrom') }}
                 <input type="datetime-local" name="availableStart" [(ngModel)]="form.availableStart" />
@@ -293,7 +319,7 @@ type StatusFilter = 'all' | 'lowStock' | ProductStatus;
     }
     </ng-container>
   `,
-  styles: [`
+  styles: [`.shipping-size { border: 1px solid var(--line); padding: .75rem 1rem; margin: 0; display: grid; gap: .5rem; } .shipping-size legend { font-weight: 600; padding: 0 .3rem; } 
     .hidden-note { margin-top: .3rem; padding: .35rem .6rem; border-left: 3px solid #b74e3c; background: #f8e9e4; color: #7d3026; font-size: .8rem; }
     .pick-list { border: 1px solid var(--line); border-radius: 6px; padding: .6rem .9rem; display: grid; gap: .35rem; max-height: 200px; overflow: auto; }
     .pick-list legend { font-size: .8rem; padding: 0 .3rem; }
@@ -414,6 +440,10 @@ export class VendorProductsPage implements OnInit {
           sku: full.sku ?? '',
           gtin: full.gtin ?? '',
           manufacturerPartNumber: full.manufacturerPartNumber ?? '',
+          weightGrams: full.weightGrams ?? null,
+          lengthCm: full.lengthCm ?? null,
+          widthCm: full.widthCm ?? null,
+          heightCm: full.heightCm ?? null,
           availableStart: toLocalInput(full.availableStartUtc),
           availableEnd: toLocalInput(full.availableEndUtc),
           relatedProductIds: [...(full.relatedProductIds ?? [])]
@@ -447,7 +477,11 @@ export class VendorProductsPage implements OnInit {
       gtin: this.form.gtin.trim() || null,
       manufacturerPartNumber: this.form.manufacturerPartNumber.trim() || null,
       availableStartUtc: fromLocalInput(this.form.availableStart),
-      availableEndUtc: fromLocalInput(this.form.availableEnd)
+      availableEndUtc: fromLocalInput(this.form.availableEnd),
+      weightGrams: this.form.weightGrams || null,
+      lengthCm: this.form.lengthCm || null,
+      widthCm: this.form.widthCm || null,
+      heightCm: this.form.heightCm || null
     };
     const request = this.editingId
       ? this.api.update(this.vendorId, this.editingId, body)
@@ -698,6 +732,6 @@ export class VendorProductsPage implements OnInit {
   private clearErrors() { this.formError = ''; this.fieldErrors = {}; this.actionError = ''; this.notice = ''; }
 
   private emptyForm(): ProductForm {
-    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, categoryIds: [], manufacturerIds: [], pictureIds: [], sku: '', gtin: '', manufacturerPartNumber: '', availableStart: '', availableEnd: '', relatedProductIds: [] };
+    return { name: '', shortDescription: '', fullDescription: '', price: 0, oldPrice: 0, stockQuantity: 0, categoryIds: [], manufacturerIds: [], pictureIds: [], sku: '', gtin: '', manufacturerPartNumber: '', weightGrams: null, lengthCm: null, widthCm: null, heightCm: null, availableStart: '', availableEnd: '', relatedProductIds: [] };
   }
 }

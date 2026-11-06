@@ -41,6 +41,11 @@ export interface VendorProduct {
   sku: string | null;
   gtin: string | null;
   manufacturerPartNumber: string | null;
+  /** Packed weight in grams; null on products saved before it was asked for. */
+  weightGrams?: number | null;
+  lengthCm?: number | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
   /** Optional sale window (UTC). A live product outside it is not shown to customers. */
   availableStartUtc: string | null;
   availableEndUtc: string | null;
@@ -64,6 +69,10 @@ export interface SaveVendorProductRequest {
   manufacturerPartNumber?: string | null;
   availableStartUtc?: string | null;
   availableEndUtc?: string | null;
+  weightGrams?: number | null;
+  lengthCm?: number | null;
+  widthCm?: number | null;
+  heightCm?: number | null;
 }
 
 export interface SavePricingRequest {

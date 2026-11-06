@@ -6,6 +6,8 @@ import { ShippingOption } from '../shipping/shipping.models';
 export type CheckoutProblem =
   | 'cart_empty' | 'cart_issues' | 'prices_changed'
   | 'address_required' | 'address_invalid'
+  /** The address has no GHN province, district and ward: the customer completes it first. */
+  | 'address_area_missing'
   | 'shipping_unavailable' | 'shipping_not_chosen' | 'shipping_invalid'
   | 'payment_required' | 'payment_invalid' | 'coupon_invalid'
   /** A chosen cart line is no longer in the cart (bought from another tab, or removed). */

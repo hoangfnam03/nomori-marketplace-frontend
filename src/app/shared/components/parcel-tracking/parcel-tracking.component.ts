@@ -18,7 +18,7 @@ import { vendorErrorMessage } from '../../../core/vendors/vendor-errors';
     <ng-container *transloco="let t">
     <div class="parcel">
       <p class="line">
-        <strong>{{ t('orders.tracking') }}:</strong> {{ carrier }} ·
+        <strong>{{ t('orders.tracking') }}:</strong> @if (!customerView) { {{ carrier }} · }
         @if (tracking?.trackingUrl; as url) {
           <a [href]="url" target="_blank" rel="noopener noreferrer">{{ trackingNumber }}</a>
         } @else {
@@ -36,7 +36,7 @@ import { vendorErrorMessage } from '../../../core/vendors/vendor-errors';
               <div>
                 <strong>{{ t('tracking.status.' + e.status) }}</strong>@if (e.location) { <span> · {{ e.location }}</span> }
                 <div class="muted">{{ e.occurredOnUtc | date: 'medium' }}</div>
-                @if (e.note) { <div>{{ e.note }}</div> }
+                @if (noteOf(e.note); as note) { <div>{{ note }}</div> }
               </div>
             </li>
           }
@@ -94,6 +94,10 @@ export class ParcelTrackingComponent implements OnChanges {
   @Input() orderStatus = '';
   /** Set by the shop's own page: shows the form that adds events. */
   @Input() vendorId: number | null = null;
+  /** The customer's view: the carrier's name is left out (lines written before carry a "GHN: " prefix, dropped here). */
+  @Input() customerView = false;
+
+  noteOf(note: string | null) { return note && this.customerView ? note.replace(/^GHN:\s*/, '') : note; }
 
   readonly statuses = TRACKING_STATUSES;
   tracking: Tracking | null = null;

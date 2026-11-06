@@ -64,7 +64,7 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
         @if (actionError) { <p class="banner" role="alert">{{ actionError }}</p> }
 
         @for (shop of order.shopOrders; track shop.id) {
-          <app-shop-order-panel [order]="shop">
+          <app-shop-order-panel [order]="shop" [customerView]="true">
             @if (shop.status === 'pending') {
               @if (cancelling?.id === shop.id) {
                 <div class="reason">

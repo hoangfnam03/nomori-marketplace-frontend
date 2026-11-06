@@ -56,8 +56,30 @@ import { ParcelTrackingComponent } from '../parcel-tracking/parcel-tracking.comp
         <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ money(order.total) }}</dd></div>
       </dl>
 
+      @if (order.expectedDeliveryUtc && (order.status === 'shipped' || order.status === 'confirmed')) {
+        <p class="expected">{{ t('orders.expectedDelivery', { date: (order.expectedDeliveryUtc | date: 'dd/MM/yyyy') }) }}</p>
+      }
+      @if (!customerView && order.shipment; as s) {
+        @if (s.carrierFee !== null || s.shopShippingCost > 0 || s.codAmount > 0) {
+          <dl class="shipment">
+            @if (s.carrierFee !== null) {
+              <div><dt>{{ t('orders.shipment.carrierFee') }}@if (s.parcelWeightGrams) { <span class="muted"> · {{ s.parcelWeightGrams }} g</span> }</dt><dd>{{ money(s.carrierFee) }}</dd></div>
+            }
+            @if (s.shopShippingCost > 0) {
+              <div><dt>{{ t('orders.shipment.freeShipping') }}</dt><dd>−{{ money(s.shopShippingCost) }}</dd></div>
+            }
+            @if (s.shippingAdjustment > 0) {
+              <div class="warn"><dt>{{ t('orders.shipment.weightAdjustment') }}</dt><dd>−{{ money(s.shippingAdjustment) }}</dd></div>
+            }
+            @if (s.codAmount > 0) {
+              <div><dt>{{ t('orders.shipment.cod') }}</dt>
+                <dd>{{ money(s.codAmount) }} · @if (s.codTransferredOnUtc) { {{ t('orders.shipment.codPaid', { date: (s.codTransferredOnUtc | date: 'dd/MM/yyyy') }) }} } @else { {{ t('orders.shipment.codHeld') }} }</dd></div>
+            }
+          </dl>
+        }
+      }
       @if (order.carrier) {
-        <app-parcel-tracking [shopOrderId]="order.id" [carrier]="order.carrier" [trackingNumber]="order.trackingNumber" [orderStatus]="order.status" [vendorId]="vendorId" />
+        <app-parcel-tracking [shopOrderId]="order.id" [carrier]="order.carrier" [trackingNumber]="order.trackingNumber" [orderStatus]="order.status" [vendorId]="vendorId" [customerView]="customerView" />
       }
       @if (order.cancelReason) {
         <p class="cancel"><strong>{{ t('orders.cancelReason') }}:</strong> {{ order.cancelReason }}</p>
@@ -80,7 +102,7 @@ import { ParcelTrackingComponent } from '../parcel-tracking/parcel-tracking.comp
     </section>
     </ng-container>
   `,
-  styles: [`
+  styles: [`.expected { margin: .4rem 0; font-weight: 600; color: #205e4a; } .shipment { display: grid; gap: .2rem; font-size: .85rem; border-top: 1px dashed var(--line); padding-top: .5rem; margin: .5rem 0; } .shipment div { display: flex; justify-content: space-between; gap: 1rem; } .shipment dt, .shipment dd { margin: 0; } .shipment .warn { color: #9a3b26; } 
     .shop-order { border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.25rem; margin-bottom: 1rem; display: grid; gap: .75rem; }
     header { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; }
     h3 { margin: 0; font-size: 1rem; }
@@ -114,6 +136,8 @@ export class ShopOrderPanelComponent {
   @Input({ required: true }) order!: ShopOrderDetail;
   /** Set by the shop's own page, so that its members can add tracking events. */
   @Input() vendorId: number | null = null;
+  /** The customer's own view: the platform's carrier is not named. */
+  @Input() customerView = false;
 
   money(value: number) { return this.currency.formatPrimary(value); }
 
