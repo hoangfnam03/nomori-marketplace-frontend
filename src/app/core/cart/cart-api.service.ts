@@ -14,6 +14,8 @@ export class CartApiService {
   add(body: AddToCartRequest) { return this.http.post<CartView>(`${this.base}/items`, body); }
   setQuantity(lineId: number, quantity: number) { return this.http.put<CartView>(`${this.base}/items/${lineId}`, { quantity }); }
   remove(lineId: number) { return this.http.delete<CartView>(`${this.base}/items/${lineId}`); }
+  /** Removes every line of one shop. */
+  removeShop(vendorId: number) { return this.http.delete<CartView>(`${this.base}/vendors/${vendorId}`); }
   clear() { return this.http.delete<CartView>(this.base); }
 
   /** Saves the current unit prices as the ones the customer has seen. */

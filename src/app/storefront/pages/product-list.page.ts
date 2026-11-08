@@ -1,8 +1,9 @@
 import { MediaApiService } from '../../core/media/media-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
 import { CartService } from '../../core/cart/cart.service';
+import { ShopperAccessService } from '../../core/auth/shopper-access.service';
 import { CartNoticeComponent } from '../../shared/components/cart-notice/cart-notice.component';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, Input, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
@@ -21,21 +22,33 @@ interface Chip {
   remove: () => void;
 }
 
+/**
+ * The product catalog: filters, sort, cards and pages, all driven by the URL. It is the products page, and the product part of a shop's
+ * page (`vendorId` set), where it only lists that shop's products and leaves the heading to the shop.
+ */
 @Component({
+  selector: 'app-product-catalog',
   standalone: true,
   imports: [BreadcrumbComponent, CartNoticeComponent, EmptyStateComponent, ProductCardComponent, FormsModule, SearchBoxComponent, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
-    <div class="page-heading">
-      <app-breadcrumb [items]="[{ label: t('storefront.products.breadcrumb'), url: '/storefront/products' }]" />
-      <div class="heading-row">
-        <div>
-          <div class="eyebrow">{{ t('storefront.products.eyebrow') }}</div>
-          <h1>@if (search) { {{ t('storefront.products.resultsFor', { search: search }) }} } @else { {{ t('storefront.products.title') }} }</h1>
-        </div>
-        <app-search-box [value]="search" (searched)="onSearch($event)" />
+    @if (vendorId) {
+      <div class="shop-search">
+        <app-search-box [value]="search" [suggest]="false" [placeholder]="t('storefront.search.shopPlaceholder', { shop: vendorName ?? '' })"
+          (searched)="onSearch($event)" />
       </div>
-    </div>
+    } @else {
+      <div class="page-heading">
+        <app-breadcrumb [items]="[{ label: t('storefront.products.breadcrumb'), url: '/storefront/products' }]" />
+        <div class="heading-row">
+          <div>
+            <div class="eyebrow">{{ t('storefront.products.eyebrow') }}</div>
+            <h1>@if (search) { {{ t('storefront.products.resultsFor', { search: search }) }} } @else { {{ t('storefront.products.title') }} }</h1>
+          </div>
+          <app-search-box [value]="search" (searched)="onSearch($event)" />
+        </div>
+      </div>
+    }
 
     <app-cart-notice [message]="cartMessage" [error]="cartFailed" (dismissed)="cartMessage = ''" />
 
@@ -138,7 +151,7 @@ interface Chip {
           } @else {
             <section class="product-grid" [attr.aria-label]="t('storefront.products.breadcrumb')">
               @for (product of cards(); track product.id) {
-                <app-product-card [product]="product" (addToCart)="addFromCard($event)" />
+                <app-product-card [product]="product" [canBuy]="!access.isStaff()" (addToCart)="addFromCard($event)" />
               }
             </section>
 
@@ -161,6 +174,8 @@ interface Chip {
     .heading-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(280px, 420px); gap: 2rem; align-items: end; margin-top: 2.5rem; }
     .eyebrow { color: var(--green); font: 700 .72rem/1 var(--mono-font); letter-spacing: .13em; text-transform: uppercase; }
     h1 { max-width: 760px; margin: 1rem 0 0; font: 700 clamp(2.5rem, 6vw, 5.5rem)/.94 var(--display-font); overflow-wrap: anywhere; }
+    .shop-search { display: flex; justify-content: flex-end; margin-bottom: 1.5rem; }
+    .shop-search app-search-box { width: min(420px, 100%); }
     .catalog-layout { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 3rem; align-items: start; }
     /* The filters stay in view under the sticky site header while the products scroll; a long list scrolls on its own. */
     .sidebar { border-right: 1px solid var(--line); padding-right: 1.5rem; display: grid; gap: 1.5rem; align-content: start; position: sticky; top: 5.5rem; max-height: calc(100vh - 6.5rem); overflow-y: auto; overscroll-behavior: contain; }
@@ -209,7 +224,15 @@ export class ProductListPage implements OnInit {
   private readonly media = inject(MediaApiService);
   private readonly currency = inject(CurrencyService);
   private readonly cart = inject(CartService);
+  /** Administrators and shop members do not shop. */
+  readonly access = inject(ShopperAccessService);
   private readonly transloco = inject(TranslocoService);
+
+  /** Set on a shop's page: only that shop's products, searched and filtered in place. */
+  @Input() vendorId: number | null = null;
+  /** The shop's name, for its search box. */
+  @Input() vendorName: string | null = null;
+
   cartMessage = '';
   cartFailed = false;
 
@@ -247,8 +270,8 @@ export class ProductListPage implements OnInit {
   private readonly seo = inject(SeoService);
 
   ngOnInit() {
-    // Whatever the filters, the page is indexed as the plain list.
-    this.seo.setByKeys('seo.products.title', 'seo.products.description', '/storefront/products');
+    // Whatever the filters, the page is indexed as the plain list. A shop's page sets its own.
+    if (!this.vendorId) this.seo.setByKeys('seo.products.title', 'seo.products.description', '/storefront/products');
     this.api.getCategoryTree().subscribe({
       next: tree => this.categoryTree = tree,
       error: () => {}
@@ -281,7 +304,8 @@ export class ProductListPage implements OnInit {
       inStock: this.inStock,
       manufacturerIds: this.manufacturerIds,
       specOptionIds: this.specOptionIds,
-      tags: this.tags
+      tags: this.tags,
+      vendorId: this.vendorId
     };
   }
 
@@ -306,7 +330,7 @@ export class ProductListPage implements OnInit {
 
   /** Facets only change when the base filters do, not when the customer pages, sorts or picks a facet. */
   private loadFacets() {
-    const key = JSON.stringify([this.search, this.activeCategoryId, this.minPrice, this.maxPrice, this.inStock]);
+    const key = JSON.stringify([this.vendorId, this.search, this.activeCategoryId, this.minPrice, this.maxPrice, this.inStock]);
     if (key === this.facetKey) return;
     this.facetKey = key;
     this.api.getFacets(this.filters()).subscribe({
@@ -324,8 +348,9 @@ export class ProductListPage implements OnInit {
   selectCategory(id: number | null) { this.go({ categoryId: id ?? undefined }); }
 
   onSearch(query: string) {
-    // A new search starts over; the sort goes back to the default for that kind of list.
-    this.router.navigate(['/storefront/products'], { queryParams: { search: query || undefined, page: 1 } });
+    // A new search starts over; the sort goes back to the default for that kind of list. On a shop's page it searches that shop.
+    const target = this.vendorId ? [] : ['/storefront/products'];
+    this.router.navigate(target, { queryParams: { search: query || undefined, page: 1 } });
   }
 
   onSortChange() { this.go({ sort: this.sort }); }

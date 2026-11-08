@@ -34,6 +34,11 @@ import { ParcelTrackingComponent } from '../parcel-tracking/parcel-tracking.comp
               <strong>{{ line.name }}</strong>
               @if (line.variantLabel) { <span class="muted">{{ line.variantLabel }}</span> }
               @if (line.sku) { <span class="muted sku">{{ line.sku }}</span> }
+              @if (line.returnStatus) {
+                <span class="return-tag" [class.done]="line.returnStatus === 'refunded'">
+                  {{ line.returnStatus === 'refunded' ? t('orders.lineReturned') : t('orders.lineReturning') }}
+                </span>
+              }
             </span>
             <span class="qty">{{ line.quantity }} × {{ money(line.unitPrice) }}@if (line.taxRate > 0) { <span class="muted"> · {{ t('orders.taxLine', { rate: line.taxRate, amount: money(line.taxAmount) }) }}</span> }</span>
             <strong>{{ money(line.lineTotal) }}</strong>
@@ -45,16 +50,28 @@ import { ParcelTrackingComponent } from '../parcel-tracking/parcel-tracking.comp
         <div><dt>{{ t('orders.subtotal') }}</dt><dd>{{ money(order.subtotal) }}</dd></div>
         @if (order.discountAmount > 0) {
           <div class="discount">
-            <dt>{{ t('orders.discount') }}@if (order.discountFunding) { <span class="muted"> · {{ t('orders.fundedBy.' + order.discountFunding) }}</span> }</dt>
+            <dt>{{ t('orders.discount') }}@if (order.discountFunding && !customerView) { <span class="muted"> · {{ t('orders.fundedBy.' + order.discountFunding) }}</span> }</dt>
             <dd>−{{ money(order.discountAmount) }}</dd>
           </div>
         }
-        <div><dt>{{ t('orders.shipping') }} ({{ order.shippingMethodName }})</dt><dd>{{ money(order.shippingFee) }}</dd></div>
+        <div><dt>{{ t('orders.shipping') }} ({{ order.shippingMethodName }})</dt><dd>{{ money(order.shippingFee + (order.shippingDiscount ?? 0)) }}</dd></div>
+        @if (order.shippingDiscount) {
+          <div class="discount">
+            <dt>{{ t('orders.shippingDiscount') }}@if (order.shippingDiscountFunding && !customerView) { <span class="muted"> · {{ t('orders.fundedBy.' + order.shippingDiscountFunding) }}</span> }</dt>
+            <dd>−{{ money(order.shippingDiscount) }}</dd>
+          </div>
+        }
         @if (order.taxAmount > 0) {
           <div><dt>{{ t('orders.tax') }}</dt><dd>{{ money(order.taxAmount) }}</dd></div>
         }
         <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ money(order.total) }}</dd></div>
+        @if (order.refundedAmount) {
+          <div class="refunded"><dt>{{ t('orders.refunded') }}</dt><dd>−{{ money(order.refundedAmount) }}</dd></div>
+        }
       </dl>
+      @if (order.hasOpenReturn) {
+        <p class="return-open">{{ t('orders.returnInProgress') }}</p>
+      }
 
       @if (order.expectedDeliveryUtc && (order.status === 'shipped' || order.status === 'confirmed')) {
         <p class="expected">{{ t('orders.expectedDelivery', { date: (order.expectedDeliveryUtc | date: 'dd/MM/yyyy') }) }}</p>
@@ -119,6 +136,10 @@ import { ParcelTrackingComponent } from '../parcel-tracking/parcel-tracking.comp
     .totals dt { color: var(--muted); }
     .totals dd { margin: 0; }
     .discount dd { color: #205e4a; }
+    .return-tag { justify-self: start; margin-top: .2rem; padding: .1rem .45rem; border: 1px solid #e3cf9c; background: #faf3e0; color: #7a5a12; font-size: .72rem; }
+    .return-tag.done { border-color: var(--line-strong); background: transparent; color: var(--muted); }
+    .refunded dd { color: #7a5a12; }
+    .return-open { margin: .5rem 0 0; color: #7a5a12; font-size: .85rem; }
     .grand { font-weight: 700; border-top: 1px solid var(--line); padding-top: .4rem; }
     .tracking, .cancel { margin: 0; font-size: .85rem; }
     .cancel { color: #8d3128; }
@@ -136,7 +157,7 @@ export class ShopOrderPanelComponent {
   @Input({ required: true }) order!: ShopOrderDetail;
   /** Set by the shop's own page, so that its members can add tracking events. */
   @Input() vendorId: number | null = null;
-  /** The customer's own view: the platform's carrier is not named. */
+  /** The customer's own view: the platform's carrier and who funds a discount are not shown. */
   @Input() customerView = false;
 
   money(value: number) { return this.currency.formatPrimary(value); }

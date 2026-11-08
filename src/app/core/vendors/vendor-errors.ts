@@ -11,7 +11,7 @@ const codes = new Set([
   'state.in_use', 'vendor.platform_shop', 'vendor.inactive',
   'ghn.not_configured', 'ghn.not_confirmed', 'ghn.no_area', 'ghn.not_ghn', 'ghn.no_pickup',
   'payment.method_unavailable', 'payment.idempotency_conflict', 'payment.invalid_state', 'payment.refund_exceeds', 'payment.provider_failed',
-  'order.invalid_transition', 'order.placement_conflict',
+  'order.invalid_transition', 'order.placement_conflict', 'order.return_open',
   'checkout.cart_not_ready', 'checkout.prices_changed', 'checkout.payment_failed', 'checkout.coupon_unavailable',
   'discount.code_exists', 'discount.limit', 'discount.in_use',
   'job.already_running', 'return.not_eligible', 'return.invalid_transition', 'return.quantity_exceeded', 'return.no_refundable_payment', 'email.not_retryable', 'email.busy',

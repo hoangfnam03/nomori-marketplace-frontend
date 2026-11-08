@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { translate } from '@jsverse/transloco';
 import { catchError, map, Observable, of } from 'rxjs';
 import { AuthFacade } from '../auth/auth.facade';
+import { ShopperAccessService } from '../auth/shopper-access.service';
 import { vendorErrorMessage } from '../vendors/vendor-errors';
 import { CartApiService } from './cart-api.service';
 import { CartView } from './cart.models';
@@ -21,6 +22,7 @@ export type CartAddOutcome =
 export class CartService {
   private readonly api = inject(CartApiService);
   private readonly auth = inject(AuthFacade);
+  private readonly access = inject(ShopperAccessService);
   private readonly router = inject(Router);
   private readonly browser = isPlatformBrowser(inject(PLATFORM_ID));
 
@@ -46,6 +48,7 @@ export class CartService {
       this.router.navigate(['/auth/login'], { queryParams: { returnUrl } });
       return of({ kind: 'login' });
     }
+    if (this.access.isStaff()) return of({ kind: 'error', message: translate('storefront.cart.addFailed') });
     return this.api.add({ productId, quantity, valueIds }).pipe(
       map((view): CartAddOutcome => { this.publish(view); return { kind: 'added', view }; }),
       catchError(err => of<CartAddOutcome>(this.toOutcome(err, valueIds.length === 0)))

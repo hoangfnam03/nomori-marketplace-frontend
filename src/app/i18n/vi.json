@@ -83,11 +83,8 @@
     "jobs": "Tác vụ nền",
     "emails": "Hàng đợi email",
     "returns": "Trả hàng",
-    "vendorReturns": "Trả hàng (shop)",
-    "vendorFinance": "Tài chính (shop)",
     "finance": "Tài chính",
     "carriers": "Hãng vận chuyển",
-    "vendorReports": "Báo cáo (shop)",
     "reports": "Báo cáo"
   },
   "language": {
@@ -168,7 +165,8 @@
     },
     "order": {
       "invalid_transition": "Đơn hàng đã thay đổi trong lúc đó nên không thể thực hiện bước này. Đã làm mới.",
-      "placement_conflict": "Yêu cầu đặt hàng này đã được dùng với nội dung khác."
+      "placement_conflict": "Yêu cầu đặt hàng này đã được dùng với nội dung khác.",
+      "return_open": "Đơn đang có yêu cầu trả hàng chưa xử lý xong, nên chưa thể xác nhận đã nhận hàng."
     },
     "checkout": {
       "cart_not_ready": "Có thứ trong giỏ hàng không còn mua được như hiện tại. Hãy kiểm tra giỏ hàng.",
@@ -482,6 +480,7 @@
     "search": {
       "label": "Tìm sản phẩm",
       "placeholder": "Tìm trên Nomori",
+      "shopPlaceholder": "Tìm trong {{shop}}",
       "submit": "Tìm",
       "suggestions": "Gợi ý"
     },
@@ -657,6 +656,9 @@
       },
       "selectAll": "Chọn tất cả ({{count}})",
       "selectShop": "Chọn mọi sản phẩm của {{name}}",
+      "removeShop": "Xóa hết",
+      "removeShopLabel": "Xóa mọi sản phẩm của {{name}}",
+      "confirmRemoveShop": "Xóa mọi sản phẩm của {{name}} khỏi giỏ hàng?",
       "selectLine": "Chọn {{name}}",
       "selectedItems": "Đã chọn",
       "fixSelected": "Có sản phẩm đã chọn không mua được. Bỏ chọn hoặc xoá chúng để tiếp tục.",
@@ -683,6 +685,12 @@
       "terms": "Tôi đồng ý với điều khoản và điều kiện của sàn.",
       "place": "Đặt hàng",
       "placing": "Đang đặt hàng…",
+      "confirm": {
+        "title": "Xác nhận đặt hàng",
+        "message": "Kiểm tra lại thông tin trước khi đặt hàng. Bạn có chắc muốn đặt đơn này?",
+        "items": "Sản phẩm",
+        "submit": "Xác nhận đặt hàng"
+      },
       "problems": {
         "cartEmpty": "Giỏ hàng của bạn đang trống.",
         "cartIssues": "Một số dòng trong giỏ hàng không mua được như hiện tại.",
@@ -708,8 +716,7 @@
         "apply": "Áp dụng",
         "remove": "Bỏ mã",
         "applied": "Đã áp dụng mã {{code}}",
-        "platform": "do sàn tài trợ",
-        "shop": "do shop tài trợ",
+        "appliedShipping": "Mã vận chuyển {{code}}",
         "available": "Mã giảm giá cho đơn này",
         "none": "Chưa có mã giảm giá nào cho đơn này.",
         "percentOff": "Giảm {{value}}%",
@@ -726,7 +733,9 @@
         "usableCount": "{{count}} mã dùng được",
         "noneUsable": "Xem mã",
         "close": "Đóng",
-        "oneCode": "Mỗi đơn hiện chỉ dùng được 1 mã. Bỏ chọn mã đang chọn để chọn mã khác.",
+        "oneCode": "Mỗi đơn dùng được 1 mã vận chuyển và 1 mã giảm giá sản phẩm. Bỏ chọn mã đang chọn để chọn mã khác cùng loại.",
+        "groups": { "shipping": "Mã vận chuyển", "product": "Mã giảm giá sản phẩm" },
+        "noneOfKind": "Chưa có mã nào loại này.",
         "back": "Trở lại",
         "use": "Sử dụng",
         "reasons": {
@@ -737,7 +746,8 @@
           "min_subtotal": "Giỏ hàng chưa đạt mức tối thiểu của mã này.",
           "limit_reached": "Mã này đã hết lượt dùng.",
           "customer_limit_reached": "Bạn đã dùng mã này đủ số lần cho phép.",
-          "nothing_to_discount": "Mã này không giảm được gì cho giỏ hàng của bạn."
+          "nothing_to_discount": "Mã này không giảm được gì cho giỏ hàng của bạn.",
+          "wrong_kind": "Mã này thuộc loại khác (mã vận chuyển hoặc mã giảm giá sản phẩm)."
         }
       },
       "taxNote": "Giá chưa gồm thuế. Thuế tính theo địa chỉ giao hàng của bạn.",
@@ -1250,6 +1260,9 @@
       "contactEmail": "Email liên hệ",
       "manageProducts": "Quản lý sản phẩm",
       "manageMembers": "Quản lý thành viên",
+      "manageReturns": "Quản lý trả hàng",
+      "manageFinance": "Tài chính",
+      "viewReports": "Báo cáo",
       "viewPublic": "Xem trang công khai",
       "noShop": "Tài khoản của bạn không thuộc shop nào.",
       "apply": "Đăng ký mở shop",
@@ -1618,8 +1631,8 @@
     "forOrder": "đơn {{number}}",
     "item": "Sản phẩm",
     "bought": "Đã mua",
-    "returnQuantity": "Trả",
-    "returnQuantityOf": "Số lượng {{name}} cần trả",
+    "returnItem": "Trả lại {{name}}",
+    "wholeItemHint": "Mỗi sản phẩm được trả lại toàn bộ số lượng đã mua.",
     "reason": "Lý do",
     "chooseReason": "Chọn lý do",
     "yourNote": "Ghi chú của bạn",
@@ -1628,6 +1641,19 @@
     "refundAmount": "Hoàn tiền",
     "refundedOn": "đã hoàn ngày {{date}}",
     "restocked": "đã đưa lại lên bán",
+    "shipment": {
+      "number": "Mã vận đơn trả hàng",
+      "fee": "Phí vận chuyển chiều về {{fee}}",
+      "paidBy": {
+        "customer": "khách chịu (trừ vào tiền hoàn)",
+        "shop": "shop chịu"
+      },
+      "payOut": "Khách thực nhận {{amount}}",
+      "customerPays": "Phí vận chuyển trả hàng {{fee}} được trừ vào tiền hoàn. Bạn sẽ nhận {{payOut}}.",
+      "changedMindHint": "Với lý do này, phí vận chuyển trả hàng sẽ được trừ vào số tiền hoàn.",
+      "failed": "Chưa tạo được vận đơn trả hàng.",
+      "retry": "Tạo lại vận đơn"
+    },
     "status": {
       "requested": "Chờ shop xử lý",
       "approved": "Đã duyệt",
@@ -1640,7 +1666,7 @@
       "damaged": "Hàng hỏng hoặc lỗi",
       "wrong_item": "Giao sai hàng",
       "not_as_described": "Không đúng mô tả",
-      "changed_mind": "Đổi ý",
+      "changed_mind": "Không còn nhu cầu nữa",
       "other": "Khác"
     },
     "customer": {
@@ -1656,7 +1682,8 @@
       "submit": "Gửi yêu cầu trả hàng",
       "withdraw": "Rút lại yêu cầu",
       "withdrawn": "Đã rút lại yêu cầu.",
-      "sendBack": "Shop đã duyệt yêu cầu. Hãy gửi hàng lại; bạn sẽ được hoàn tiền khi shop nhận được hàng."
+      "sendBack": "Shop đã duyệt yêu cầu. Hãy gửi hàng lại; bạn sẽ được hoàn tiền khi shop nhận được hàng.",
+      "pickup": "Shop đã duyệt yêu cầu. Đơn vị vận chuyển sẽ đến lấy hàng tại địa chỉ giao hàng của bạn: hãy đóng gói sẵn. Bạn được hoàn tiền khi shop nhận được hàng."
     },
     "vendor": {
       "eyebrow": "Kênh người bán / Trả hàng",
@@ -1680,9 +1707,11 @@
       "receive": "Đã nhận hàng",
       "refund": "Hoàn tiền",
       "done": {
+        "shipped": "Đã tạo vận đơn trả hàng.",
         "approved": "Đã duyệt yêu cầu.",
         "rejected": "Đã từ chối yêu cầu.",
-        "received": "Đã ghi nhận nhận hàng.",
+        "received": "Đã ghi nhận nhận hàng. Đơn thanh toán khi nhận hàng (COD) chờ quản trị viên hoàn tiền.",
+        "receivedRefunded": "Đã ghi nhận nhận hàng và đã tự động hoàn tiền cho khách.",
         "refunded": "Đã ghi nhận hoàn tiền."
       }
     },
@@ -1696,6 +1725,10 @@
     }
   },
   "orders": {
+    "lineReturning": "Đang trả hàng",
+    "lineReturned": "Đã trả hàng – hoàn tiền",
+    "refunded": "Đã hoàn cho khách",
+    "returnInProgress": "Đang xử lý yêu cầu trả hàng.",
     "status": {
       "pending": "Chờ xác nhận",
       "confirmed": "Đã xác nhận",
@@ -1703,6 +1736,7 @@
       "delivered": "Đã giao",
       "completed": "Hoàn tất",
       "cancelled": "Đã hủy",
+      "returned": "Đã trả hàng",
       "processing": "Đang xử lý"
     },
     "actor": {
@@ -1749,13 +1783,14 @@
       "reasonRequired": "Hãy nhập lý do."
     },
     "discount": "Giảm giá",
+    "shippingDiscount": "Giảm phí vận chuyển",
     "fundedBy": {
       "platform": "do sàn chịu",
       "shop": "do shop chịu"
     },
     "tax": "Thuế",
     "taxLine": "thuế {{rate}}% = {{amount}}",
-    "confirmReceiptNote": "Chỉ xác nhận khi bạn đã nhận đủ hàng. Bạn vẫn có thể yêu cầu trả hàng trong thời hạn đổi trả.",
+    "confirmReceiptNote": "Chỉ xác nhận khi bạn đã nhận đủ hàng và hài lòng. Sau khi xác nhận, bạn không thể yêu cầu trả hàng nữa. Nếu bạn không xác nhận, đơn sẽ tự hoàn tất sau 7 ngày kể từ khi giao.",
     "expectedDelivery": "Dự kiến giao: {{date}}",
     "shipment": {
       "carrierFee": "Phí GHN thực tế",
@@ -1787,7 +1822,13 @@
     "fundedByPlatform": "Do sàn tài trợ: áp dụng cho cả giỏ hàng.",
     "name": "Tên",
     "codeHint": "Chữ, số, \"-\" và \"_\". Khách nhập khi thanh toán; không phân biệt hoa thường.",
-    "type": "Loại",
+    "kind": "Loại khuyến mãi",
+    "kinds": { "product": "Giảm giá sản phẩm", "shipping": "Vận chuyển" },
+    "kindHints": {
+      "product": "Trừ vào tiền hàng.",
+      "shipping": "Chỉ trừ vào phí vận chuyển, không trừ tiền hàng. Khách dùng được cùng lúc với 1 mã giảm giá sản phẩm."
+    },
+    "type": "Cách giảm",
     "typePercentage": "Phần trăm",
     "typeFixed": "Số tiền cố định",
     "valuePercent": "Phần trăm (%)",

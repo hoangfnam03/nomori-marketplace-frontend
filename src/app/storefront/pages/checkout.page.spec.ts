@@ -21,9 +21,11 @@ describe('CheckoutPage: buying the chosen lines', () => {
     addressId: 3, shops: [{ vendorId: 5, vendorName: 'Shop', subtotal: 20, options: [{ rateId: 1, name: 'Standard', fee: 2, isFree: false, minDays: null, maxDays: null }], chosenRateId: 1, shippingFee: 2 }],
     paymentMethods: [{ systemName: 'cod', displayName: 'COD', isOffline: true, redirects: false }], paymentMethod: 'cod',
     subtotal: 20, shippingTotal: 2, total: 22, problems: [], canPlace: true, discount: null, couponReason: null, tax: null,
+    shippingDiscount: null, shippingCouponReason: null,
     coupons: [
-      { code: 'ALL10', name: 'All', funding: 'platform', vendorId: null, type: 'percentage', value: 10, maxDiscountAmount: null, minSubtotal: null, startsOnUtc: null, endsOnUtc: null, amount: 2, reason: null, shortfall: null },
-      { code: 'BIG', name: 'Big', funding: 'shop', vendorId: 5, type: 'fixed', value: 5, maxDiscountAmount: null, minSubtotal: 50, startsOnUtc: null, endsOnUtc: null, amount: null, reason: 'min_subtotal', shortfall: 30 }
+      { code: 'ALL10', name: 'All', funding: 'platform', vendorId: null, type: 'percentage', kind: 'product', value: 10, maxDiscountAmount: null, minSubtotal: null, startsOnUtc: null, endsOnUtc: null, amount: 2, reason: null, shortfall: null },
+      { code: 'BIG', name: 'Big', funding: 'shop', vendorId: 5, type: 'fixed', kind: 'product', value: 5, maxDiscountAmount: null, minSubtotal: 50, startsOnUtc: null, endsOnUtc: null, amount: null, reason: 'min_subtotal', shortfall: 30 },
+      { code: 'FREESHIP', name: 'Free shipping', funding: 'platform', vendorId: null, type: 'percentage', kind: 'shipping', value: 100, maxDiscountAmount: null, minSubtotal: null, startsOnUtc: null, endsOnUtc: null, amount: 2, reason: null, shortfall: null }
     ]
   } as CheckoutPreview;
 
@@ -99,21 +101,66 @@ describe('CheckoutPage: buying the chosen lines', () => {
 
     const element = fixture.nativeElement as HTMLElement;
     const radios = Array.from(element.querySelectorAll('.offer input[type=radio]')) as HTMLInputElement[];
-    expect(Array.from(element.querySelectorAll('.offer-code')).map(c => c.textContent!.trim())).toEqual(['ALL10', 'BIG']);
-    expect(radios.map(r => r.disabled)).toEqual([false, true]);
-    expect(element.querySelectorAll('.offer')[1].querySelector('.offer-reason')).not.toBeNull();
+    expect(Array.from(element.querySelectorAll('.offer-code')).map(c => c.textContent!.trim())).toEqual(['FREESHIP', 'ALL10', 'BIG']);
+    expect(radios.map(r => r.disabled)).toEqual([false, false, true]);
+    expect(element.querySelectorAll('.offer')[2].querySelector('.offer-reason')).not.toBeNull();
 
     // The summary only shows a button; the list opens in a dialog, a radio ticks a code and "Use code" applies it and closes.
     const dialog = element.querySelector('dialog.coupon-dialog') as HTMLDialogElement;
     expect(dialog.open).toBeFalse();
     (element.querySelector('button.offers-open') as HTMLButtonElement).click();
     expect(dialog.open).toBeTrue();
-    radios[0].click();
+    radios[1].click();
     fixture.detectChanges();
-    expect(radios[0].checked).toBeTrue();
+    expect(radios[1].checked).toBeTrue();
     (element.querySelector('button.use-code') as HTMLButtonElement).click();
     expect(dialog.open).toBeFalse();
     expect(fixture.componentInstance.appliedCode).toBe('ALL10');
+  });
+
+  it('takes one shipping code and one item code together, each ticked in its own group', async () => {
+    const { page, previews, placed } = await render(null);
+    const [all10, , freeShip] = preview.coupons;
+
+    page.openCoupons();
+    page.tick(all10);
+    // A shipping code is not blocked by the ticked item code.
+    expect(page.canTick(freeShip)).toBeTrue();
+    page.tick(freeShip);
+    expect([page.pendingCode, page.pendingShippingCode]).toEqual(['ALL10', 'FREESHIP']);
+    expect(page.offerGroups().map(g => [g.kind, g.offers.map(o => o.code)])).toEqual([['shipping', ['FREESHIP']], ['product', ['ALL10', 'BIG']]]);
+
+    page.useCode();
+    const last = previews[previews.length - 1];
+    expect([last.couponCode, last.shippingCouponCode]).toEqual(['ALL10', 'FREESHIP']);
+
+    page.acceptedTerms = true;
+    page.place();
+    expect([placed[0].couponCode, placed[0].shippingCouponCode]).toEqual(['ALL10', 'FREESHIP']);
+  });
+
+  it('asks for confirmation before placing the order, and places nothing when the customer goes back', async () => {
+    const { fixture, placed } = await render(null);
+    const page = fixture.componentInstance;
+    page.acceptedTerms = true;
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const dialog = element.querySelector('dialog.confirm-dialog') as HTMLDialogElement;
+    expect(dialog.open).toBeFalse();
+
+    page.openConfirm();
+    expect(dialog.open).toBeTrue();
+    expect(placed.length).toBe(0);
+
+    page.closeConfirm();
+    expect(dialog.open).toBeFalse();
+    expect(placed.length).toBe(0);
+
+    page.openConfirm();
+    (element.querySelector('button.confirm-submit') as HTMLButtonElement).click();
+    expect(dialog.open).toBeFalse();
+    expect(placed.length).toBe(1);
   });
 
   it('buys the whole cart when nothing was chosen', async () => {

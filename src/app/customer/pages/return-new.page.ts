@@ -9,7 +9,7 @@ import { ReturnApiService } from '../../core/returns/return-api.service';
 import { RETURN_REASONS, ReturnReason } from '../../core/returns/return.models';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
-/** Ask to return items of one delivered shop order: choose how many of each line, say why, send. The server works out the refund. */
+/** Ask to return items of one delivered shop order: tick the items (each goes back whole), say why, send. The server works out the refund. */
 @Component({
   standalone: true,
   imports: [FormsModule, RouterLink, TranslocoDirective],
@@ -37,27 +37,29 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
         <div class="panel-body">
           <form (ngSubmit)="submit()" #form="ngForm">
             <table class="data-table">
-              <thead><tr><th>{{ t('returns.item') }}</th><th>{{ t('returns.bought') }}</th><th>{{ t('returns.returnQuantity') }}</th></tr></thead>
+              <thead><tr><th class="pick"></th><th>{{ t('returns.item') }}</th><th>{{ t('returns.bought') }}</th></tr></thead>
               <tbody>
                 @for (line of shop.lines; track line.id) {
-                  <tr>
+                  <tr class="pickable" [class.picked]="picked[line.id]" (click)="toggle(line.id)">
+                    <td class="pick">
+                      <input type="checkbox" [(ngModel)]="picked[line.id]" [name]="'pick-' + line.id" (click)="$event.stopPropagation()"
+                        [attr.aria-label]="t('returns.returnItem', { name: line.name })" />
+                    </td>
                     <td>{{ line.name }}@if (line.variantLabel) { <span class="muted"> ({{ line.variantLabel }})</span> }</td>
                     <td>{{ line.quantity }} × {{ money(line.unitPrice) }}</td>
-                    <td>
-                      <input type="number" min="0" [max]="line.quantity" step="1" [(ngModel)]="quantities[line.id]" [name]="'qty-' + line.id"
-                        style="width:5rem" [attr.aria-label]="t('returns.returnQuantityOf', { name: line.name })" />
-                    </td>
                   </tr>
                 }
               </tbody>
             </table>
 
+            <p class="muted">{{ t('returns.wholeItemHint') }}</p>
             <p>
               <label for="return-reason">{{ t('returns.reason') }}</label><br />
               <select id="return-reason" [(ngModel)]="reason" name="reason" required>
                 <option value="" disabled>{{ t('returns.chooseReason') }}</option>
                 @for (r of reasons; track r) { <option [value]="r">{{ t('returns.reasons.' + r) }}</option> }
               </select>
+              @if (reason === 'changed_mind') { <br /><span class="muted">{{ t('returns.shipment.changedMindHint') }}</span> }
             </p>
             <p>
               <label for="return-note">{{ t('returns.yourNote') }}</label><br />
@@ -74,7 +76,12 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
       </div>
     }
     </ng-container>
-  `
+  `,
+  styles: [`
+    .pick { width: 2.5rem; }
+    .pickable { cursor: pointer; }
+    .pickable.picked td { background: rgba(39,116,93,.06); }
+  `]
 })
 export class ReturnNewPage implements OnInit {
   private readonly orders = inject(OrderApiService);
@@ -88,7 +95,8 @@ export class ReturnNewPage implements OnInit {
 
   orderId = 0;
   shop: ShopOrderDetail | null = null;
-  quantities: Record<number, number> = {};
+  /** The ticked items (order line id); each goes back with every unit that was bought. */
+  picked: Record<number, boolean> = {};
   reason: ReturnReason | '' = '';
   note = '';
   loading = true;
@@ -114,7 +122,7 @@ export class ReturnNewPage implements OnInit {
       next: order => {
         this.shop = order.shopOrders.find(s => s.id === shopOrderId) ?? null;
         this.notFound = !this.shop;
-        this.quantities = Object.fromEntries((this.shop?.lines ?? []).map((l: OrderLine) => [l.id, 0]));
+        this.picked = Object.fromEntries((this.shop?.lines ?? []).map((l: OrderLine) => [l.id, false]));
         this.loading = false;
       },
       error: err => {
@@ -125,11 +133,11 @@ export class ReturnNewPage implements OnInit {
     });
   }
 
+  toggle(lineId: number) { this.picked = { ...this.picked, [lineId]: !this.picked[lineId] }; }
+
   submit() {
     if (!this.shop || !this.reason) return;
-    const lines = this.shop.lines
-      .map(l => ({ orderLineId: l.id, quantity: Math.floor(Number(this.quantities[l.id]) || 0) }))
-      .filter(l => l.quantity > 0);
+    const lines = this.shop.lines.filter(l => this.picked[l.id]).map(l => ({ orderLineId: l.id, quantity: l.quantity }));
     if (lines.length === 0) { this.error = this.transloco.translate('returns.errors.noItems'); return; }
 
     this.busy = true;

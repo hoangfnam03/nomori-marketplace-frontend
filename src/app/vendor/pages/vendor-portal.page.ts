@@ -52,6 +52,9 @@ import { DATE_FORMAT, formatDateTime } from '../../shared/utils/datetime';
             <a class="btn" routerLink="/vendor/discounts">{{ t('vendor.portal.manageDiscounts') }}</a>
             <a class="btn" routerLink="/vendor/shipping">{{ t('vendor.portal.manageShipping') }}</a>
             <a class="btn" routerLink="/vendor/members">{{ t('vendor.portal.manageMembers') }}</a>
+            <a class="btn" routerLink="/vendor/returns">{{ t('vendor.portal.manageReturns') }}</a>
+            <a class="btn" routerLink="/vendor/finance">{{ t('vendor.portal.manageFinance') }}</a>
+            <a class="btn" routerLink="/vendor/reports">{{ t('vendor.portal.viewReports') }}</a>
             <a class="btn btn-secondary" [routerLink]="['/storefront/vendors', vendor.id]">{{ t('vendor.portal.viewPublic') }}</a>
           </div>
         </div>

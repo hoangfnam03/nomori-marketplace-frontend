@@ -1,5 +1,5 @@
 import { CartView } from '../cart/cart.models';
-import { CouponReason, DiscountFunding, DiscountType } from '../discounts/discount.models';
+import { CouponReason, DiscountFunding, DiscountKind, DiscountType } from '../discounts/discount.models';
 import { ShippingOption } from '../shipping/shipping.models';
 
 /** What can be wrong with the cart or the choices at checkout. The server gives a stable code for each. */
@@ -9,7 +9,7 @@ export type CheckoutProblem =
   /** The address has no GHN province, district and ward: the customer completes it first. */
   | 'address_area_missing'
   | 'shipping_unavailable' | 'shipping_not_chosen' | 'shipping_invalid'
-  | 'payment_required' | 'payment_invalid' | 'coupon_invalid'
+  | 'payment_required' | 'payment_invalid' | 'coupon_invalid' | 'shipping_coupon_invalid'
   /** A chosen cart line is no longer in the cart (bought from another tab, or removed). */
   | 'selection_changed';
 
@@ -22,8 +22,10 @@ export interface CheckoutChoices {
   addressId: number | null;
   shippingChoices: ShippingChoice[];
   paymentMethod: string | null;
-  /** The code the customer typed, if any. */
+  /** The item code the customer chose, if any. */
   couponCode: string | null;
+  /** The shipping code the customer chose, if any. It can go with an item code. */
+  shippingCouponCode?: string | null;
   /** The cart lines to buy now; leave out to buy the whole cart. Lines left out stay in the cart. */
   cartItemIds?: number[] | null;
 }
@@ -66,6 +68,8 @@ export interface CheckoutCoupon {
   /** The shop that offers it; null for a marketplace code. */
   vendorId: number | null;
   type: DiscountType;
+  /** `product` takes off the items, `shipping` takes off the shipping. */
+  kind: DiscountKind;
   value: number;
   maxDiscountAmount: number | null;
   minSubtotal: number | null;
@@ -97,7 +101,7 @@ export interface CheckoutPreview {
   paymentMethods: CheckoutPaymentMethod[];
   paymentMethod: string | null;
   subtotal: number;
-  /** Null while a shipping choice is missing. */
+  /** Null while a shipping choice is missing. Before the shipping code: `total` takes `shippingDiscount` off it. */
   shippingTotal: number | null;
   total: number | null;
   problems: CheckoutProblem[];
@@ -107,8 +111,11 @@ export interface CheckoutPreview {
   couponReason: CouponReason | null;
   /** Null until there is an address: the tax follows the delivery address. */
   tax: CheckoutTax | null;
-  /** The codes to pick from: usable ones first, the biggest discount first. */
+  /** The codes to pick from, of both kinds: usable ones first, the biggest discount first. */
   coupons: CheckoutCoupon[];
+  shippingDiscount: CheckoutDiscount | null;
+  /** Why the chosen shipping code gives nothing; null when it works or none was chosen. */
+  shippingCouponReason: CouponReason | null;
 }
 
 export interface PlaceOrderRequest extends CheckoutChoices {
@@ -124,6 +131,7 @@ export interface PlacedOrder {
   subtotal: number;
   shippingTotal: number;
   discountTotal: number;
+  shippingDiscountTotal: number;
   taxTotal: number;
   total: number;
   paymentMethod: string;

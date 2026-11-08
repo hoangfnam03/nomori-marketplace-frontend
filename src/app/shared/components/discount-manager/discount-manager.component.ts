@@ -3,13 +3,14 @@ import { DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { DiscountApiService } from '../../../core/discounts/discount-api.service';
-import { Discount, DiscountType, SaveDiscountRequest } from '../../../core/discounts/discount.models';
+import { Discount, DiscountKind, DiscountType, SaveDiscountRequest } from '../../../core/discounts/discount.models';
 import { CurrencyService } from '../../../core/money/currency.service';
 import { vendorErrorMessage } from '../../../core/vendors/vendor-errors';
 
 interface DiscountForm {
   name: string;
   code: string;
+  kind: DiscountKind;
   type: DiscountType;
   value: number | null;
   maxDiscountAmount: number | null;
@@ -22,7 +23,7 @@ interface DiscountForm {
 }
 
 const emptyForm = (): DiscountForm => ({
-  name: '', code: '', type: 'percentage', value: 10, maxDiscountAmount: null, startsOn: '', endsOn: '',
+  name: '', code: '', kind: 'product', type: 'percentage', value: 10, maxDiscountAmount: null, startsOn: '', endsOn: '',
   minSubtotal: null, maxUses: null, maxUsesPerCustomer: null, enabled: true
 });
 
@@ -59,13 +60,14 @@ const toLocal = (utc: string | null) => (utc ? utc.slice(0, 16) : '');
         <div class="table-scroll">
           <table class="data-table">
             <thead><tr>
-              <th>{{ t('discounts.code') }}</th><th>{{ t('discounts.discount') }}</th><th>{{ t('discounts.validity') }}</th>
+              <th>{{ t('discounts.code') }}</th><th>{{ t('discounts.kind') }}</th><th>{{ t('discounts.discount') }}</th><th>{{ t('discounts.validity') }}</th>
               <th>{{ t('discounts.uses') }}</th><th>{{ t('admin.common.status') }}</th><th></th>
             </tr></thead>
             <tbody>
               @for (d of items; track d.id) {
                 <tr>
                   <td><strong>{{ d.code }}</strong><div class="muted">{{ d.name }}</div></td>
+                  <td><span class="badge" [class.kind-shipping]="d.kind === 'shipping'">{{ t('discounts.kinds.' + d.kind) }}</span></td>
                   <td>
                     {{ d.type === 'percentage' ? d.value + '%' : money(d.value) }}
                     @if (d.maxDiscountAmount !== null) { <div class="muted">{{ t('discounts.upTo', { amount: money(d.maxDiscountAmount) }) }}</div> }
@@ -120,6 +122,14 @@ const toLocal = (utc: string | null) => (utc ? utc.slice(0, 16) : '');
             </label>
           </div>
           <div class="form-row">
+            <label>{{ t('discounts.kind') }}
+              <select name="kind" [(ngModel)]="form.kind">
+                <option value="product">{{ t('discounts.kinds.product') }}</option>
+                <option value="shipping">{{ t('discounts.kinds.shipping') }}</option>
+              </select>
+              <span class="hint">{{ t('discounts.kindHints.' + form.kind) }}</span>
+              @if (fieldError('kind'); as e) { <span class="field-error">{{ e }}</span> }
+            </label>
             <label>{{ t('discounts.type') }}
               <select name="type" [(ngModel)]="form.type">
                 <option value="percentage">{{ t('discounts.typePercentage') }}</option>
@@ -171,7 +181,8 @@ const toLocal = (utc: string | null) => (utc ? utc.slice(0, 16) : '');
       </div>
     }
     </ng-container>
-  `
+  `,
+  styles: [`.kind-shipping { background: #e6f0fb; color: #1f4f82; }`]
 })
 export class DiscountManagerComponent implements OnInit {
   private readonly api = inject(DiscountApiService);
@@ -216,7 +227,7 @@ export class DiscountManagerComponent implements OnInit {
 
   startEdit(d: Discount) {
     this.open(d.id, {
-      name: d.name, code: d.code, type: d.type, value: d.value, maxDiscountAmount: d.maxDiscountAmount, startsOn: toLocal(d.startsOnUtc),
+      name: d.name, code: d.code, kind: d.kind ?? 'product', type: d.type, value: d.value, maxDiscountAmount: d.maxDiscountAmount, startsOn: toLocal(d.startsOnUtc),
       endsOn: toLocal(d.endsOnUtc), minSubtotal: d.minSubtotal, maxUses: d.maxUses, maxUsesPerCustomer: d.maxUsesPerCustomer, enabled: d.enabled
     });
   }
@@ -230,7 +241,7 @@ export class DiscountManagerComponent implements OnInit {
       return;
     }
     const body: SaveDiscountRequest = {
-      name: f.name.trim(), code: f.code.trim().toUpperCase(), type: f.type, value: f.value,
+      name: f.name.trim(), code: f.code.trim().toUpperCase(), kind: f.kind, type: f.type, value: f.value,
       maxDiscountAmount: f.type === 'percentage' ? f.maxDiscountAmount || null : null,
       startsOnUtc: toUtc(f.startsOn), endsOnUtc: toUtc(f.endsOn),
       minSubtotal: f.minSubtotal || null, maxUses: f.maxUses || null, maxUsesPerCustomer: f.maxUsesPerCustomer || null, enabled: f.enabled

@@ -73,7 +73,7 @@ const PAGE_SIZE = 20;
                         <p class="muted">{{ t('admin.orders.customerId') }}: {{ opened.customerId }} · {{ opened.recipient.name }} · {{ opened.recipient.phone }} · {{ opened.paymentMethod }}</p>
                         @for (shop of opened.shopOrders; track shop.id) {
                           <app-shop-order-panel [order]="shop">
-                            @if (shop.status !== 'completed' && shop.status !== 'cancelled') {
+                            @if (shop.status !== 'completed' && shop.status !== 'cancelled' && shop.status !== 'returned') {
                               @if (cancelling?.id === shop.id) {
                                 <div class="form">
                                   <label>{{ t('orders.reason') }} *

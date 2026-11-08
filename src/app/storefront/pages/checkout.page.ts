@@ -8,6 +8,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
 import { CartService } from '../../core/cart/cart.service';
 import { CheckoutApiService } from '../../core/checkout/checkout-api.service';
 import { CheckoutCoupon, CheckoutPreview, CheckoutProblem, CheckoutShop } from '../../core/checkout/checkout.models';
+import { DiscountKind } from '../../core/discounts/discount.models';
 import { CustomerAccountDataApiService, CustomerAddress } from '../../core/customer/customer-account-data-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
 import { ShippingOption } from '../../core/shipping/shipping.models';
@@ -27,8 +28,12 @@ const PROBLEM_KEY: Record<CheckoutProblem, string> = {
   payment_required: 'storefront.checkout.problems.paymentRequired',
   payment_invalid: 'storefront.checkout.problems.paymentInvalid',
   coupon_invalid: 'storefront.checkout.problems.couponInvalid',
+  shipping_coupon_invalid: 'storefront.checkout.problems.couponInvalid',
   selection_changed: 'storefront.checkout.problems.selectionChanged'
 };
+
+/** A shipping code; an offer without a kind is an item code. */
+const isShipping = (offer: CheckoutCoupon) => offer.kind === 'shipping';
 
 /** Problems that send the customer back to the cart rather than to a field of this page. */
 const CART_PROBLEMS: CheckoutProblem[] = ['cart_empty', 'cart_issues', 'prices_changed', 'selection_changed'];
@@ -107,7 +112,8 @@ function newKey(): string {
             } @else {
               @for (shop of preview.shops; track shop.vendorId) {
                 <fieldset class="shop">
-                  <legend>{{ shop.vendorName ?? t('admin.catalog.shop') }}</legend>
+                  <!-- Kept for screen readers only: on screen the options speak for themselves. -->
+                  <legend class="sr-only">{{ shop.vendorName ?? t('admin.catalog.shop') }}</legend>
                   @if (shop.options.length === 0) {
                     <p class="issue" role="status">{{ t('storefront.checkout.shopCannotShip') }}</p>
                   } @else {
@@ -157,7 +163,7 @@ function newKey(): string {
             <div class="group">
               <strong>{{ group.vendorName ?? t('admin.catalog.shop') }}</strong>
               @for (line of group.lines; track line.id) {
-                <div class="line"><span>{{ line.quantity }} × {{ line.name }}@if (line.variantLabel) { <span class="muted"> ({{ line.variantLabel }})</span> }</span><span>{{ money(line.lineTotal) }}</span></div>
+                <div class="line"><span class="line-name">{{ line.quantity }} × {{ line.name }}@if (line.variantLabel) { <span class="muted"> ({{ line.variantLabel }})</span> }</span><span class="line-total">{{ money(line.lineTotal) }}</span></div>
               }
             </div>
           }
@@ -175,9 +181,20 @@ function newKey(): string {
             @if (preview.couponReason; as reason) { <p class="issue" role="alert">{{ t('storefront.checkout.coupon.reasons.' + reason) }}</p> }
             @if (fieldError('couponCode'); as e) { <p class="issue" role="alert">{{ e }}</p> }
             @if (preview.discount; as discount) {
-              <p class="coupon-ok" role="status">{{ t('storefront.checkout.coupon.applied', { code: discount.code }) }}
-                · {{ discount.funding === 'platform' ? t('storefront.checkout.coupon.platform') : t('storefront.checkout.coupon.shop') }}</p>
+              <p class="coupon-ok" role="status">{{ t('storefront.checkout.coupon.applied', { code: discount.code }) }}</p>
             }
+            @if (appliedShippingCode) {
+              <div class="applied-shipping">
+                @if (preview.shippingDiscount; as shipping) {
+                  <p class="coupon-ok" role="status">{{ t('storefront.checkout.coupon.appliedShipping', { code: shipping.code }) }}</p>
+                } @else {
+                  <p class="muted">{{ t('storefront.checkout.coupon.appliedShipping', { code: appliedShippingCode }) }}</p>
+                }
+                <button type="button" class="link-button" (click)="removeShippingCoupon()" [disabled]="refreshing">{{ t('storefront.checkout.coupon.remove') }}</button>
+              </div>
+            }
+            @if (preview.shippingCouponReason; as reason) { <p class="issue" role="alert">{{ t('storefront.checkout.coupon.reasons.' + reason) }}</p> }
+            @if (fieldError('shippingCouponCode'); as e) { <p class="issue" role="alert">{{ e }}</p> }
             <!-- The codes open in a dialog, so the summary stays short however many codes there are. -->
             <button type="button" class="offers-open" (click)="openCoupons()" [disabled]="refreshing">
               <span>{{ t('storefront.checkout.coupon.choose') }}</span>
@@ -186,8 +203,8 @@ function newKey(): string {
           </div>
 
           <!--
-            Every code for these lines. A usable code is ticked with its radio, then "Use code" applies it. One code per order for now: once one is
-            ticked the others are disabled (untick it to choose another), so several kinds of code (shipping, for example) can be added later.
+            Every code for these lines, in two groups: shipping codes and item codes. A usable code is ticked with its radio, then "Use code"
+            applies what is ticked. One code of each kind: once one is ticked the others of its group are disabled (untick it to choose another).
           -->
           <dialog #couponDialog class="coupon-dialog" [attr.aria-label]="t('storefront.checkout.coupon.available')" (click)="closeOnBackdrop($event)">
             <div class="dialog-head">
@@ -197,11 +214,14 @@ function newKey(): string {
             <div class="dialog-body">
               @if (preview.coupons.length) {
                 <p class="muted offers-hint">{{ t('storefront.checkout.coupon.oneCode') }}</p>
+                @for (group of offerGroups(); track group.kind) {
+                <h4 class="offers-group">{{ t('storefront.checkout.coupon.groups.' + group.kind) }}</h4>
+                @if (!group.offers.length) { <p class="muted offers-none">{{ t('storefront.checkout.coupon.noneOfKind') }}</p> }
                 <ul class="offers">
-                  @for (offer of preview.coupons; track offer.code) {
+                  @for (offer of group.offers; track offer.code) {
                     <li>
-                      <label class="offer" [class.picked]="offer.code === pendingCode" [class.disabled]="!canTick(offer)">
-                        <input type="radio" name="couponOffer" [value]="offer.code" [checked]="offer.code === pendingCode" [disabled]="!canTick(offer)"
+                      <label class="offer" [class.picked]="isTicked(offer)" [class.disabled]="!canTick(offer)">
+                        <input type="radio" [name]="'couponOffer-' + group.kind" [value]="offer.code" [checked]="isTicked(offer)" [disabled]="!canTick(offer)"
                           (click)="tick(offer)" />
                         <span class="offer-text">
                           <span class="offer-head">
@@ -214,7 +234,7 @@ function newKey(): string {
                             @if (offer.minSubtotal !== null && offer.endsOnUtc) { · }
                             @if (offer.endsOnUtc) { {{ t('storefront.checkout.coupon.endsOn', { date: (offer.endsOnUtc | date: 'dd/MM/yyyy HH:mm') }) }} }
                           </span>
-                          @if (offer.code === appliedCode && offer.amount !== null) {
+                          @if (isApplied(offer) && offer.amount !== null) {
                             <span class="offer-state">{{ t('storefront.checkout.coupon.inUse') }}</span>
                           } @else if (offer.reason) {
                             <span class="offer-reason">
@@ -230,13 +250,15 @@ function newKey(): string {
                     </li>
                   }
                 </ul>
+                }
               } @else {
                 <p class="muted offers-none">{{ t('storefront.checkout.coupon.none') }}</p>
               }
             </div>
             <div class="dialog-foot">
               <button type="button" class="secondary" (click)="closeCoupons()">{{ t('storefront.checkout.coupon.back') }}</button>
-              <button type="button" class="primary use-code" (click)="useCode()" [disabled]="refreshing || pendingCode === appliedCode">{{ t('storefront.checkout.coupon.use') }}</button>
+              <button type="button" class="primary use-code" (click)="useCode()"
+                [disabled]="refreshing || (pendingCode === appliedCode && pendingShippingCode === appliedShippingCode)">{{ t('storefront.checkout.coupon.use') }}</button>
             </div>
           </dialog>
 
@@ -246,6 +268,9 @@ function newKey(): string {
               <div class="discount"><dt>{{ t('orders.discount') }}</dt><dd>−{{ money(discount.amount) }}</dd></div>
             }
             <div><dt>{{ t('orders.shipping') }}</dt><dd>{{ preview.shippingTotal === null ? '—' : money(preview.shippingTotal) }}</dd></div>
+            @if (preview.shippingDiscount; as shipping) {
+              <div class="discount"><dt>{{ t('orders.shippingDiscount') }}</dt><dd>−{{ money(shipping.amount) }}</dd></div>
+            }
             <div><dt>{{ t('orders.tax') }}</dt><dd>{{ preview.tax === null ? '—' : money(preview.tax.total) }}</dd></div>
             <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ preview.total === null ? '—' : money(preview.total) }}</dd></div>
           </dl>
@@ -258,9 +283,59 @@ function newKey(): string {
           </label>
           @if (fieldError('acceptedTerms'); as e) { <p class="issue" role="alert">{{ e }}</p> }
 
-          <button type="button" class="primary" (click)="place()" [disabled]="placing || refreshing || !preview.canPlace || !acceptedTerms">
+          <button type="button" class="primary" (click)="openConfirm()" [disabled]="placing || refreshing || !preview.canPlace || !acceptedTerms">
             {{ placing ? t('storefront.checkout.placing') : t('storefront.checkout.place') }}
           </button>
+
+          <!-- The customer checks what will be ordered once more before the order is sent. -->
+          <dialog #confirmDialog class="coupon-dialog confirm-dialog" [attr.aria-label]="t('storefront.checkout.confirm.title')" (click)="closeConfirmOnBackdrop($event)">
+            <div class="dialog-head">
+              <h3>{{ t('storefront.checkout.confirm.title') }}</h3>
+              <button type="button" class="dialog-close" (click)="closeConfirm()" [attr.aria-label]="t('storefront.checkout.coupon.close')">×</button>
+            </div>
+            <div class="dialog-body confirm-body">
+              <p class="confirm-lead">{{ t('storefront.checkout.confirm.message') }}</p>
+              <dl>
+                @if (selectedAddress(); as a) {
+                  <div class="confirm-row confirm-address"><dt>{{ t('storefront.checkout.address') }}</dt><dd>{{ a.firstName }} {{ a.lastName }} · {{ a.address1 }}, {{ a.city }}</dd></div>
+                }
+                <div class="confirm-items">
+                  <dt>{{ t('storefront.checkout.confirm.items') }}</dt>
+                  <dd>
+                    <ul>
+                      @for (group of preview.cart.groups; track group.vendorId) {
+                        @for (line of group.lines; track line.id) {
+                          <li>
+                            <span class="confirm-name">{{ line.name }}@if (line.variantLabel) { <span class="muted"> · {{ line.variantLabel }}</span> }</span>
+                            <span class="confirm-qty">× {{ line.quantity }}</span>
+                          </li>
+                        }
+                      }
+                    </ul>
+                  </dd>
+                </div>
+                @if (selectedPaymentName(); as pay) {
+                  <div class="confirm-row"><dt>{{ t('storefront.checkout.payment') }}</dt><dd>{{ pay }}</dd></div>
+                }
+                <div class="confirm-row confirm-money"><dt>{{ t('storefront.cart.subtotal') }}</dt><dd>{{ money(preview.subtotal) }}</dd></div>
+                <div class="confirm-row"><dt>{{ t('orders.shipping') }}</dt><dd>{{ preview.shippingTotal === null ? '—' : money(preview.shippingTotal) }}</dd></div>
+                @if (preview.shippingDiscount; as shipping) {
+                  <div class="confirm-row discount"><dt>{{ t('orders.shippingDiscount') }} ({{ shipping.code }})</dt><dd>−{{ money(shipping.amount) }}</dd></div>
+                }
+                @if (preview.discount; as discount) {
+                  <div class="confirm-row discount"><dt>{{ t('orders.discount') }} ({{ discount.code }})</dt><dd>−{{ money(discount.amount) }}</dd></div>
+                }
+                @if (preview.tax; as tax) {
+                  <div class="confirm-row"><dt>{{ t('orders.tax') }}</dt><dd>{{ money(tax.total) }}</dd></div>
+                }
+                <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ preview.total === null ? '—' : money(preview.total) }}</dd></div>
+              </dl>
+            </div>
+            <div class="dialog-foot">
+              <button type="button" class="secondary" (click)="closeConfirm()">{{ t('storefront.checkout.coupon.back') }}</button>
+              <button type="button" class="primary confirm-submit" (click)="confirmPlace()" [disabled]="placing || refreshing || !preview.canPlace">{{ t('storefront.checkout.confirm.submit') }}</button>
+            </div>
+          </dialog>
           @if (!preview.canPlace && !cartProblem()) {
             <ul class="problems">
               @for (p of otherProblems(); track p) { <li>{{ t(problemKey(p)) }}</li> }
@@ -295,11 +370,14 @@ function newKey(): string {
     .summary { border: 1px solid var(--line-strong); padding: 1.25rem; position: sticky; top: 1rem; display: grid; gap: .75rem; }
     .summary h2 { margin: 0; font: 700 1.1rem var(--display-font); }
     .group { display: grid; gap: .25rem; font-size: .85rem; }
-    .line { display: flex; justify-content: space-between; gap: 1rem; }
+    .line { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; }
+    /* A long name wraps on its own side; the amount stays on one line. */
+    .line-name { min-width: 0; overflow-wrap: anywhere; }
+    .line-total { flex-shrink: 0; white-space: nowrap; }
     dl { margin: 0; display: grid; gap: .4rem; }
     dl div { display: flex; justify-content: space-between; }
     dt { color: var(--muted); }
-    dd { margin: 0; font-weight: 700; }
+    dd { margin: 0; font-weight: 700; white-space: nowrap; }
     .grand { border-top: 1px solid var(--line); padding-top: .5rem; font-size: 1.05rem; }
     .note { margin: 0; line-height: 1.5; }
     .terms { display: flex; gap: .5rem; align-items: flex-start; font-size: .85rem; line-height: 1.4; }
@@ -326,6 +404,23 @@ function newKey(): string {
     .offer.picked { border-style: solid; border-color: var(--green); background: rgba(39,116,93,.08); }
     .offer.disabled { cursor: not-allowed; opacity: .55; }
     .offers-hint { margin: 0 0 .6rem; font-size: .78rem; }
+    .offers-group { margin: .9rem 0 .45rem; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+    .offers-hint + .offers-group { margin-top: 0; }
+    .applied-shipping { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; }
+    .applied-shipping p { margin: 0; font-size: .8rem; }
+    .link-button { border: 0; background: none; padding: 0; color: var(--muted); font: inherit; font-size: .78rem; text-decoration: underline; cursor: pointer; }
+    .dialog-foot .secondary { flex-shrink: 0; white-space: nowrap; }
+    .confirm-body dl { margin: 0; display: grid; gap: .5rem; }
+    .confirm-lead { margin: 0 0 .85rem; font-size: .9rem; }
+    .confirm-row { gap: 1rem; font-size: .88rem; }
+    .confirm-row dd { text-align: right; }
+    .confirm-address dd { white-space: normal; }
+    .confirm-items { display: grid; gap: .35rem; font-size: .88rem; }
+    .confirm-items ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .3rem; max-height: 12rem; overflow-y: auto; }
+    .confirm-items li { display: flex; justify-content: space-between; gap: 1rem; font-weight: 400; }
+    .confirm-name { min-width: 0; overflow-wrap: anywhere; }
+    .confirm-qty { flex-shrink: 0; font-weight: 700; }
+    .confirm-money { border-top: 1px solid var(--line); padding-top: .5rem; }
     .dialog-foot { display: flex; justify-content: flex-end; gap: .5rem; padding: .75rem 1rem; border-top: 1px solid var(--line); }
     .offer-head { display: flex; justify-content: space-between; gap: .5rem; }
     .offer-code { font-family: var(--mono-font); letter-spacing: .04em; }
@@ -349,6 +444,7 @@ export class CheckoutPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly transloco = inject(TranslocoService);
   @ViewChild('couponDialog') private couponDialog?: ElementRef<HTMLDialogElement>;
+  @ViewChild('confirmDialog') private confirmDialog?: ElementRef<HTMLDialogElement>;
 
   preview: CheckoutPreview | null = null;
   /** The cart lines chosen in the cart (?items=1,2,3); empty buys the whole cart. */
@@ -360,7 +456,9 @@ export class CheckoutPage implements OnInit {
   paymentMethod: string | null = null;
   /** What the customer is typing, and the code that was sent with the last request. */
   couponInput = '';
+  /** The item code and the shipping code sent with the last request; an order can carry one of each. */
   appliedCode: string | null = null;
+  appliedShippingCode: string | null = null;
   note = '';
   acceptedTerms = false;
 
@@ -404,7 +502,10 @@ export class CheckoutPage implements OnInit {
     return CART_PROBLEMS.find(p => this.hasProblem(p)) ?? null;
   }
 
-  otherProblems(): CheckoutProblem[] { return (this.preview?.problems ?? []).filter(p => !CART_PROBLEMS.includes(p) && p !== 'address_invalid' && p !== 'address_area_missing' && p !== 'coupon_invalid'); }
+  otherProblems(): CheckoutProblem[] {
+    return (this.preview?.problems ?? []).filter(p => !CART_PROBLEMS.includes(p) && p !== 'address_invalid' && p !== 'address_area_missing'
+      && p !== 'coupon_invalid' && p !== 'shipping_coupon_invalid');
+  }
 
   fieldError(name: string) { return this.fieldErrors[name]?.join(' ') ?? ''; }
 
@@ -444,43 +545,73 @@ export class CheckoutPage implements OnInit {
     this.refresh();
   }
 
+  /**
+   * Applies the typed code to its own kind: a code listed as a shipping code goes to shipping, any other to the items. A code that is not
+   * listed and turns out to be a shipping code is moved by the next preview (see `moveWrongKind`).
+   */
   applyCoupon() {
     const code = this.couponInput.trim().toUpperCase();
     if (!code) return;
     this.clearMessages();
-    this.couponInput = code;
-    this.appliedCode = code;
+    if (this.preview?.coupons.find(c => c.code === code && isShipping(c))) {
+      this.appliedShippingCode = code;
+      this.couponInput = '';
+    } else {
+      this.couponInput = code;
+      this.appliedCode = code;
+    }
     this.refresh();
   }
 
   usableCoupons() { return this.preview?.coupons.filter(c => c.amount !== null).length ?? 0; }
 
-  /** The code ticked in the dialog, not yet used. The dialog opens with the code in use ticked. */
+  /** Shipping codes first, then item codes. */
+  offerGroups(): { kind: DiscountKind; offers: CheckoutCoupon[] }[] {
+    const coupons = this.preview?.coupons ?? [];
+    return [
+      { kind: 'shipping', offers: coupons.filter(c => isShipping(c)) },
+      { kind: 'product', offers: coupons.filter(c => !isShipping(c)) }
+    ];
+  }
+
+  /** The codes ticked in the dialog, one of each kind, not yet used. The dialog opens with the codes in use ticked. */
   pendingCode: string | null = null;
+  pendingShippingCode: string | null = null;
 
   openCoupons() {
-    const applied = this.preview?.coupons.find(c => c.code === this.appliedCode && c.amount !== null);
-    this.pendingCode = applied?.code ?? null;
+    const usable = (code: string | null) => this.preview?.coupons.find(c => c.code === code && c.amount !== null)?.code ?? null;
+    this.pendingCode = usable(this.appliedCode);
+    this.pendingShippingCode = usable(this.appliedShippingCode);
     this.couponDialog?.nativeElement.showModal();
   }
 
-  /** Usable, and no other code is ticked: one code per order for now. */
-  canTick(offer: CheckoutCoupon) { return offer.amount !== null && (this.pendingCode === null || this.pendingCode === offer.code); }
+  isTicked(offer: CheckoutCoupon) { return offer.code === (isShipping(offer) ? this.pendingShippingCode : this.pendingCode); }
 
-  /** Ticking the ticked code again unticks it, so another one can be chosen. */
-  tick(offer: CheckoutCoupon) {
-    if (!this.canTick(offer)) return;
-    this.pendingCode = this.pendingCode === offer.code ? null : offer.code;
+  isApplied(offer: CheckoutCoupon) { return offer.code === (isShipping(offer) ? this.appliedShippingCode : this.appliedCode); }
+
+  /** Usable, and no other code of its kind is ticked: one code of each kind per order. */
+  canTick(offer: CheckoutCoupon) {
+    const ticked = isShipping(offer) ? this.pendingShippingCode : this.pendingCode;
+    return offer.amount !== null && (ticked === null || ticked === offer.code);
   }
 
-  /** Uses the ticked code (or takes the code off when nothing is ticked) and closes the dialog. */
+  /** Ticking the ticked code again unticks it, so another one of its kind can be chosen. */
+  tick(offer: CheckoutCoupon) {
+    if (!this.canTick(offer)) return;
+    const next = this.isTicked(offer) ? null : offer.code;
+    if (isShipping(offer)) this.pendingShippingCode = next;
+    else this.pendingCode = next;
+  }
+
+  /** Uses the ticked codes (a kind with nothing ticked loses its code) and closes the dialog. */
   useCode() {
-    const code = this.pendingCode;
     this.closeCoupons();
-    if (code === this.appliedCode) return;
-    if (code === null) { this.removeCoupon(); return; }
-    this.couponInput = code;
-    this.applyCoupon();
+    if (this.pendingCode === this.appliedCode && this.pendingShippingCode === this.appliedShippingCode) return;
+    this.clearMessages();
+    this.appliedCode = this.pendingCode;
+    this.appliedShippingCode = this.pendingShippingCode;
+    this.couponInput = this.appliedCode ?? '';
+    this.refresh();
   }
 
   closeCoupons() { this.couponDialog?.nativeElement.close(); }
@@ -510,6 +641,21 @@ export class CheckoutPage implements OnInit {
     this.refresh();
   }
 
+  removeShippingCoupon() {
+    this.clearMessages();
+    this.appliedShippingCode = null;
+    this.refresh();
+  }
+
+  /** A typed shipping code sent as an item code comes back as the wrong kind: it moves to shipping, once. True when it moved. */
+  private moveWrongKind(preview: CheckoutPreview): boolean {
+    if (preview.couponReason !== 'wrong_kind' || !this.appliedCode || this.appliedShippingCode) return false;
+    this.appliedShippingCode = this.appliedCode;
+    this.appliedCode = null;
+    this.couponInput = '';
+    return true;
+  }
+
   changePayment(method: string) {
     this.clearMessages();
     this.paymentMethod = method;
@@ -524,6 +670,7 @@ export class CheckoutPage implements OnInit {
       shippingChoices: Object.entries(this.choices).map(([vendorId, rateId]) => ({ vendorId: Number(vendorId), rateId })),
       paymentMethod: this.paymentMethod,
       couponCode: this.appliedCode,
+      shippingCouponCode: this.appliedShippingCode,
       cartItemIds: this.cartItemIds.length ? this.cartItemIds : null
     }).subscribe({
       next: preview => {
@@ -531,7 +678,7 @@ export class CheckoutPage implements OnInit {
         this.loading = false;
         this.preview = preview;
         // The page pre-selects the cheapest option and the first payment method, so the customer sees what will be sent.
-        if (this.applyDefaults(preview)) this.refresh();
+        if (this.moveWrongKind(preview) || this.applyDefaults(preview)) this.refresh();
       },
       error: err => {
         this.refreshing = false;
@@ -539,6 +686,27 @@ export class CheckoutPage implements OnInit {
         this.loadError = vendorErrorMessage(err, this.transloco.translate('storefront.checkout.errors.load'));
       }
     });
+  }
+
+  selectedAddress() { return this.addresses.find(a => a.id === this.addressId) ?? null; }
+
+  selectedPaymentName() { return this.preview?.paymentMethods.find(m => m.systemName === this.paymentMethod)?.displayName ?? null; }
+
+  /** "Place order" opens the confirmation first; the order is only sent from there. */
+  openConfirm() {
+    if (!this.preview?.canPlace || this.placing || this.refreshing || !this.acceptedTerms) return;
+    this.confirmDialog?.nativeElement.showModal();
+  }
+
+  closeConfirm() { this.confirmDialog?.nativeElement.close(); }
+
+  closeConfirmOnBackdrop(event: MouseEvent) {
+    if (event.target === this.confirmDialog?.nativeElement) this.closeConfirm();
+  }
+
+  confirmPlace() {
+    this.closeConfirm();
+    this.place();
   }
 
   place() {
@@ -552,6 +720,7 @@ export class CheckoutPage implements OnInit {
       shippingChoices: Object.entries(this.choices).map(([vendorId, rateId]) => ({ vendorId: Number(vendorId), rateId })),
       paymentMethod: this.paymentMethod,
       couponCode: this.appliedCode,
+      shippingCouponCode: this.appliedShippingCode,
       cartItemIds: this.cartItemIds.length ? this.cartItemIds : null,
       idempotencyKey: this.key,
       acceptedTerms: this.acceptedTerms,

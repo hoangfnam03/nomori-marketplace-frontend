@@ -71,6 +71,16 @@ type Mode = 'vendor' | 'admin';
                 @if (r.restocked) { <span class="muted"> · {{ t('returns.restocked') }}</span> }</p>
               @if (r.customerNote) { <p class="muted">{{ t('returns.customerNote') }}: {{ r.customerNote }}</p> }
               @if (r.resolutionNote) { <p>{{ t('returns.shopNote') }}: {{ r.resolutionNote }}</p> }
+              @if (r.returnTrackingNumber) {
+                <p>{{ t('returns.shipment.number') }}: <strong>{{ r.returnTrackingNumber }}</strong>
+                  @if (r.returnShipmentStatus) { <span class="muted"> · {{ r.returnShipmentStatus }}</span> }<br />
+                  <span class="muted">{{ t('returns.shipment.fee', { fee: money(r.returnShippingFee) }) }} ·
+                    {{ t('returns.shipment.paidBy.' + (r.returnShippingPaidBy ?? 'shop')) }}</span>
+                  @if (r.payOut !== r.refundAmount) { <br /><span class="muted">{{ t('returns.shipment.payOut', { amount: money(r.payOut) }) }}</span> }
+                </p>
+              } @else if (r.returnShipmentError && r.status === 'approved') {
+                <p class="banner" role="alert">{{ t('returns.shipment.failed') }} {{ r.returnShipmentError }}</p>
+              }
 
               @if (r.status === 'requested' || r.status === 'approved' || (r.status === 'received' && mode === 'admin')) {
                 <div class="field">
@@ -92,6 +102,9 @@ type Mode = 'vendor' | 'admin';
                   }
                   @if (r.status === 'approved') {
                     <button type="button" class="btn btn-small" (click)="receive(r)" [disabled]="busy">{{ t('returns.manage.receive') }}</button>
+                    @if (!r.returnTrackingNumber && r.returnShipmentError) {
+                      <button type="button" class="btn btn-secondary btn-small" (click)="shipBack(r)" [disabled]="busy">{{ t('returns.shipment.retry') }}</button>
+                    }
                   }
                   @if (r.status === 'received') {
                     <button type="button" class="btn btn-small" (click)="refund(r)" [disabled]="busy">{{ t('returns.manage.refund') }}</button>
@@ -185,16 +198,26 @@ export class ReturnsManagePage implements OnInit {
     this.act(this.mode === 'admin' ? this.api.adminReceive(r.id, restock) : this.api.shopReceive(this.vendorId!, r.id, restock), 'received');
   }
 
+  shipBack(r: ReturnRequest) {
+    this.act(this.mode === 'admin' ? this.api.adminShipBack(r.id) : this.api.shopShipBack(this.vendorId!, r.id), 'shipped');
+  }
+
   refund(r: ReturnRequest) {
     this.act(this.api.adminRefund(r.id, !!this.manual[r.id]), 'refunded');
   }
 
-  private act(request: ReturnType<ReturnApiService['adminRefund']>, done: ReturnStatus) {
+  private act(request: ReturnType<ReturnApiService['adminRefund']>, done: ReturnStatus | 'shipped') {
     this.busy = true;
     this.notice = '';
     this.actionError = '';
     request.subscribe({
-      next: () => { this.busy = false; this.notice = this.transloco.translate('returns.manage.done.' + done); this.goTo(this.page); },
+      next: updated => {
+        this.busy = false;
+        // Receiving goods paid online refunds them at once: say so.
+        const key = done === 'received' && updated?.status === 'refunded' ? 'receivedRefunded' : done;
+        this.notice = this.transloco.translate('returns.manage.done.' + key);
+        this.goTo(this.page);
+      },
       error: err => {
         this.busy = false;
         this.actionError = vendorErrorMessage(err, this.transloco.translate('returns.errors.action'));

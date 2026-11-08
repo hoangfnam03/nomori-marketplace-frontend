@@ -29,6 +29,7 @@ export class ReturnApiService {
   shopApprove(vendorId: number, id: number, note: string) { return this.http.post<ReturnRequest>(`${this.base}/vendors/${vendorId}/returns/${id}/approve`, { note }); }
   shopReject(vendorId: number, id: number, note: string) { return this.http.post<ReturnRequest>(`${this.base}/vendors/${vendorId}/returns/${id}/reject`, { note }); }
   shopReceive(vendorId: number, id: number, restock: boolean) { return this.http.post<ReturnRequest>(`${this.base}/vendors/${vendorId}/returns/${id}/receive`, { restock }); }
+  shopShipBack(vendorId: number, id: number) { return this.http.post<ReturnRequest>(`${this.base}/vendors/${vendorId}/returns/${id}/ship-back`, {}); }
 
   // ---- Administrator ----
   adminReturns(status: ReturnStatus | '', page: number, pageSize: number) {
@@ -37,5 +38,6 @@ export class ReturnApiService {
   adminApprove(id: number, note: string) { return this.http.post<ReturnRequest>(`${this.base}/admin/returns/${id}/approve`, { note }); }
   adminReject(id: number, note: string) { return this.http.post<ReturnRequest>(`${this.base}/admin/returns/${id}/reject`, { note }); }
   adminReceive(id: number, restock: boolean) { return this.http.post<ReturnRequest>(`${this.base}/admin/returns/${id}/receive`, { restock }); }
+  adminShipBack(id: number) { return this.http.post<ReturnRequest>(`${this.base}/admin/returns/${id}/ship-back`, {}); }
   adminRefund(id: number, manual: boolean) { return this.http.post<ReturnRequest>(`${this.base}/admin/returns/${id}/refund`, { manual }); }
 }

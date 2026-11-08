@@ -79,14 +79,14 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
                 <button type="button" class="secondary" (click)="startCancel(shop)" [disabled]="busy">{{ t('orders.cancelShopOrder') }}</button>
               }
             }
-            <!-- Once the shop marked it delivered, the customer confirms receipt: the shop order is completed (a return can still be asked within the return window). -->
-            @if (shop.status === 'delivered') {
+            <!-- Once the shop marked it delivered, the customer either confirms receipt (the shop order is completed and can no longer be returned) or asks for a return. -->
+            @if (shop.status === 'delivered' && !shop.hasOpenReturn) {
               <div class="receipt">
                 <button type="button" class="primary" (click)="receive(shop)" [disabled]="busy">{{ t('orders.confirmReceipt') }}</button>
                 <span class="muted">{{ t('orders.confirmReceiptNote') }}</span>
               </div>
             }
-            @if (shop.status === 'delivered' || shop.status === 'completed') {
+            @if (shop.status === 'delivered' && canReturn(shop)) {
               <a class="secondary" [routerLink]="['/customer/returns/new', order.id, shop.id]">{{ t('returns.customer.requestReturn') }}</a>
             }
           </app-shop-order-panel>
@@ -97,7 +97,10 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
           @if (order.discountTotal > 0) {
             <div class="discount"><dt>{{ t('orders.discount') }} ({{ order.discountCode }})</dt><dd>−{{ money(order.discountTotal) }}</dd></div>
           }
-          <div><dt>{{ t('orders.shipping') }}</dt><dd>{{ money(order.shippingTotal) }}</dd></div>
+          <div><dt>{{ t('orders.shipping') }}</dt><dd>{{ money(order.shippingTotal + (order.shippingDiscountTotal ?? 0)) }}</dd></div>
+          @if (order.shippingDiscountTotal) {
+            <div class="discount"><dt>{{ t('orders.shippingDiscount') }} ({{ order.shippingDiscountCode }})</dt><dd>−{{ money(order.shippingDiscountTotal) }}</dd></div>
+          }
           @if (order.taxTotal > 0) {
             <div><dt>{{ t('orders.tax') }}</dt><dd>{{ money(order.taxTotal) }}</dd></div>
           }
@@ -211,6 +214,9 @@ export class OrderDetailPage implements OnInit {
   }
 
   receive(shop: ShopOrderDetail) { this.run(this.api.confirmReceipt(shop.id)); }
+
+  /** Something is left to return: an item goes back whole, once. */
+  canReturn(shop: ShopOrderDetail) { return shop.lines.some(l => !l.returnStatus); }
 
   private run(request: ReturnType<OrderApiService['confirmReceipt']>) {
     this.busy = true;

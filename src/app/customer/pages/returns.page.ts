@@ -53,7 +53,16 @@ const PAGE_SIZE = 10;
               @if (r.status === 'refunded') { <span class="muted"> · {{ t('returns.refundedOn', { date: (r.updatedOnUtc | date: 'medium') }) }}</span> }</p>
             @if (r.customerNote) { <p class="muted">{{ t('returns.yourNote') }}: {{ r.customerNote }}</p> }
             @if (r.resolutionNote) { <p>{{ t('returns.shopNote') }}: {{ r.resolutionNote }}</p> }
-            @if (r.status === 'approved') { <p class="muted">{{ t('returns.customer.sendBack') }}</p> }
+            @if (r.returnTrackingNumber) {
+              <p class="shipment">{{ t('returns.shipment.number') }}: <strong>{{ r.returnTrackingNumber }}</strong>
+                @if (r.returnShipmentStatus) { <span class="muted"> · {{ r.returnShipmentStatus }}</span> }</p>
+              @if (r.status === 'approved') { <p class="muted">{{ t('returns.customer.pickup') }}</p> }
+            } @else if (r.status === 'approved') {
+              <p class="muted">{{ t('returns.customer.sendBack') }}</p>
+            }
+            @if (r.returnShippingPaidBy === 'customer' && r.returnShippingFee > 0) {
+              <p class="muted">{{ t('returns.shipment.customerPays', { fee: money(r.returnShippingFee), payOut: money(r.payOut) }) }}</p>
+            }
             @if (r.status === 'requested') {
               <div class="actions"><button type="button" class="btn btn-secondary btn-small" (click)="withdraw(r)" [disabled]="busy">{{ t('returns.customer.withdraw') }}</button></div>
             }
