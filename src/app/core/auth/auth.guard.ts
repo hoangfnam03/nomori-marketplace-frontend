@@ -2,6 +2,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { AuthFacade } from './auth.facade';
+import { ShopperAccessService } from './shopper-access.service';
 
 export const authGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthFacade);
@@ -11,6 +12,21 @@ export const authGuard: CanActivateFn = (_route, state) => {
     map(session => session.isAuthenticated
       ? true
       : router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } }))
+  );
+};
+
+/** Signed in as a customer: administrators and shop members do not shop (cart, checkout, own orders, address book). */
+export const shopperGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthFacade);
+  const access = inject(ShopperAccessService);
+  const router = inject(Router);
+
+  return auth.loadSession().pipe(
+    switchMap(session => {
+      if (!session.isAuthenticated) return of(router.createUrlTree(['/auth/login'], { queryParams: { returnUrl: state.url } }));
+      // Quietly back to the storefront: the screens do not spell out who may shop.
+      return access.staff().pipe(map(staff => staff ? router.createUrlTree(['/storefront']) : true));
+    })
   );
 };
 

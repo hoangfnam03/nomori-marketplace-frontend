@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from '../core/auth/auth.guard';
+import { shopperGuard } from '../core/auth/auth.guard';
 
 export const storefrontRoutes: Routes = [
   {
@@ -14,14 +14,15 @@ export const storefrontRoutes: Routes = [
     path: 'products/:key',
     loadComponent: () => import('./pages/product-detail.page').then(page => page.ProductDetailPage)
   },
+  // The cart and checkout are for customers; administrators and shop members do not buy.
   {
     path: 'cart',
-    canActivate: [authGuard],
+    canActivate: [shopperGuard],
     loadComponent: () => import('./pages/cart.page').then(page => page.CartPage)
   },
   {
     path: 'checkout',
-    canActivate: [authGuard],
+    canActivate: [shopperGuard],
     loadComponent: () => import('./pages/checkout.page').then(page => page.CheckoutPage)
   },
   {

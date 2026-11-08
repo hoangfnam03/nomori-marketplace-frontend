@@ -30,6 +30,17 @@ export interface ReturnRequest {
   currencyCode: string;
   /** Worked out by the server when the return was asked for; shipping is not part of it. */
   refundAmount: number;
+  /** What the customer actually gets back: the refund less the return shipping they pay. */
+  payOut: number;
+  /** The carrier's parcel that brings the goods back; null when the customer sends them by themselves. */
+  returnTrackingNumber: string | null;
+  returnShippingFee: number;
+  /** Who bears the return shipping: the customer (taken off the refund) or the shop. */
+  returnShippingPaidBy: 'customer' | 'shop' | null;
+  /** Where the parcel back is, in words. */
+  returnShipmentStatus: string | null;
+  /** Why the parcel back could not be made. */
+  returnShipmentError: string | null;
   restocked: boolean;
   createdOnUtc: string;
   updatedOnUtc: string;

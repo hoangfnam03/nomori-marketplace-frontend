@@ -1,6 +1,7 @@
 import { MediaApiService } from '../../core/media/media-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
 import { CartService } from '../../core/cart/cart.service';
+import { ShopperAccessService } from '../../core/auth/shopper-access.service';
 import { CartNoticeComponent } from '../../shared/components/cart-notice/cart-notice.component';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
@@ -44,7 +45,7 @@ import { ProductResponse } from '../../core/catalog/catalog.models';
 
     <section class="product-grid" [attr.aria-label]="t('storefront.home.featuredProducts')">
       @for (product of cards(); track product.id) {
-        <app-product-card [product]="product" (addToCart)="onAddToCart($event)" />
+        <app-product-card [product]="product" [canBuy]="!access.isStaff()" (addToCart)="onAddToCart($event)" />
       }
     </section>
 
@@ -87,6 +88,8 @@ export class StorefrontHomePage {
   private readonly media = inject(MediaApiService);
   private readonly currency = inject(CurrencyService);
   private readonly cart = inject(CartService);
+  /** Administrators and shop members do not shop. */
+  readonly access = inject(ShopperAccessService);
   private readonly transloco = inject(TranslocoService);
   cartMessage = '';
   cartFailed = false;

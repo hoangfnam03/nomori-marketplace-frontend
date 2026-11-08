@@ -23,7 +23,9 @@ import { ProductCardModel } from '../../models/product-card.model';
           <div class="rating" [attr.aria-label]="t('storefront.card.rating', { rating: product().rating })">{{ '★'.repeat(product().rating ?? 0) }}<span>{{ t('storefront.card.reviews', { count: product().reviewCount ?? 0 }) }}</span></div>
         }
         <div class="price-row"><strong>{{ product().price }}</strong>@if (product().compareAtPrice) { <del>{{ product().compareAtPrice }}</del> }</div>
-        <button type="button" [disabled]="product().outOfStock" (click)="addToCart.emit(product())">{{ t('storefront.card.addToCart') }}</button>
+        @if (canBuy()) {
+          <button type="button" [disabled]="product().outOfStock" (click)="addToCart.emit(product())">{{ t('storefront.card.addToCart') }}</button>
+        }
       </div>
     </article>
   `,
@@ -56,4 +58,6 @@ export class ProductCardComponent {
   readonly product = input.required<ProductCardModel>();
   readonly link = computed(() => productLink(this.product().id, this.product().slug));
   readonly addToCart = output<ProductCardModel>();
+  /** False for administrators and shop members, who do not shop. */
+  readonly canBuy = input(true);
 }

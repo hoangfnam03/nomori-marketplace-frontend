@@ -8,6 +8,7 @@ import { CatalogApiService } from '../../core/catalog/catalog-api.service';
 import { MediaApiService } from '../../core/media/media-api.service';
 import { CurrencyService } from '../../core/money/currency.service';
 import { CartService } from '../../core/cart/cart.service';
+import { ShopperAccessService } from '../../core/auth/shopper-access.service';
 import { describe, keyFor, parseKey, productLink, productPath, PRODUCTS_PATH } from '../../core/seo/seo-paths';
 import { SeoService } from '../../core/seo/seo.service';
 import { CartNoticeComponent } from '../../shared/components/cart-notice/cart-notice.component';
@@ -132,7 +133,9 @@ import { ProductSpecDetail, ProductTag } from '../../core/catalog/spec-attribute
             @if (quote && !needsChoice()) { <span class="line-total">{{ t('storefront.productDetail.lineTotal', { total: formatPrice(quote.lineTotal) }) }}</span> }
           </div>
 
-          <button type="button" class="add-to-cart" [disabled]="needsChoice() || currentStock() === 0 || adding" (click)="addToCart()">{{ adding ? t('storefront.productDetail.adding') : t('storefront.card.addToCart') }}</button>
+          @if (!access.isStaff()) {
+            <button type="button" class="add-to-cart" [disabled]="needsChoice() || currentStock() === 0 || adding" (click)="addToCart()">{{ adding ? t('storefront.productDetail.adding') : t('storefront.card.addToCart') }}</button>
+          }
           @if (needsChoice()) { <p class="quote-error" role="status">{{ t('storefront.productDetail.chooseFirst', { options: missingChoices() }) }}</p> }
 
           @if (detail.fullDescription) {
@@ -312,6 +315,8 @@ export class ProductDetailPage implements OnInit {
   readonly media = inject(MediaApiService);
   private readonly currency = inject(CurrencyService);
   private readonly cart = inject(CartService);
+  /** Administrators and shop members do not shop. */
+  readonly access = inject(ShopperAccessService);
   private readonly transloco = inject(TranslocoService);
   private readonly seo = inject(SeoService);
   private readonly location = inject(Location);

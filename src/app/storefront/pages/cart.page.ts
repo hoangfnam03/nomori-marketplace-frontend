@@ -62,7 +62,11 @@ const ISSUE_KEY: Record<CartIssue, string> = {
                     [attr.aria-label]="t('storefront.cart.selectShop', { name: group.vendorName ?? t('admin.catalog.shop') })" />
                   {{ t('storefront.productDetail.soldBy') }} <a [routerLink]="['/storefront/vendors', group.vendorId]">{{ group.vendorName ?? t('admin.catalog.shop') }}</a>
                 </h2>
-                <span class="muted">{{ t('storefront.cart.subtotalValue', { amount: money(group.subtotal) }) }}</span>
+                <div class="group-tools">
+                  <span class="muted">{{ t('storefront.cart.subtotalValue', { amount: money(group.subtotal) }) }}</span>
+                  <button type="button" class="link" (click)="removeShop(group)" [disabled]="busy"
+                    [attr.aria-label]="t('storefront.cart.removeShopLabel', { name: group.vendorName ?? t('admin.catalog.shop') })">{{ t('storefront.cart.removeShop') }}</button>
+                </div>
               </header>
 
               @for (line of group.lines; track line.id) {
@@ -150,6 +154,7 @@ const ISSUE_KEY: Record<CartIssue, string> = {
     input[type="checkbox"] { width: 1rem; height: 1rem; accent-color: var(--green); }
     .pick { margin-top: .35rem; }
     .group-head a { color: var(--green); }
+    .group-tools { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap; justify-content: flex-end; }
     .line { display: grid; grid-template-columns: auto 72px minmax(0, 1fr) auto auto; gap: 1rem; align-items: start; padding: 1rem; border-bottom: 1px solid var(--line); }
     .line:last-child { border-bottom: 0; }
     .line.blocked { background: #faf3f1; }
@@ -246,6 +251,13 @@ export class CartPage implements OnInit {
   }
 
   remove(line: CartLine) { this.run(this.api.remove(line.id), line.id); }
+
+  /** Removes every line of one shop at once, after the customer confirms. */
+  removeShop(group: CartView['groups'][number]) {
+    const name = group.vendorName ?? this.transloco.translate('admin.catalog.shop');
+    if (!confirm(this.transloco.translate('storefront.cart.confirmRemoveShop', { name }))) return;
+    this.run(this.api.removeShop(group.vendorId));
+  }
 
   acceptPrices() { this.run(this.api.acceptPrices()); }
 

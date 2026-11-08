@@ -1,20 +1,18 @@
 import { Location } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { TranslocoDirective } from '@jsverse/transloco';
 import { BreadcrumbComponent } from '../../shared/components/breadcrumb/breadcrumb.component';
 import { MediaApiService } from '../../core/media/media-api.service';
-import { CurrencyService } from '../../core/money/currency.service';
-import { CatalogApiService } from '../../core/catalog/catalog-api.service';
-import { ProductResponse } from '../../core/catalog/catalog.models';
-import { describe, keyFor, parseKey, productLink, vendorPath, VENDORS_PATH } from '../../core/seo/seo-paths';
+import { describe, keyFor, parseKey, vendorPath, VENDORS_PATH } from '../../core/seo/seo-paths';
 import { SeoService } from '../../core/seo/seo.service';
 import { VendorApiService } from '../../core/vendors/vendor-api.service';
 import { VendorResponse } from '../../core/vendors/vendor.models';
+import { ProductListPage } from './product-list.page';
 
 @Component({
   standalone: true,
-  imports: [BreadcrumbComponent, RouterLink, TranslocoDirective],
+  imports: [BreadcrumbComponent, ProductListPage, TranslocoDirective],
   template: `
     <ng-container *transloco="let t">
     @if (loading) {
@@ -50,48 +48,28 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
               <p>{{ vendor.description }}</p>
             </div>
           }
-
-          <div class="vendor-products">
-            <h2>{{ t('storefront.products.breadcrumb') }}</h2>
-            @if (productsLoading) {
-              <p class="muted">{{ t('storefront.products.loading') }}</p>
-            } @else if (productsError) {
-              <p class="state-error" role="alert">{{ t(productsError) }}</p>
-            } @else if (products.length === 0) {
-              <p class="muted">{{ t('storefront.vendorDetail.noProducts') }}</p>
-            } @else {
-              <ul class="product-list" role="list">
-                @for (p of products; track p.id) {
-                  <li><a [routerLink]="productLink(p.id, p.slug)">{{ p.name }}</a><span>{{ price(p.price) }}</span></li>
-                }
-              </ul>
-            }
-          </div>
         </div>
       </div>
+
+      <!-- The shop's products, with the same filters, sort and cards as the products page. -->
+      <app-product-catalog [vendorId]="vendor.id" [vendorName]="vendor.name" />
     }
     </ng-container>
   `,
   styles: [`
     :host { display: block; }
-    .vendor-products { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
-    .vendor-products h2 { font-size: 1.1rem; margin: 0 0 .75rem; }
-    .product-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .4rem; }
-    .product-list li { display: flex; justify-content: space-between; gap: 1rem; border-bottom: 1px solid var(--line); padding: .4rem 0; }
-    .product-list a { color: var(--ink); text-decoration: none; }
-    .product-list a:hover { color: var(--green); }
-    .muted { color: var(--muted); }
-
     .state { padding: 3rem 2rem; color: var(--muted); }
     .state-error { color: #d32f2f; }
 
-    .page-heading { padding: 1.5rem var(--page-gutter, 2rem) 0; }
+    .page-heading { padding: 1rem 0 0; }
 
+    /* The shop's card sits above its catalog, like the heading of the products page. */
     .vendor-layout {
       display: flex;
       gap: 2.5rem;
-      padding: 2rem var(--page-gutter, 2rem);
-      max-width: 860px;
+      padding: 2.5rem 0 3rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--line-strong);
     }
 
     .vendor-aside { flex-shrink: 0; }
@@ -112,7 +90,7 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
       border: 2px solid var(--line);
     }
 
-    .vendor-body { flex: 1; }
+    .vendor-body { flex: 1; max-width: 760px; }
 
     .eyebrow {
       font-family: var(--mono-font);
@@ -149,19 +127,13 @@ import { VendorResponse } from '../../core/vendors/vendor.models';
 export class VendorDetailPage implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly api = inject(VendorApiService);
-  private readonly catalog = inject(CatalogApiService);
   private readonly media = inject(MediaApiService);
-  private readonly currency = inject(CurrencyService);
   private readonly seo = inject(SeoService);
   private readonly location = inject(Location);
-  readonly productLink = productLink;
 
   vendor: VendorResponse | null = null;
   loading = false;
   error = '';
-  products: ProductResponse[] = [];
-  productsLoading = false;
-  productsError = '';
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => this.load(params.get('key')));
@@ -169,19 +141,20 @@ export class VendorDetailPage implements OnInit {
 
   private load(key: string | null) {
     const id = parseKey(key);
-    this.vendor = null;
-    this.products = [];
     this.error = '';
+    // The same shop again (a filter changed the address) keeps the page; only another shop starts over.
+    if (id && this.vendor?.id === id) return;
+    this.vendor = null;
     if (!id) { this.error = 'storefront.vendorDetail.invalid'; return; }
     this.loading = true;
     this.api.getVendor(id).subscribe({
       next: v => {
         this.vendor = v;
         this.loading = false;
-        this.loadProducts(v.id);
         // An old name or a bare id opens the page; the address is replaced by the canonical one.
         const canonical = keyFor(v.id, v.slug);
-        if (key !== canonical) this.location.replaceState(`${VENDORS_PATH}/${canonical}`);
+        // The filters in the query stay.
+        if (key !== canonical) this.location.replaceState(`${VENDORS_PATH}/${canonical}`, this.location.path().split('?')[1] ?? '');
         const logo = this.media.url(v.pictureId) ?? undefined;
         const description = describe(v.description);
         this.seo.set({
@@ -204,17 +177,6 @@ export class VendorDetailPage implements OnInit {
         this.loading = false;
         this.error = err?.status === 404 ? 'storefront.vendorDetail.notFound' : 'storefront.vendorDetail.loadError';
       }
-    });
-  }
-
-  price(value: number) { return this.currency.format(value); }
-
-  private loadProducts(vendorId: number) {
-    this.productsLoading = true;
-    this.productsError = '';
-    this.catalog.getProducts({ vendorId, pageSize: 24 }).subscribe({
-      next: r => { this.products = r.items; this.productsLoading = false; },
-      error: () => { this.productsLoading = false; this.productsError = 'storefront.products.loadError'; }
     });
   }
 

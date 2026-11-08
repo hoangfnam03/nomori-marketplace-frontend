@@ -1,7 +1,8 @@
-export type ShopOrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'completed' | 'cancelled';
-export type OverallOrderStatus = 'processing' | 'completed' | 'cancelled';
+/** `returned`: every item came back and was refunded. */
+export type ShopOrderStatus = 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'completed' | 'cancelled' | 'returned';
+export type OverallOrderStatus = 'processing' | 'completed' | 'cancelled' | 'returned';
 
-export const SHOP_ORDER_STATUSES: ShopOrderStatus[] = ['pending', 'confirmed', 'shipped', 'delivered', 'completed', 'cancelled'];
+export const SHOP_ORDER_STATUSES: ShopOrderStatus[] = ['pending', 'confirmed', 'shipped', 'delivered', 'completed', 'cancelled', 'returned'];
 
 export interface ShopOrderSummary {
   id: number;
@@ -57,6 +58,8 @@ export interface OrderLine {
   /** The percentage charged on this line when it was ordered. */
   taxRate: number;
   taxAmount: number;
+  /** Where the line's return stands; null when it was never returned. */
+  returnStatus?: 'requested' | 'approved' | 'received' | 'refunded' | null;
 }
 
 export interface OrderHistoryEntry {
@@ -96,6 +99,13 @@ export interface ShopOrderDetail {
   /** What the discount took off this shop order; who paid for it is in discountFunding. */
   discountAmount: number;
   discountFunding: 'platform' | 'shop' | null;
+  /** A return is waiting for a decision, the goods or the refund: the shop order cannot be completed meanwhile. */
+  hasOpenReturn?: boolean;
+  /** What returns of this shop order refunded to the customer. */
+  refundedAmount?: number;
+  /** What the shipping code took off this shop order's shipping; `shippingFee` is already net of it. */
+  shippingDiscount?: number;
+  shippingDiscountFunding?: 'platform' | 'shop' | null;
   /** The tax on this shop order's lines. */
   taxAmount: number;
   total: number;
@@ -125,6 +135,9 @@ export interface OrderDetail {
   shippingTotal: number;
   discountTotal: number;
   discountCode: string | null;
+  /** What the shipping code took off; `shippingTotal` is already net of it. */
+  shippingDiscountTotal?: number;
+  shippingDiscountCode?: string | null;
   taxTotal: number;
   total: number;
   status: OverallOrderStatus;

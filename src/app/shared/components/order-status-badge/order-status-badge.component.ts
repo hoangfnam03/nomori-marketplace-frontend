@@ -13,6 +13,7 @@ import { TranslocoDirective } from '@jsverse/transloco';
     .badge[data-status="confirmed"], .badge[data-status="shipped"] { color: #205e4a; border-color: #b9d6c7; background: #eef6f1; }
     .badge[data-status="delivered"], .badge[data-status="completed"] { color: var(--green); border-color: color-mix(in srgb, var(--green) 40%, var(--line)); background: #e5f0e9; }
     .badge[data-status="cancelled"] { color: #a84031; border-color: #e4b3aa; background: #f8e9e4; }
+    .badge[data-status="returned"] { color: #7a5a12; border-color: #e3cf9c; background: #faf3e0; }
   `]
 })
 export class OrderStatusBadgeComponent {

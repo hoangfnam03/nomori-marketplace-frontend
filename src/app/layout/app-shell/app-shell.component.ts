@@ -9,6 +9,7 @@ import { AuthFacade } from '../../core/auth/auth.facade';
 import { displayName } from '../../core/auth/display-name';
 import { permissionCodes } from '../../core/auth/permission-codes';
 import { CartService } from '../../core/cart/cart.service';
+import { ShopperAccessService } from '../../core/auth/shopper-access.service';
 import { MediaApiService } from '../../core/media/media-api.service';
 import { LanguageSwitcherComponent } from '../../core/i18n/language-switcher.component';
 import { CurrencyService } from '../../core/money/currency.service';
@@ -26,6 +27,8 @@ export class AppShellComponent {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly currency = inject(CurrencyService);
   readonly cart = inject(CartService);
+  /** Administrators and shop members do not shop: no cart, no orders of their own. */
+  readonly access = inject(ShopperAccessService);
   readonly media = inject(MediaApiService);
   readonly codes = permissionCodes;
 

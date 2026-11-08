@@ -81,4 +81,4 @@ export interface Reconciliation {
   payoutMismatches: number;
 }
 
-export const ORDER_STATUS_ORDER = ['pending', 'confirmed', 'shipped', 'delivered', 'completed', 'cancelled'];
+export const ORDER_STATUS_ORDER = ['pending', 'confirmed', 'shipped', 'delivered', 'completed', 'cancelled', 'returned'];

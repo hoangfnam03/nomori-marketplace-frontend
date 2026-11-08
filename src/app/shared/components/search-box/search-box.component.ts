@@ -21,7 +21,7 @@ const MIN_CHARACTERS = 2;
     <form class="search-box" role="search" *transloco="let t" (submit)="submitSearch($event)">
       <label class="sr-only" for="marketplace-search">{{ t('storefront.search.label') }}</label>
       <input
-        id="marketplace-search" name="query" [(ngModel)]="query" [placeholder]="t('storefront.search.placeholder')" autocomplete="off"
+        id="marketplace-search" name="query" [(ngModel)]="query" [placeholder]="placeholder() ?? t('storefront.search.placeholder')" autocomplete="off"
         role="combobox" aria-autocomplete="list" aria-controls="search-suggestions" [attr.aria-expanded]="open && suggestions.length > 0"
         [attr.aria-activedescendant]="active >= 0 ? 'suggestion-' + active : null"
         (ngModelChange)="onInput($event)" (keydown)="onKey($event)" (blur)="closeSoon()" (focus)="open = suggestions.length > 0" />
@@ -65,6 +65,10 @@ export class SearchBoxComponent {
 
   /** The text to show, for example the current search of the list page. */
   readonly value = input('');
+  /** Replaces "Search Nomori", for example on a shop's page. */
+  readonly placeholder = input<string | null>(null);
+  /** The suggestions come from the whole marketplace, so a search inside one shop goes without them. */
+  readonly suggest = input(true);
   readonly searched = output<string>();
 
   query = '';
@@ -79,7 +83,7 @@ export class SearchBoxComponent {
     this.typed.pipe(
       debounceTime(250),
       distinctUntilChanged(),
-      switchMap(text => text.length < MIN_CHARACTERS ? of([]) : this.api.suggest(text).pipe(catchError(() => of([])))),
+      switchMap(text => !this.suggest() || text.length < MIN_CHARACTERS ? of([]) : this.api.suggest(text).pipe(catchError(() => of([])))),
       takeUntilDestroyed(inject(DestroyRef))
     ).subscribe(list => {
       this.suggestions = list;
