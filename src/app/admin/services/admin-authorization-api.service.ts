@@ -14,6 +14,14 @@ export interface CustomerRolesResponse {
   roles: AdminRole[];
 }
 
+export interface AdminCustomerSummary {
+  id: number;
+  email: string;
+  username: string | null;
+  firstName: string | null;
+  lastName: string | null;
+}
+
 export interface AdminAuditLog {
   id: number;
   eventName: string;
@@ -33,6 +41,10 @@ export class AdminAuthorizationApiService {
 
   getRoles() {
     return this.http.get<AdminRole[]>(`${this.apiBaseUrl}/v1/admin/authorization/roles`);
+  }
+
+  searchCustomers(term: string, take = 20) {
+    return this.http.get<AdminCustomerSummary[]>(`${this.apiBaseUrl}/v1/admin/authorization/customers`, { params: { q: term, take } });
   }
 
   getCustomerRoles(customerId: number) {

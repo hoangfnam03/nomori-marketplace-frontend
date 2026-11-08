@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslocoDirective } from '@jsverse/transloco';
-import { AdminAuthorizationApiService, AdminAuditLog, AdminRole } from '../services/admin-authorization-api.service';
+import { AdminAuthorizationApiService, AdminAuditLog, AdminCustomerSummary, AdminRole } from '../services/admin-authorization-api.service';
 
 @Component({
   standalone: true,
@@ -23,6 +23,26 @@ import { AdminAuthorizationApiService, AdminAuditLog, AdminRole } from '../servi
       @if (loading) { <p class="state">{{ t('admin.home.rolesLoading') }}</p> }
       @if (error) { <p class="state state-error" role="alert">{{ t(error) }}</p> }
       @if (!loading && !error) {
+        <div class="customer-search">
+          <form class="role-form" (ngSubmit)="searchCustomers()">
+            <label>{{ t('admin.home.searchLabel') }} <input type="search" name="customerSearch" [(ngModel)]="searchTerm" maxlength="200" /></label>
+            <button type="submit" [disabled]="searching || !searchTerm.trim()">{{ searching ? t('admin.home.searching') : t('admin.home.searchButton') }}</button>
+          </form>
+          @if (searchError) { <p class="state state-error" role="alert">{{ t(searchError) }}</p> }
+          @if (searchResults) {
+            @if (!searchResults.length) { <p class="state">{{ t('admin.home.noCustomerFound') }}</p> }
+            @else {
+              <div class="search-results">
+                @for (c of searchResults; track c.id) {
+                  <div class="search-row">
+                    <span><strong>{{ c.email }}</strong> <small>#{{ c.id }}{{ c.username ? ' · ' + c.username : '' }}{{ fullName(c) ? ' · ' + fullName(c) : '' }}</small></span>
+                    <button type="button" (click)="selectCustomer(c)" [disabled]="customerId === c.id">{{ customerId === c.id ? t('admin.home.selectedCustomer') : t('admin.home.selectCustomer') }}</button>
+                  </div>
+                }
+              </div>
+            }
+          }
+        </div>
         <div class="role-form">
           <label>{{ t('admin.home.customerId') }} <input type="number" min="1" [(ngModel)]="customerId" /></label>
           <button type="button" (click)="loadCustomerRoles()" [disabled]="!customerId">{{ t('admin.home.loadRoles') }}</button>
@@ -61,6 +81,12 @@ import { AdminAuthorizationApiService, AdminAuditLog, AdminRole } from '../servi
     input[type=number] { display: block; width: 180px; padding: .7rem; border: 1px solid var(--line-strong); background: var(--paper); font: inherit; }
     button { border: 1px solid var(--ink); padding: .75rem 1rem; background: var(--ink); color: var(--paper); cursor: pointer; font-weight: 700; }
     button:disabled { cursor: not-allowed; opacity: .5; }
+    .customer-search { display: grid; gap: .8rem; margin-bottom: 1.2rem; }
+    .customer-search form { margin: 0; }
+    .search-results { display: grid; gap: .4rem; }
+    .search-row { display: flex; justify-content: space-between; align-items: center; gap: .8rem; padding: .6rem 0; border-bottom: 1px solid var(--line); }
+    .search-row small { color: var(--muted); font: .68rem var(--mono-font); }
+    .search-row button { padding: .5rem .8rem; }
     .role-list { display: grid; gap: .6rem; margin: 1.4rem 0; }
     .role-option { display: grid; grid-template-columns: auto 1fr auto; gap: .7rem; align-items: center; padding: .7rem; border-bottom: 1px solid var(--line); }
     .role-option small { color: var(--muted); font: .68rem var(--mono-font); }
@@ -82,6 +108,10 @@ export class AdminHomePage {
   roles: AdminRole[] = [];
   selectedRoles = new Set<string>();
   customerId: number | null = null;
+  searchTerm = '';
+  searchResults: AdminCustomerSummary[] | null = null;
+  searching = false;
+  searchError: string | null = null;
   loading = true;
   saving = false;
   success = false;
@@ -100,6 +130,25 @@ export class AdminHomePage {
   toggleRole(role: AdminRole) {
     if (this.selectedRoles.has(role.systemName)) this.selectedRoles.delete(role.systemName);
     else this.selectedRoles.add(role.systemName);
+  }
+
+  searchCustomers() {
+    const term = this.searchTerm.trim();
+    if (!term) return;
+    this.searching = true; this.searchError = null;
+    this.api.searchCustomers(term).subscribe({
+      next: results => { this.searchResults = results; this.searching = false; },
+      error: () => { this.searchError = 'admin.home.searchError'; this.searching = false; }
+    });
+  }
+
+  selectCustomer(customer: AdminCustomerSummary) {
+    this.customerId = customer.id;
+    this.loadCustomerRoles();
+  }
+
+  fullName(customer: AdminCustomerSummary) {
+    return [customer.firstName, customer.lastName].filter(Boolean).join(' ');
   }
 
   loadCustomerRoles() {
