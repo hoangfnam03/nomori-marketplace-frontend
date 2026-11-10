@@ -28,10 +28,5 @@ export const routes: Routes = [
 			}
 		]
 	},
-	// The page of the test gateway. A real gateway has its own site; this one only works where the test gateway is configured.
-	{
-		path: 'payments/sandbox/:reference',
-		loadComponent: () => import('./payments/sandbox-gateway.page').then(page => page.SandboxGatewayPage)
-	},
 	{ path: '**', redirectTo: 'storefront' }
 ];

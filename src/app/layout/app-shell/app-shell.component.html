@@ -85,6 +85,7 @@
                 <a role="menuitem" routerLink="/customer/profile" (click)="closeMenu()">{{ t('nav.account.profile') }}</a>
                 @if (!access.isStaff()) {
                   <a role="menuitem" routerLink="/customer/orders" (click)="closeMenu()">{{ t('nav.account.orders') }}</a>
+                  <a role="menuitem" routerLink="/customer/wallet" (click)="closeMenu()">{{ t('nav.account.wallet') }}</a>
                 }
                 <hr aria-hidden="true" />
                 <button role="menuitem" type="button" (click)="logout()">{{ t('nav.account.signOut') }}</button>

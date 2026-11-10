@@ -69,6 +69,11 @@ type Mode = 'vendor' | 'admin';
               </ul>
               <p><strong>{{ t('returns.refundAmount') }}: {{ money(r.refundAmount) }}</strong>
                 @if (r.restocked) { <span class="muted"> · {{ t('returns.restocked') }}</span> }</p>
+              @if (r.shippingRefund > 0) {
+                <p class="muted">{{ t('returns.shippingRefund.manage', { fee: money(r.shippingRefund) }) }} ·
+                  {{ t('returns.shippingRefund.paidBy.' + (r.shippingRefundPaidBy ?? 'shop')) }} ·
+                  {{ t('returns.shipment.payOut', { amount: money(r.payOut) }) }}</p>
+              }
               @if (r.customerNote) { <p class="muted">{{ t('returns.customerNote') }}: {{ r.customerNote }}</p> }
               @if (r.resolutionNote) { <p>{{ t('returns.shopNote') }}: {{ r.resolutionNote }}</p> }
               @if (r.returnTrackingNumber) {

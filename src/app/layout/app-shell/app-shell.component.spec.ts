@@ -108,10 +108,10 @@ describe('AppShellComponent navigation', () => {
     expect(document.activeElement).toBe(trigger);
   });
 
-  it('links the account menu to the real orders page', async () => {
+  it('links the account menu to the real orders and wallet pages', async () => {
     const links = await render({ ...guest, isAuthenticated: true, customerId: 5, email: 'buyer@test' }, 'forbidden');
 
-    expect(links.menu).toEqual(['/auth/account', '/customer/profile', '/customer/orders']);
+    expect(links.menu).toEqual(['/auth/account', '/customer/profile', '/customer/orders', '/customer/wallet']);
     expect(links.element.querySelector('.account-panel [aria-disabled="true"]')).toBeNull();
   });
 

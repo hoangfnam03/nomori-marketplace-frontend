@@ -28,10 +28,14 @@ export interface ReturnRequest {
   /** What the shop or administrator wrote when deciding. */
   resolutionNote: string | null;
   currencyCode: string;
-  /** Worked out by the server when the return was asked for; shipping is not part of it. */
+  /** Worked out by the server when the return was asked for, for the items only. */
   refundAmount: number;
-  /** What the customer actually gets back: the refund less the return shipping they pay. */
+  /** What the customer actually gets back: the refund and the shipping given back, less the return shipping they pay. */
   payOut: number;
+  /** The shipping the customer paid, given back by the return that leaves nothing of the shop order unreturned; 0 otherwise. */
+  shippingRefund: number;
+  /** Who bears that shipping: the shop (faulty goods) or the platform. */
+  shippingRefundPaidBy: 'shop' | 'platform' | null;
   /** The carrier's parcel that brings the goods back; null when the customer sends them by themselves. */
   returnTrackingNumber: string | null;
   returnShippingFee: number;
