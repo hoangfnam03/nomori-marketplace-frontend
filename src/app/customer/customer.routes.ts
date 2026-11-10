@@ -8,6 +8,7 @@ export const customerRoutes: Routes = [
   { path: 'orders', canActivate: [shopperGuard], loadComponent: () => import('./pages/orders.page').then(page => page.OrdersPage) },
   { path: 'orders/:id', canActivate: [shopperGuard], loadComponent: () => import('./pages/order-detail.page').then(page => page.OrderDetailPage) },
   { path: 'returns', canActivate: [shopperGuard], loadComponent: () => import('./pages/returns.page').then(page => page.ReturnsPage) },
+  { path: 'wallet', canActivate: [shopperGuard], loadComponent: () => import('./pages/wallet.page').then(page => page.WalletPage) },
   { path: 'returns/new/:orderId/:shopOrderId', canActivate: [shopperGuard], loadComponent: () => import('./pages/return-new.page').then(page => page.ReturnNewPage) },
   { path: 'settings', canActivate: [authGuard], loadComponent: () => import('./pages/account-data.page').then(page => page.AccountDataPage) }
 ];

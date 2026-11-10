@@ -66,7 +66,8 @@
       "account": "Tài khoản",
       "orders": "Đơn mua",
       "comingSoon": "Sắp có",
-      "menu": "Menu tài khoản"
+      "menu": "Menu tài khoản",
+      "wallet": "Ví Nomori"
     },
     "footer": {
       "brand": "Nomori Marketplace",
@@ -218,6 +219,10 @@
       "no_area": "Địa chỉ người nhận chưa có tỉnh/thành và phường/xã theo địa giới mới.",
       "not_ghn": "Đơn này không được gửi qua GHN.",
       "no_pickup": "Shop chưa khai địa chỉ lấy hàng. Vào trang Vận chuyển để khai địa chỉ trước khi thêm sản phẩm."
+    },
+    "wallet": {
+      "insufficient": "Số dư ví không đủ để thanh toán.",
+      "method_not_allowed": "Không thể nạp tiền bằng phương thức này. Hãy chọn một cổng thanh toán khác."
     }
   },
   "vendorStatus": {
@@ -677,11 +682,9 @@
       "chooseAddressFirst": "Hãy chọn địa chỉ để xem từng shop giao hàng thế nào.",
       "shopCannotShip": "Shop này không giao tới địa chỉ này.",
       "payment": "Thanh toán",
-      "offlineHint": "trả tiền khi nhận hàng",
       "noPaymentMethods": "Hiện chưa có phương thức thanh toán nào.",
       "noteHeading": "Ghi chú cho shop (không bắt buộc)",
       "notePlaceholder": "Ví dụ: để trước cửa",
-      "currencyNote": "Số tiền tính bằng {{code}}.",
       "terms": "Tôi đồng ý với điều khoản và điều kiện của sàn.",
       "place": "Đặt hàng",
       "placing": "Đang đặt hàng…",
@@ -734,7 +737,10 @@
         "noneUsable": "Xem mã",
         "close": "Đóng",
         "oneCode": "Mỗi đơn dùng được 1 mã vận chuyển và 1 mã giảm giá sản phẩm. Bỏ chọn mã đang chọn để chọn mã khác cùng loại.",
-        "groups": { "shipping": "Mã vận chuyển", "product": "Mã giảm giá sản phẩm" },
+        "groups": {
+          "shipping": "Mã vận chuyển",
+          "product": "Mã giảm giá sản phẩm"
+        },
         "noneOfKind": "Chưa có mã nào loại này.",
         "back": "Trở lại",
         "use": "Sử dụng",
@@ -751,10 +757,15 @@
         }
       },
       "taxNote": "Giá chưa gồm thuế. Thuế tính theo địa chỉ giao hàng của bạn.",
-      "redirectHint": "bạn thanh toán ở trang thanh toán",
       "editAddress": "Cập nhật địa chỉ",
       "expectedOn": "Dự kiến giao {{date}}",
-      "expectedBetween": "Dự kiến giao {{from}} – {{to}}"
+      "expectedBetween": "Dự kiến giao {{from}} – {{to}}",
+      "wallet": {
+        "name": "Ví Nomori",
+        "balance": "số dư {{balance}}",
+        "short": "không đủ số dư.",
+        "topUp": "Nạp thêm"
+      }
     }
   },
   "admin": {
@@ -1672,7 +1683,7 @@
     "customer": {
       "eyebrow": "Tài khoản / Trả hàng",
       "title": "Trả hàng của tôi",
-      "lede": "Các sản phẩm bạn đã yêu cầu trả. Phí vận chuyển không được hoàn.",
+      "lede": "Các sản phẩm bạn đã yêu cầu trả. Tiền hoàn được cộng vào Ví Nomori của bạn.",
       "toOrders": "Về đơn hàng của tôi",
       "myReturns": "Trả hàng của tôi",
       "empty": "Bạn chưa yêu cầu trả hàng nào.",
@@ -1682,12 +1693,12 @@
       "submit": "Gửi yêu cầu trả hàng",
       "withdraw": "Rút lại yêu cầu",
       "withdrawn": "Đã rút lại yêu cầu.",
-      "sendBack": "Shop đã duyệt yêu cầu. Hãy gửi hàng lại; bạn sẽ được hoàn tiền khi shop nhận được hàng.",
-      "pickup": "Shop đã duyệt yêu cầu. Đơn vị vận chuyển sẽ đến lấy hàng tại địa chỉ giao hàng của bạn: hãy đóng gói sẵn. Bạn được hoàn tiền khi shop nhận được hàng."
+      "sendBack": "Shop đã duyệt yêu cầu. Hãy gửi hàng lại; tiền hoàn được cộng vào Ví Nomori khi shop nhận được hàng.",
+      "pickup": "Shop đã duyệt yêu cầu. Đơn vị vận chuyển sẽ đến lấy hàng tại địa chỉ giao hàng của bạn: hãy đóng gói sẵn. Tiền hoàn được cộng vào Ví Nomori khi shop nhận được hàng."
     },
     "vendor": {
       "eyebrow": "Kênh người bán / Trả hàng",
-      "lede": "Yêu cầu trả hàng từ khách của shop bạn. Duyệt hoặc từ chối, và xác nhận khi đã nhận lại hàng. Sàn sẽ hoàn tiền."
+      "lede": "Yêu cầu trả hàng từ khách của shop bạn. Duyệt hoặc từ chối, và xác nhận khi đã nhận lại hàng. Tiền hoàn được tự động cộng vào ví của khách."
     },
     "admin": {
       "eyebrow": "Quản trị / Trả hàng",
@@ -1710,8 +1721,8 @@
         "shipped": "Đã tạo vận đơn trả hàng.",
         "approved": "Đã duyệt yêu cầu.",
         "rejected": "Đã từ chối yêu cầu.",
-        "received": "Đã ghi nhận nhận hàng. Đơn thanh toán khi nhận hàng (COD) chờ quản trị viên hoàn tiền.",
-        "receivedRefunded": "Đã ghi nhận nhận hàng và đã tự động hoàn tiền cho khách.",
+        "received": "Đã ghi nhận nhận hàng. Chưa cộng được tiền vào ví của khách; quản trị viên sẽ hoàn tiền.",
+        "receivedRefunded": "Đã ghi nhận nhận hàng và đã hoàn tiền vào ví của khách.",
         "refunded": "Đã ghi nhận hoàn tiền."
       }
     },
@@ -1722,6 +1733,13 @@
       "action": "Không thực hiện được thao tác.",
       "noItems": "Hãy chọn ít nhất một sản phẩm cần trả.",
       "reasonRequired": "Hãy viết lý do cho khách."
+    },
+    "shippingRefund": {
+      "manage": "Hoàn phí vận chuyển {{fee}} (trả lại toàn bộ đơn)",
+      "paidBy": {
+        "shop": "shop chịu",
+        "platform": "sàn chịu"
+      }
     }
   },
   "orders": {
@@ -1823,7 +1841,10 @@
     "name": "Tên",
     "codeHint": "Chữ, số, \"-\" và \"_\". Khách nhập khi thanh toán; không phân biệt hoa thường.",
     "kind": "Loại khuyến mãi",
-    "kinds": { "product": "Giảm giá sản phẩm", "shipping": "Vận chuyển" },
+    "kinds": {
+      "product": "Giảm giá sản phẩm",
+      "shipping": "Vận chuyển"
+    },
     "kindHints": {
       "product": "Trừ vào tiền hàng.",
       "shipping": "Chỉ trừ vào phí vận chuyển, không trừ tiền hàng. Khách dùng được cùng lúc với 1 mã giảm giá sản phẩm."
@@ -1852,32 +1873,6 @@
       "save": "Không lưu được khuyến mãi.",
       "delete": "Không xóa được khuyến mãi.",
       "required": "Hãy nhập tên, mã và giá trị."
-    }
-  },
-  "payments": {
-    "sandbox": {
-      "tag": "Cổng thử nghiệm: không có tiền thật",
-      "title": "Thanh toán đơn hàng",
-      "notFound": "Trang thanh toán này không tồn tại.",
-      "hint": "Đây là trang thanh toán giả, giống trang của một cổng thật. Hãy chọn kết quả.",
-      "pay": "Thanh toán",
-      "fail": "Cho thanh toán thất bại",
-      "leave": "Về cửa hàng, không thanh toán",
-      "back": "Về cửa hàng",
-      "alreadyDone": "Khoản thanh toán này đã ở trạng thái: {{status}}.",
-      "status": {
-        "pending": "đang chờ",
-        "authorized": "đã cấp phép",
-        "paid": "đã thanh toán",
-        "partially_refunded": "hoàn một phần",
-        "refunded": "đã hoàn tiền",
-        "voided": "đã hủy",
-        "failed": "thất bại"
-      },
-      "errors": {
-        "load": "Không tải được khoản thanh toán.",
-        "complete": "Không hoàn tất được thanh toán. Hãy thử lại."
-      }
     }
   },
   "finance": {
@@ -2145,6 +2140,61 @@
     "vendors": {
       "title": "Cửa hàng",
       "description": "Khám phá các cửa hàng đang bán trên Nomori Marketplace."
+    }
+  },
+  "wallet": {
+    "eyebrow": "Tài khoản / Ví",
+    "title": "Ví Nomori",
+    "lede": "Nạp tiền để thanh toán nhanh.",
+    "balance": "Số dư",
+    "balanceHint": "Dùng số dư để thanh toán khi đặt hàng: chọn \"Ví Nomori\" ở bước thanh toán.",
+    "refresh": "Làm mới",
+    "topUp": {
+      "title": "Nạp tiền",
+      "quick": "Số tiền gợi ý",
+      "amount": "Số tiền nạp",
+      "limits": "Nạp từ {{min}} đến {{max}}, số tiền chẵn.",
+      "method": "Nạp qua",
+      "chooseMethod": "Hãy chọn cổng thanh toán.",
+      "submit": "Nạp tiền",
+      "going": "Đang chuyển tới trang thanh toán…",
+      "redirectHint": "Bạn sẽ thanh toán ở trang của cổng thanh toán.",
+      "noMethods": "Hiện chưa có cổng thanh toán nào để nạp tiền.",
+      "returned": "Đã quay lại từ trang thanh toán. Số dư được cộng khi cổng thanh toán xác nhận; nếu chưa thấy, hãy bấm \"Làm mới\" sau ít phút.",
+      "open": "Nạp tiền",
+      "close": "Đóng",
+      "cancel": "Huỷ"
+    },
+    "history": {
+      "title": "Lịch sử giao dịch",
+      "empty": "Chưa có giao dịch nào.",
+      "date": "Thời gian",
+      "what": "Nội dung",
+      "amount": "Số tiền",
+      "after": "Số dư sau",
+      "seeOrder": "xem đơn",
+      "forReturn": "trả hàng {{number}}",
+      "forCancel": "huỷ đơn {{number}}"
+    },
+    "kinds": {
+      "top_up": "Nạp tiền",
+      "payment": "Thanh toán đơn hàng",
+      "refund": "Hoàn tiền",
+      "withdrawal": "Rút tiền",
+      "adjustment": "Điều chỉnh"
+    },
+    "errors": {
+      "load": "Không tải được ví.",
+      "history": "Không tải được lịch sử giao dịch.",
+      "topUp": "Không bắt đầu được việc nạp tiền."
+    },
+    "withdraw": "Rút tiền"
+  },
+  "payments": {
+    "methods": {
+      "cod": "Thanh toán khi nhận hàng (COD)",
+      "stripe": "Thanh toán online (Stripe)",
+      "wallet": "Ví Nomori"
     }
   }
 }

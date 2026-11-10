@@ -66,7 +66,8 @@
       "account": "Account",
       "orders": "My orders",
       "comingSoon": "Soon",
-      "menu": "Account menu"
+      "menu": "Account menu",
+      "wallet": "Nomori wallet"
     },
     "footer": {
       "brand": "Nomori Marketplace",
@@ -218,6 +219,10 @@
       "no_area": "The order's address has no province and ward in the new units.",
       "not_ghn": "This order was not shipped with GHN.",
       "no_pickup": "The shop has no pickup address yet. Add it on the Shipping page before adding products."
+    },
+    "wallet": {
+      "insufficient": "Your wallet balance is too low for this payment.",
+      "method_not_allowed": "You cannot top up with this method. Choose another payment gateway."
     }
   },
   "vendorStatus": {
@@ -677,11 +682,9 @@
       "chooseAddressFirst": "Choose an address to see how each shop can ship.",
       "shopCannotShip": "This shop does not ship to this address.",
       "payment": "Payment",
-      "offlineHint": "pay when it arrives",
       "noPaymentMethods": "No payment method is available right now.",
       "noteHeading": "Note for the shops (optional)",
       "notePlaceholder": "For example: leave at the door",
-      "currencyNote": "Amounts are in {{code}}.",
       "terms": "I accept the terms and conditions of the marketplace.",
       "place": "Place order",
       "placing": "Placing order…",
@@ -734,7 +737,10 @@
         "noneUsable": "See codes",
         "close": "Close",
         "oneCode": "An order can use one shipping code and one item code. Untick the ticked code to choose another of its kind.",
-        "groups": { "shipping": "Shipping codes", "product": "Item codes" },
+        "groups": {
+          "shipping": "Shipping codes",
+          "product": "Item codes"
+        },
         "noneOfKind": "No codes of this kind yet.",
         "back": "Back",
         "use": "Use code",
@@ -751,10 +757,15 @@
         }
       },
       "taxNote": "Prices are before tax. The tax follows your delivery address.",
-      "redirectHint": "you pay on the payment page",
       "editAddress": "Update the address",
       "expectedOn": "Expected {{date}}",
-      "expectedBetween": "Expected {{from}} – {{to}}"
+      "expectedBetween": "Expected {{from}} – {{to}}",
+      "wallet": {
+        "name": "Nomori wallet",
+        "balance": "balance {{balance}}",
+        "short": "not enough balance.",
+        "topUp": "Top up"
+      }
     }
   },
   "admin": {
@@ -1672,7 +1683,7 @@
     "customer": {
       "eyebrow": "Account / Returns",
       "title": "My returns",
-      "lede": "Items you asked to return. Shipping is not refunded.",
+      "lede": "The items you asked to return. Refunds go to your Nomori wallet.",
       "toOrders": "Back to my orders",
       "myReturns": "My returns",
       "empty": "You have not asked to return anything.",
@@ -1682,12 +1693,12 @@
       "submit": "Send return request",
       "withdraw": "Withdraw request",
       "withdrawn": "Request withdrawn.",
-      "sendBack": "The shop approved your request. Send the items back; you get your refund once they arrive.",
-      "pickup": "The shop approved your request. The carrier will collect the items at your delivery address: pack them and keep them ready. You get your refund once the shop receives them."
+      "sendBack": "The shop approved your request. Send the items back; the refund goes to your Nomori wallet once the shop receives them.",
+      "pickup": "The shop approved your request. The carrier will pick the parcel up at your delivery address: have it packed. The refund goes to your Nomori wallet once the shop receives it."
     },
     "vendor": {
       "eyebrow": "Seller center / Returns",
-      "lede": "Return requests from customers of your shop. Approve or reject them, and confirm when the goods came back. The platform sends the refund."
+      "lede": "Return requests from your shop's customers. Approve or reject them, and confirm when the goods are back. The refund goes to the customer's wallet by itself."
     },
     "admin": {
       "eyebrow": "Admin / Returns",
@@ -1710,8 +1721,8 @@
         "shipped": "Return parcel made.",
         "approved": "Return approved.",
         "rejected": "Return rejected.",
-        "received": "Receipt recorded. A cash on delivery order waits for an administrator to refund it.",
-        "receivedRefunded": "Receipt recorded and the customer was refunded automatically.",
+        "received": "Receipt recorded. The money could not be added to the customer's wallet yet; an administrator will refund it.",
+        "receivedRefunded": "Receipt recorded and the refund added to the customer's wallet.",
         "refunded": "Refund recorded."
       }
     },
@@ -1722,6 +1733,13 @@
       "action": "Unable to do that.",
       "noItems": "Choose at least one item to return.",
       "reasonRequired": "Write a reason for the customer."
+    },
+    "shippingRefund": {
+      "manage": "Shipping of {{fee}} refunded (whole order returned)",
+      "paidBy": {
+        "shop": "borne by the shop",
+        "platform": "borne by the platform"
+      }
     }
   },
   "orders": {
@@ -1823,7 +1841,10 @@
     "name": "Name",
     "codeHint": "Letters, digits, \"-\" and \"_\". Customers type it at checkout; case does not matter.",
     "kind": "Applies to",
-    "kinds": { "product": "Items", "shipping": "Shipping" },
+    "kinds": {
+      "product": "Items",
+      "shipping": "Shipping"
+    },
     "kindHints": {
       "product": "Taken off the items.",
       "shipping": "Taken off the shipping only, never the items. It can go with one item code."
@@ -1852,32 +1873,6 @@
       "save": "Unable to save the discount.",
       "delete": "Unable to delete the discount.",
       "required": "Enter a name, a code and a value."
-    }
-  },
-  "payments": {
-    "sandbox": {
-      "tag": "Test gateway: no real money",
-      "title": "Pay for your order",
-      "notFound": "This payment page does not exist.",
-      "hint": "This is a pretend payment page, like the one a real gateway shows. Choose what happens.",
-      "pay": "Pay",
-      "fail": "Fail the payment",
-      "leave": "Back to the shop without paying",
-      "back": "Back to the shop",
-      "alreadyDone": "This payment is already {{status}}.",
-      "status": {
-        "pending": "waiting",
-        "authorized": "authorized",
-        "paid": "paid",
-        "partially_refunded": "partly refunded",
-        "refunded": "refunded",
-        "voided": "cancelled",
-        "failed": "failed"
-      },
-      "errors": {
-        "load": "Unable to load the payment.",
-        "complete": "Unable to finish the payment. Try again."
-      }
     }
   },
   "finance": {
@@ -2145,6 +2140,61 @@
     "vendors": {
       "title": "Shops",
       "description": "Discover the shops that sell on Nomori Marketplace."
+    }
+  },
+  "wallet": {
+    "eyebrow": "Account / Wallet",
+    "title": "Nomori wallet",
+    "lede": "Top up to pay faster.",
+    "balance": "Balance",
+    "balanceHint": "Pay with your balance at checkout: choose \"Nomori wallet\" in the payment step.",
+    "refresh": "Refresh",
+    "topUp": {
+      "title": "Top up",
+      "quick": "Suggested amounts",
+      "amount": "Amount",
+      "limits": "Top up a whole amount from {{min}} to {{max}}.",
+      "method": "Pay with",
+      "chooseMethod": "Choose a payment gateway.",
+      "submit": "Top up",
+      "going": "Opening the payment page…",
+      "redirectHint": "You pay on the gateway's page.",
+      "noMethods": "No payment gateway can take top-ups right now.",
+      "returned": "Back from the payment page. The balance goes up once the gateway confirms; if it has not yet, press \"Refresh\" in a few minutes.",
+      "open": "Top up",
+      "close": "Close",
+      "cancel": "Cancel"
+    },
+    "history": {
+      "title": "History",
+      "empty": "Nothing here yet.",
+      "date": "When",
+      "what": "What",
+      "amount": "Amount",
+      "after": "Balance after",
+      "seeOrder": "see order",
+      "forReturn": "return {{number}}",
+      "forCancel": "cancelled order {{number}}"
+    },
+    "kinds": {
+      "top_up": "Top-up",
+      "payment": "Order payment",
+      "refund": "Refund",
+      "withdrawal": "Withdrawal",
+      "adjustment": "Adjustment"
+    },
+    "errors": {
+      "load": "Could not load your wallet.",
+      "history": "Could not load the history.",
+      "topUp": "Could not start the top-up."
+    },
+    "withdraw": "Withdraw"
+  },
+  "payments": {
+    "methods": {
+      "cod": "Cash on delivery (COD)",
+      "stripe": "Online payment (Stripe)",
+      "wallet": "Nomori wallet"
     }
   }
 }

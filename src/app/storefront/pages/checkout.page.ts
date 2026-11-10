@@ -13,6 +13,9 @@ import { CustomerAccountDataApiService, CustomerAddress } from '../../core/custo
 import { CurrencyService } from '../../core/money/currency.service';
 import { ShippingOption } from '../../core/shipping/shipping.models';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
+import { WalletApiService } from '../../core/wallets/wallet-api.service';
+import { WALLET_METHOD } from '../../core/wallets/wallet.models';
+import { paymentMethodName } from '../../core/payments/payment-method-name';
 
 /** Translation key per problem. */
 const PROBLEM_KEY: Record<CheckoutProblem, string> = {
@@ -139,8 +142,18 @@ function newKey(): string {
             <div class="options">
               @for (m of preview.paymentMethods; track m.systemName) {
                 <label class="option">
-                  <input type="radio" name="payment" [value]="m.systemName" [ngModel]="paymentMethod" (ngModelChange)="changePayment($event)" />
-                  <span>{{ m.displayName }}@if (m.isOffline) { <span class="muted"> · {{ t('storefront.checkout.offlineHint') }}</span> }@if (m.redirects) { <span class="muted"> · {{ t('storefront.checkout.redirectHint') }}</span> }</span>
+                  <input type="radio" name="payment" [value]="m.systemName" [ngModel]="paymentMethod" (ngModelChange)="changePayment($event)"
+                    [disabled]="walletShort(m.systemName)" />
+                  @if (m.systemName === walletMethod) {
+                    <span>{{ t('storefront.checkout.wallet.name') }}
+                      @if (walletBalance !== null) { <span class="muted"> · {{ t('storefront.checkout.wallet.balance', { balance: money(walletBalance) }) }}</span> }
+                      @if (walletShort(m.systemName)) {
+                        <span class="muted"> · {{ t('storefront.checkout.wallet.short') }} <a routerLink="/customer/wallet">{{ t('storefront.checkout.wallet.topUp') }}</a></span>
+                      }
+                    </span>
+                  } @else {
+                  <span>{{ methodName(m.systemName, m.displayName) }}</span>
+                  }
                 </label>
               } @empty {
                 <p class="issue" role="status">{{ t('storefront.checkout.noPaymentMethods') }}</p>
@@ -274,7 +287,6 @@ function newKey(): string {
             <div><dt>{{ t('orders.tax') }}</dt><dd>{{ preview.tax === null ? '—' : money(preview.tax.total) }}</dd></div>
             <div class="grand"><dt>{{ t('orders.total') }}</dt><dd>{{ preview.total === null ? '—' : money(preview.total) }}</dd></div>
           </dl>
-          <p class="muted note">{{ t('storefront.checkout.currencyNote', { code: preview.cart.currencyCode }) }}</p>
           <p class="muted note">{{ t('storefront.checkout.taxNote') }}</p>
 
           <label class="terms">
@@ -283,7 +295,7 @@ function newKey(): string {
           </label>
           @if (fieldError('acceptedTerms'); as e) { <p class="issue" role="alert">{{ e }}</p> }
 
-          <button type="button" class="primary" (click)="openConfirm()" [disabled]="placing || refreshing || !preview.canPlace || !acceptedTerms">
+          <button type="button" class="primary" (click)="openConfirm()" [disabled]="placing || refreshing || !preview.canPlace || !acceptedTerms || walletShort(paymentMethod)">
             {{ placing ? t('storefront.checkout.placing') : t('storefront.checkout.place') }}
           </button>
 
@@ -443,6 +455,7 @@ export class CheckoutPage implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly transloco = inject(TranslocoService);
+  private readonly wallets = inject(WalletApiService);
   @ViewChild('couponDialog') private couponDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild('confirmDialog') private confirmDialog?: ElementRef<HTMLDialogElement>;
 
@@ -454,6 +467,9 @@ export class CheckoutPage implements OnInit {
   /** The customer's pick per shop (vendor id to rate id). */
   choices: Record<number, number> = {};
   paymentMethod: string | null = null;
+  readonly walletMethod = WALLET_METHOD;
+  /** The wallet balance, to show next to the wallet and to keep it from paying more than it holds; null until known. */
+  walletBalance: number | null = null;
   /** What the customer is typing, and the code that was sent with the last request. */
   couponInput = '';
   /** The item code and the shipping code sent with the last request; an order can carry one of each. */
@@ -476,7 +492,19 @@ export class CheckoutPage implements OnInit {
     this.currency.load();
     this.cartItemIds = (this.route.snapshot.queryParamMap.get('items') ?? '')
       .split(',').map(Number).filter(id => Number.isInteger(id) && id > 0);
+    this.loadWallet();
     this.start();
+  }
+
+  /** The balance is only a hint here: the server takes the money and refuses when it is short. */
+  loadWallet() {
+    this.wallets.get().subscribe({ next: wallet => this.walletBalance = wallet.balance, error: () => this.walletBalance = null });
+  }
+
+  /** The wallet cannot pay this order: its balance is below the total. */
+  walletShort(method: string | null) {
+    const total = this.preview?.total;
+    return method === WALLET_METHOD && this.walletBalance !== null && total !== null && total !== undefined && this.walletBalance < total;
   }
 
   start() {
@@ -493,6 +521,8 @@ export class CheckoutPage implements OnInit {
   }
 
   money(value: number) { return this.currency.formatPrimary(value); }
+
+  methodName(systemName: string, serverName: string) { return paymentMethodName(systemName, serverName); }
 
   problemKey(problem: CheckoutProblem) { return PROBLEM_KEY[problem]; }
 
@@ -690,11 +720,14 @@ export class CheckoutPage implements OnInit {
 
   selectedAddress() { return this.addresses.find(a => a.id === this.addressId) ?? null; }
 
-  selectedPaymentName() { return this.preview?.paymentMethods.find(m => m.systemName === this.paymentMethod)?.displayName ?? null; }
+  selectedPaymentName() {
+    if (!this.paymentMethod) return null;
+    return paymentMethodName(this.paymentMethod, this.preview?.paymentMethods.find(m => m.systemName === this.paymentMethod)?.displayName);
+  }
 
   /** "Place order" opens the confirmation first; the order is only sent from there. */
   openConfirm() {
-    if (!this.preview?.canPlace || this.placing || this.refreshing || !this.acceptedTerms) return;
+    if (!this.preview?.canPlace || this.placing || this.refreshing || !this.acceptedTerms || this.walletShort(this.paymentMethod)) return;
     this.confirmDialog?.nativeElement.showModal();
   }
 
@@ -743,6 +776,8 @@ export class CheckoutPage implements OnInit {
           return;
         }
         this.placeError = vendorErrorMessage(err, this.transloco.translate('storefront.checkout.errors.place'));
+        // Paying from the wallet may have been refused for its balance: show the balance as it is now.
+        if (this.paymentMethod === WALLET_METHOD) this.loadWallet();
         // The cart, the stock or the prices changed: the customer has to look at the cart again. The page shows what it is now.
         this.placeErrorGoesToCart = err?.status === 409 && !String(err?.message).includes('payment_failed');
         if (err?.status === 409) this.refresh();
