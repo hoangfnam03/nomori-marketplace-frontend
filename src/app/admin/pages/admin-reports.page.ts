@@ -4,18 +4,27 @@ import { RouterLink } from '@angular/router';
 import { TranslocoDirective, TranslocoService } from '@jsverse/transloco';
 import { CurrencyService } from '../../core/money/currency.service';
 import { ReportApiService } from '../../core/reports/report-api.service';
-import { Operations, PlatformDashboard, Reconciliation } from '../../core/reports/report.models';
+import { Operations, PlatformDashboard, PlatformProfit, Reconciliation } from '../../core/reports/report.models';
 import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 import { DateRangeComponent, DayRange, utcDay } from '../../shared/components/date-range/date-range.component';
 import { SalesBarsComponent } from '../../shared/components/sales-bars/sales-bars.component';
 
-type Tab = 'overview' | 'operations' | 'reconciliation';
+type Tab = 'overview' | 'operations' | 'reconciliation' | 'profit';
 
-/** Platform reports: sales and commission, what needs attention now, and proof that the money adds up. */
+/** Platform reports: sales and commission, what needs attention now, proof that the money adds up, and the platform's own profit. */
 @Component({
   standalone: true,
   imports: [DatePipe, RouterLink, TranslocoDirective, DateRangeComponent, SalesBarsComponent],
   styleUrls: ['../../shared/styles/vendor-pages.scss'],
+  styles: [`
+    .pl th[scope=row] { font-weight: 400; }
+    .pl .sub th, .pl .sub td { padding-left: 2rem; color: var(--muted); }
+    .pl .total th, .pl .total td { font-weight: 600; }
+    .pl td { text-align: right; white-space: nowrap; }
+    .pl .neg { color: #a84031; }
+    .pl .pos { color: var(--green); }
+    .profit { font-family: var(--display-font); font-size: 1.75rem; margin: 0; }
+  `],
   template: `
     <ng-container *transloco="let t">
     <section class="page-intro" aria-labelledby="areports-title">
@@ -133,6 +142,58 @@ type Tab = 'overview' | 'operations' | 'reconciliation';
           <div class="panel"><p class="state">{{ t('common.states.loading') }}</p></div>
         }
       }
+      @case ('profit') {
+        @if (profit; as p) {
+          <div class="panel">
+            <div class="panel-header"><h2>{{ t('reports.profit.title') }}</h2></div>
+            <div class="panel-body">
+              <p class="profit" [class.neg]="p.profit < 0">{{ money(p.profit) }}</p>
+              <p class="muted">{{ t('reports.profit.lede') }}</p>
+              @if (p.gatewayFeesPending > 0) { <p class="banner banner-info" role="status">{{ t('reports.profit.feesPending', { count: p.gatewayFeesPending }) }}</p> }
+              <div class="table-scroll"><table class="data-table pl"><tbody>
+                <tr class="total"><th scope="row">{{ t('reports.profit.netCommission') }}</th><td [class.neg]="p.netCommission < 0">{{ money(p.netCommission) }}</td></tr>
+                <tr class="sub"><th scope="row">{{ t('reports.profit.commission') }}</th><td>{{ money(p.commission) }}</td></tr>
+                <tr class="sub"><th scope="row">{{ t('reports.profit.commissionReturned') }}</th><td>−{{ money(p.commissionReturned) }}</td></tr>
+
+                <tr class="total"><th scope="row">{{ t('reports.profit.shippingResult') }}</th><td [class.neg]="p.shippingResult < 0">{{ money(p.shippingResult) }}</td></tr>
+                <tr class="sub"><th scope="row">{{ t('reports.profit.shippingCollected') }}</th><td>{{ money(p.shippingCollected) }}</td></tr>
+                <tr class="sub"><th scope="row">{{ t('reports.profit.carrierFees') }}</th><td>−{{ money(p.carrierFees) }}</td></tr>
+
+                <tr class="total"><th scope="row">{{ t('reports.profit.platformDiscounts') }}</th><td class="neg">−{{ money(p.platformDiscounts) }}</td></tr>
+
+                <tr class="total"><th scope="row">{{ t('reports.profit.returnsResult') }}</th><td [class.neg]="p.returnsResult < 0">{{ money(p.returnsResult) }}</td></tr>
+                <tr class="sub"><th scope="row">{{ t('reports.profit.returnShippingRecovered') }}</th><td>{{ money(p.returnShippingRecovered) }}</td></tr>
+                <tr class="sub"><th scope="row">{{ t('reports.profit.returnedOrdersShipping') }}</th><td>{{ money(p.returnedOrdersShipping) }}</td></tr>
+                <tr class="sub"><th scope="row">{{ t('reports.profit.returnParcelFees') }}</th><td>−{{ money(p.returnParcelFees) }}</td></tr>
+                <tr class="sub"><th scope="row">{{ t('reports.profit.shippingRefunds') }}</th><td>−{{ money(p.shippingRefunds) }}</td></tr>
+                <tr class="sub"><th scope="row">{{ t('reports.profit.returnedOrdersCarrierFees') }}</th><td>−{{ money(p.returnedOrdersCarrierFees) }}</td></tr>
+
+                <tr class="total"><th scope="row">{{ t('reports.profit.failedDeliveryFees') }}</th><td class="neg">−{{ money(p.failedDeliveryFees) }}</td></tr>
+                <tr class="total"><th scope="row">{{ t('reports.profit.gatewayFees') }}</th><td class="neg">−{{ money(p.gatewayFees) }}</td></tr>
+
+                <tr class="total"><th scope="row">{{ t('reports.profit.profit') }}</th><td [class.neg]="p.profit < 0" [class.pos]="p.profit > 0">{{ money(p.profit) }}</td></tr>
+              </tbody></table></div>
+              <p class="muted">{{ p.fromUtc | date: 'mediumDate' }} – {{ p.toUtc | date: 'mediumDate' }}</p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header"><h2>{{ t('reports.profit.wallets.title') }}</h2></div>
+            <div class="panel-body">
+              <div class="table-scroll"><table class="data-table pl"><tbody>
+                <tr class="total"><th scope="row">{{ t('reports.profit.wallets.balance') }}</th><td>{{ money(p.wallets.balance) }}</td></tr>
+                <tr class="sub"><th scope="row">{{ t('reports.profit.wallets.customers') }}</th><td>{{ p.wallets.customersWithBalance }}</td></tr>
+                <tr><th scope="row">{{ t('reports.profit.wallets.topUps') }}</th><td>{{ money(p.wallets.topUps) }}</td></tr>
+                <tr><th scope="row">{{ t('reports.profit.wallets.payments') }}</th><td>{{ money(p.wallets.payments) }}</td></tr>
+                <tr><th scope="row">{{ t('reports.profit.wallets.refunds') }}</th><td>{{ money(p.wallets.refunds) }}</td></tr>
+              </tbody></table></div>
+              <p class="muted">{{ t('reports.profit.wallets.hint') }}</p>
+            </div>
+          </div>
+        } @else if (!error) {
+          <div class="panel"><p class="state">{{ t('common.states.loading') }}</p></div>
+        }
+      }
     }
     </ng-container>
   `
@@ -142,7 +203,7 @@ export class AdminReportsPage implements OnInit {
   private readonly currency = inject(CurrencyService);
   private readonly transloco = inject(TranslocoService);
 
-  readonly tabs: Tab[] = ['overview', 'operations', 'reconciliation'];
+  readonly tabs: Tab[] = ['overview', 'operations', 'reconciliation', 'profit'];
   readonly formatMoney = (value: number) => this.money(value);
 
   tab: Tab = 'overview';
@@ -153,6 +214,7 @@ export class AdminReportsPage implements OnInit {
   dashboard: PlatformDashboard | null = null;
   operations: Operations | null = null;
   reconciliation: Reconciliation | null = null;
+  profit: PlatformProfit | null = null;
 
   ngOnInit() {
     this.currency.load();
@@ -181,9 +243,12 @@ export class AdminReportsPage implements OnInit {
     } else if (this.tab === 'operations') {
       this.operations = null;
       this.api.operations().subscribe({ next: o => this.operations = o, error: fail });
-    } else {
+    } else if (this.tab === 'reconciliation') {
       this.reconciliation = null;
       this.api.reconciliation(this.from, this.to).subscribe({ next: r => this.reconciliation = r, error: fail });
+    } else {
+      this.profit = null;
+      this.api.profit(this.from, this.to).subscribe({ next: p => this.profit = p, error: fail });
     }
   }
 }

@@ -22,5 +22,4 @@ export class PaymentApiService {
 
   capture(id: number) { return this.http.post<Payment>(`${this.base}/payments/${id}/capture`, {}); }
   void(id: number) { return this.http.post<Payment>(`${this.base}/payments/${id}/void`, {}); }
-  refund(id: number, amount: number) { return this.http.post<Payment>(`${this.base}/payments/${id}/refund`, { amount }); }
 }
