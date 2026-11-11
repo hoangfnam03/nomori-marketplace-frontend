@@ -1066,9 +1066,6 @@
       "updated": "Updated",
       "capture": "Capture",
       "void": "Void",
-      "refund": "Refund",
-      "refundConfirm": "Refund",
-      "refundAmount": "Amount to refund",
       "pageOf": "Page {{page}} of {{total}}",
       "next": "Next",
       "status": {
@@ -1084,8 +1081,7 @@
         "loadMethods": "Unable to load payment methods.",
         "saveMethod": "Unable to save the payment method.",
         "load": "Unable to load payments.",
-        "action": "Unable to change the payment.",
-        "refundRange": "Enter an amount above 0 and up to {{max}}."
+        "action": "Unable to change the payment."
       },
       "redirect": "Payment page"
     },
@@ -2088,7 +2084,8 @@
       "tabs": {
         "overview": "Overview",
         "operations": "Operations",
-        "reconciliation": "Reconciliation"
+        "reconciliation": "Reconciliation",
+        "profit": "Platform P&L"
       },
       "attention": "Needs attention"
     },
@@ -2126,6 +2123,36 @@
     },
     "errors": {
       "load": "Could not load the report. Try again."
+    },
+    "profit": {
+      "title": "Platform's profit and loss",
+      "lede": "What the platform earned and spent in the chosen days. Orders count on the day they were recorded, returns on the day they were refunded, gateway fees on the day of the payment.",
+      "feesPending": "{{count}} online payments have no gateway fee yet; the fees are complete once the fee job has run.",
+      "netCommission": "Net commission",
+      "commission": "Commission on sales",
+      "commissionReturned": "Commission given back with refunds",
+      "shippingResult": "Shipping result",
+      "shippingCollected": "Shipping kept (customers, shops’ free shipping, weight charges)",
+      "carrierFees": "GHN delivery fees",
+      "platformDiscounts": "Discount codes the platform paid for",
+      "returnsResult": "Returns",
+      "returnShippingRecovered": "Shipping taken back from customers and shops",
+      "returnedOrdersShipping": "Shipping of orders returned whole",
+      "returnParcelFees": "GHN fees for parcels back",
+      "shippingRefunds": "Shipping refunded to customers",
+      "returnedOrdersCarrierFees": "GHN fees to deliver the orders returned whole",
+      "failedDeliveryFees": "GHN fees of failed deliveries / cancels after shipping",
+      "gatewayFees": "Payment gateway fees (Stripe)",
+      "profit": "Profit / loss",
+      "wallets": {
+        "title": "Customer wallets",
+        "balance": "Total balance the platform holds for customers",
+        "customers": "Customers with a balance",
+        "topUps": "Topped up in the range",
+        "payments": "Paid from wallets in the range",
+        "refunds": "Refunded to wallets in the range",
+        "hint": "The balance is the customers' money, not the platform's revenue; it is always as of today."
+      }
     }
   },
   "seo": {

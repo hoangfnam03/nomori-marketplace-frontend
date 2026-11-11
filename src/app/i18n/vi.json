@@ -1066,9 +1066,6 @@
       "updated": "Cập nhật",
       "capture": "Ghi nhận thu",
       "void": "Hủy",
-      "refund": "Hoàn tiền",
-      "refundConfirm": "Hoàn tiền",
-      "refundAmount": "Số tiền hoàn",
       "pageOf": "Trang {{page}} / {{total}}",
       "next": "Sau",
       "status": {
@@ -1084,8 +1081,7 @@
         "loadMethods": "Không tải được phương thức thanh toán.",
         "saveMethod": "Không lưu được phương thức thanh toán.",
         "load": "Không tải được các khoản thanh toán.",
-        "action": "Không thay đổi được khoản thanh toán.",
-        "refundRange": "Nhập số tiền lớn hơn 0 và tối đa {{max}}."
+        "action": "Không thay đổi được khoản thanh toán."
       },
       "redirect": "Trang thanh toán"
     },
@@ -2088,7 +2084,8 @@
       "tabs": {
         "overview": "Tổng quan",
         "operations": "Vận hành",
-        "reconciliation": "Đối soát"
+        "reconciliation": "Đối soát",
+        "profit": "Lãi/lỗ sàn"
       },
       "attention": "Cần xử lý"
     },
@@ -2126,6 +2123,36 @@
     },
     "errors": {
       "load": "Không tải được báo cáo. Hãy thử lại."
+    },
+    "profit": {
+      "title": "Lãi/lỗ của sàn",
+      "lede": "Sàn thu gì và chi gì trong khoảng ngày đã chọn. Đơn tính theo ngày ghi sổ, trả hàng theo ngày hoàn tiền, phí cổng thanh toán theo ngày thanh toán.",
+      "feesPending": "Còn {{count}} giao dịch online chưa có phí từ cổng thanh toán; số liệu phí sẽ đủ sau khi job lấy phí chạy.",
+      "netCommission": "Hoa hồng ròng",
+      "commission": "Hoa hồng từ đơn bán",
+      "commissionReturned": "Hoa hồng trả lại khi hoàn tiền",
+      "shippingResult": "Chênh lệch vận chuyển",
+      "shippingCollected": "Phí ship thu được (khách trả, shop bù freeship, phạt khai sai cân)",
+      "carrierFees": "Phí GHN giao hàng",
+      "platformDiscounts": "Mã giảm giá sàn tài trợ",
+      "returnsResult": "Trả hàng",
+      "returnShippingRecovered": "Phí ship thu lại từ khách và shop",
+      "returnedOrdersShipping": "Phí ship của đơn bị trả toàn bộ",
+      "returnParcelFees": "Phí GHN chiều về",
+      "shippingRefunds": "Phí ship hoàn cho khách",
+      "returnedOrdersCarrierFees": "Phí GHN giao các đơn bị trả toàn bộ",
+      "failedDeliveryFees": "Phí GHN của đơn giao thất bại / huỷ sau khi gửi",
+      "gatewayFees": "Phí cổng thanh toán (Stripe)",
+      "profit": "Lãi/lỗ",
+      "wallets": {
+        "title": "Ví khách hàng",
+        "balance": "Tổng số dư sàn đang giữ cho khách",
+        "customers": "Số khách còn số dư",
+        "topUps": "Nạp vào trong kỳ",
+        "payments": "Thanh toán bằng ví trong kỳ",
+        "refunds": "Hoàn tiền vào ví trong kỳ",
+        "hint": "Tổng số dư là tiền của khách, không phải doanh thu của sàn; con số này luôn tính đến hôm nay."
+      }
     }
   },
   "seo": {

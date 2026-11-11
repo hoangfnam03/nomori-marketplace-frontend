@@ -60,6 +60,41 @@ export interface Operations {
   lowStockProducts: number;
 }
 
+/** The customers' wallets: `balance` is what the platform owes them today; the flows are in the range. */
+export interface WalletSummary {
+  balance: number;
+  customersWithBalance: number;
+  topUps: number;
+  payments: number;
+  refunds: number;
+}
+
+/** The platform's own profit and loss in a range. The subtotals and `profit` are worked out by the server. */
+export interface PlatformProfit {
+  currencyCode: string;
+  fromUtc: string;
+  toUtc: string;
+  commission: number;
+  commissionReturned: number;
+  netCommission: number;
+  shippingCollected: number;
+  carrierFees: number;
+  shippingResult: number;
+  platformDiscounts: number;
+  returnParcelFees: number;
+  shippingRefunds: number;
+  returnShippingRecovered: number;
+  returnedOrdersShipping: number;
+  returnedOrdersCarrierFees: number;
+  returnsResult: number;
+  failedDeliveryFees: number;
+  gatewayFees: number;
+  /** Paid online payments whose fee the gateway has not told yet. */
+  gatewayFeesPending: number;
+  profit: number;
+  wallets: WalletSummary;
+}
+
 /** `difference` must be 0; anything else is a defect to investigate. */
 export interface Reconciliation {
   currencyCode: string;

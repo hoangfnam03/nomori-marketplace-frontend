@@ -9,7 +9,7 @@ import { vendorErrorMessage } from '../../core/vendors/vendor-errors';
 
 const PAGE_SIZE = 20;
 
-/** Payment methods (on or off, order) and the payments with capture, void and refund. */
+/** Payment methods (on or off, order) and the payments with capture and void. Refunds go to the customer's wallet, never from here. */
 @Component({
   standalone: true,
   imports: [FormsModule, DatePipe, TranslocoDirective],
@@ -108,16 +108,6 @@ const PAGE_SIZE = 20;
                         <button type="button" class="btn btn-small" (click)="run(p, 'capture')" [disabled]="busy">{{ t('admin.payments.capture') }}</button>
                         <button type="button" class="btn btn-danger btn-small" (click)="run(p, 'void')" [disabled]="busy">{{ t('admin.payments.void') }}</button>
                       }
-                      @if (p.refundable > 0) {
-                        @if (refunding?.id === p.id) {
-                          <input type="number" min="0" [max]="p.refundable" [step]="currency.step()" [(ngModel)]="refundAmount" name="refund" style="width:6rem"
-                            [attr.aria-label]="t('admin.payments.refundAmount')" />
-                          <button type="button" class="btn btn-small" (click)="refund(p)" [disabled]="busy">{{ t('admin.payments.refundConfirm') }}</button>
-                          <button type="button" class="btn btn-secondary btn-small" (click)="refunding = null">{{ t('common.actions.cancel') }}</button>
-                        } @else {
-                          <button type="button" class="btn btn-secondary btn-small" (click)="startRefund(p)" [disabled]="busy">{{ t('admin.payments.refund') }}</button>
-                        }
-                      }
                     </div>
                     @if (rowErrors[p.id]) { <div class="field-error" role="alert">{{ rowErrors[p.id] }}</div> }
                   </td>
@@ -156,8 +146,6 @@ export class AdminPaymentsPage implements OnInit {
   loadError = '';
   busy = false;
   rowErrors: Record<number, string> = {};
-  refunding: Payment | null = null;
-  refundAmount: number | null = null;
 
   ngOnInit() {
     this.currency.load();
@@ -207,28 +195,12 @@ export class AdminPaymentsPage implements OnInit {
     this.apply(payment, action === 'capture' ? this.api.capture(payment.id) : this.api.void(payment.id));
   }
 
-  startRefund(payment: Payment) {
-    this.refunding = payment;
-    this.refundAmount = payment.refundable;
-    this.rowErrors = { ...this.rowErrors, [payment.id]: '' };
-  }
-
-  refund(payment: Payment) {
-    const amount = this.refundAmount;
-    if (amount === null || !(amount > 0) || amount > payment.refundable) {
-      this.rowErrors = { ...this.rowErrors, [payment.id]: this.transloco.translate('admin.payments.errors.refundRange', { max: this.money(payment.refundable) }) };
-      return;
-    }
-    this.apply(payment, this.api.refund(payment.id, amount));
-  }
-
   private apply(payment: Payment, request: ReturnType<PaymentApiService['capture']>) {
     this.busy = true;
     this.rowErrors = { ...this.rowErrors, [payment.id]: '' };
     request.subscribe({
       next: updated => {
         this.busy = false;
-        this.refunding = null;
         this.payments = this.payments.map(p => p.id === updated.id ? updated : p);
       },
       error: err => {
